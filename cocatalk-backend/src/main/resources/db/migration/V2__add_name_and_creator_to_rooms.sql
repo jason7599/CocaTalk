@@ -1,0 +1,7 @@
+ALTER TABLE rooms
+ADD COLUMN name VARCHAR(50) NOT NULL DEFAULT 'Unnamed Room',
+ADD COLUMN creator_id BIGINT NOT NULL;
+
+ALTER TABLE rooms
+ADD CONSTRAINT fk_rooms_creator
+FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE SET NULL;
