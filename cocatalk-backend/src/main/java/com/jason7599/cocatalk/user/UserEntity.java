@@ -18,6 +18,8 @@ public class UserEntity {
 
     private String username;
     private String passwordHash;
+
+    @Column(insertable = false)
     private Instant createdAt;
 
     public UserEntity(String username, String passwordHash) {

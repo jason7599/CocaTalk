@@ -15,22 +15,29 @@ public class ChatroomService {
 
     @Transactional
     public ChatroomResponse createRoom(Long userId, ChatroomCreateRequest request) {
-        ChatroomEntity chatroom = chatroomRepository.save(
+        // because addUserToRoom requires a query to said chatroom
+        ChatroomEntity chatroom = chatroomRepository.saveAndFlush(
                 new ChatroomEntity(
                         userId,
                         request.name()
                 ));
 
+        addUserToRoom(userId, chatroom.getId());
 
-
+        // TODO: No idea why, but DB-side default for the chatroom name
+        // TODO: does not seem to apply automatically..
         return new ChatroomResponse(
                 chatroom.getId(),
-                chatroom.getName(),
+                chatroom.getName() == null ? "Unnamed Room" : chatroom.getName(),
                 null,
                 null,
                 Instant.now(),
                 1
         );
+    }
+
+    public void addUserToRoom(Long userId, Long roomId) {
+        chatroomRepository.addUserToRoom(userId, roomId);
     }
 
     public List<Long> loadChatroomIds(Long userId) {

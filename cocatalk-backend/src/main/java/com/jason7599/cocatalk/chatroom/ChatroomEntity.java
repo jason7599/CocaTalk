@@ -20,9 +20,17 @@ public class ChatroomEntity {
     private Long id;
 
     private Long creatorId;
+
+    @Column(insertable = false)
     private String name;
+
+    @Column(insertable = false)
     private Long lastSeq;
+
+    @Column(insertable = false)
     private Instant lastMessageAt;
+
+    @Column(insertable = false)
     private Instant createdAt;
 
     public ChatroomEntity(Long creatorId, String name) {

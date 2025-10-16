@@ -1,6 +1,7 @@
 package com.jason7599.cocatalk.chatroom;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -16,6 +17,7 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             """, nativeQuery = true)
     List<Long> loadUserChatroomIds(@Param("userId") Long userId);
 
+    @Modifying
     @Query(value = """
             INSERT INTO room_members(room_id, user_id, last_ack)
             SELECT :roomId, :userId, last_seq
