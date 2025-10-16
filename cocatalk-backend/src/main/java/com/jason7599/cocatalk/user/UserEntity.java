@@ -3,6 +3,8 @@ package com.jason7599.cocatalk.user;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
+
 @Entity
 @Table(name = "users")
 @Getter
@@ -16,6 +18,7 @@ public class UserEntity {
 
     private String username;
     private String passwordHash;
+    private Instant createdAt;
 
     public UserEntity(String username, String passwordHash) {
         this.username = username;

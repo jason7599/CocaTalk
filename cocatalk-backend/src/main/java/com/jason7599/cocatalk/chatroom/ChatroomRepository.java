@@ -1,6 +1,5 @@
 package com.jason7599.cocatalk.chatroom;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,4 +15,12 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             ORDER BY rooms.last_message_at DESC
             """, nativeQuery = true)
     List<Long> loadUserChatroomIds(@Param("userId") Long userId);
+
+    @Query(value = """
+            INSERT INTO room_members(room_id, user_id, last_ack)
+            SELECT :roomId, :userId, last_seq
+            FROM rooms
+            WHERE id = :roomId
+            """, nativeQuery = true)
+    void addUserToRoom(@Param("userId") Long userId, @Param("roomId") Long roomId);
 }

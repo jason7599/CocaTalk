@@ -21,8 +21,9 @@ public class ChatroomEntity {
 
     private Long creatorId;
     private String name;
+    private Long lastSeq;
     private Instant lastMessageAt;
-    private Long nextSeq;
+    private Instant createdAt;
 
     public ChatroomEntity(Long creatorId, String name) {
         this.creatorId = creatorId;

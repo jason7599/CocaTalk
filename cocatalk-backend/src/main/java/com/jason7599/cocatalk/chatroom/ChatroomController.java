@@ -1,7 +1,6 @@
 package com.jason7599.cocatalk.chatroom;
 
 import com.jason7599.cocatalk.security.CustomUserDetails;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +23,7 @@ public class ChatroomController {
                 chatroomService.createRoom(userDetails.getId(), request));
     }
 
-    @GetMapping
+    @GetMapping("/ids")
     public ResponseEntity<List<Long>> loadChatroomIds(@AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.ok(chatroomService.loadChatroomIds(userDetails.getId()));
     }

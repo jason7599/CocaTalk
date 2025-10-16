@@ -21,6 +21,8 @@ public class ChatroomService {
                         request.name()
                 ));
 
+
+
         return new ChatroomResponse(
                 chatroom.getId(),
                 chatroom.getName(),

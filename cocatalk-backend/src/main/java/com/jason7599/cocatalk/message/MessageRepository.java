@@ -10,12 +10,12 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
     @Query(value = """
             WITH next AS (
                 UPDATE rooms
-                SET next_seq = next_seq + 1
+                SET last_seq = last_seq + 1
                 WHERE id = :roomId
-                RETURNING next_seq
+                RETURNING last_seq
             )
             INSERT INTO messages(room_id, seq_no, user_id, content)
-            SELECT :roomId, next_seq, :userId, :content
+            SELECT :roomId, last_seq, :userId, :content
             FROM next
             RETURNING
                 room_id AS roomId,
