@@ -1,12 +1,14 @@
-// pages/AuthPage.tsx
 import React, { useState } from 'react';
 import { login, register} from '../api/auth';
+import { useNavigate } from 'react-router-dom';
 
 const AuthPage: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLogin, setIsLogin] = useState(true); // toggle between login/register
   const [message, setMessage] = useState('');
+
+  const navigate = useNavigate();
 
   const resetFields = () => {
     setUsername('');
@@ -26,7 +28,9 @@ const AuthPage: React.FC = () => {
       if (isLogin) {
         await login(username, password);
         setMessage('Login success!');
-        // todo: redirect or do something useful here
+
+        navigate('/chatrooms', { replace: true });
+        window.location.reload();
 
       } else {
         await register(username, password);
