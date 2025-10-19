@@ -7,6 +7,7 @@ const AuthPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [isLogin, setIsLogin] = useState(true); // toggle between login/register
   const [message, setMessage] = useState('');
+  const [isError, setIsError] = useState(false);
 
   const navigate = useNavigate();
 
@@ -21,6 +22,7 @@ const AuthPage: React.FC = () => {
 
     if (!username.trim() || !password.trim()) {
       setMessage("Username and password cannot be blank.");
+      setIsError(true);
       return;
     }
 
@@ -28,6 +30,7 @@ const AuthPage: React.FC = () => {
       if (isLogin) {
         await login(username, password);
         setMessage('Login success!');
+        setIsError(false);
 
         navigate('/chatrooms', { replace: true });
         window.location.reload();
@@ -35,10 +38,13 @@ const AuthPage: React.FC = () => {
       } else {
         await register(username, password);
         setMessage('Registration successful!');
+        setIsError(false);
+
         setIsLogin(true);
         resetFields();
       }
     } catch (err: any) {
+      setIsError(true);
       setMessage(err.message || 'Something went wrong.');
     }
   };
@@ -108,7 +114,7 @@ const AuthPage: React.FC = () => {
             <div
               className={[
                 "rounded-xl border px-3 py-2 text-sm",
-                /^(4|5)\d\d/.test(message)
+                isError
                   ? "border-red-500/40 bg-red-500/10 text-red-300"
                   : "border-emerald-500/40 bg-emerald-500/10 text-emerald-300",
               ].join(" ")}
