@@ -60,6 +60,7 @@ const Sidebar: React.FC = () => {
                 </button>
             </div>
 
+            {/* SEARCH BAR */}
             <div className="p-4">
                 <input
                     type="text"
@@ -68,6 +69,7 @@ const Sidebar: React.FC = () => {
                 />
             </div>
 
+            {/* THE ACTUAL LIST */}
             <div className="flex-1 overflow-y-auto">
                 {["Swati - THN", "Chintu Voda", "Pinder"].map((chat, idx) => (
                     <div

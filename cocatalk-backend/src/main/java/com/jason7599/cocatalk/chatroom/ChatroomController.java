@@ -17,14 +17,14 @@ public class ChatroomController {
     private final ChatroomService chatroomService;
 
     @PostMapping("/create")
-    public ResponseEntity<ChatroomResponse> createRoom(@RequestBody ChatroomCreateRequest request,
+    public ResponseEntity<ChatroomSummary> createRoom(@RequestBody ChatroomCreateRequest request,
                                                       @AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 chatroomService.createRoom(userDetails.getId(), request));
     }
 
-    @GetMapping("/ids")
-    public ResponseEntity<List<Long>> loadChatroomIds(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        return ResponseEntity.ok(chatroomService.loadChatroomIds(userDetails.getId()));
+    @GetMapping
+    public ResponseEntity<List<ChatroomSummary>> loadChatroomSummaries(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(chatroomService.loadChatroomSummaries(userDetails.getId()));
     }
 }
