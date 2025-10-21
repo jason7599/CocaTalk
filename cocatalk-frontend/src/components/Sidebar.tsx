@@ -3,54 +3,13 @@ import {
     PlusIcon,
     ArrowRightStartOnRectangleIcon,
     UserCircleIcon,
-    XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { useEffect, useState } from "react";
-import { loadChatrooms } from "../api/chatrooms";
 import { useModal } from "./MainLayout";
 import ChatroomList from "./ChatroomList";
+import LogoutModal from "./LogoutModal";
 
 const Sidebar: React.FC = () => {
-    const [chatrooms, setChatrooms] = useState<ChatroomSummary[]>([]);
-    const [error, setError] = useState<string | null>(null);
     const { showModal, closeModal } = useModal();
-
-    const confirmLogout = () => {
-        showModal(
-            <>
-                <h2 className="text-lg font-semibold mb-4">Confirm Logout</h2>
-                <p className="text-sm text-gray-600 mb-6">
-                    Are you sure you want to log out?
-                </p>
-                <div className="flex justify-end gap-2">
-                    <button
-                        onClick={closeModal}
-                        className="px-4 py-2 rounded-md border hover:bg-gray-100 transition"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={() => {
-                            localStorage.removeItem("token");
-                            window.location.href = "/login";
-                        }}
-                        className="px-4 py-2 rounded-md bg-red-500 text-white hover:bg-red-600 transition"
-                    >
-                        Log Out
-                    </button>
-                </div>
-            </>
-        )
-    }
-
-    // Load chatrooms
-    useEffect(() => {
-        try {
-            loadChatrooms().then(setChatrooms);
-        } catch (err: any) {
-            setError(err);
-        }
-    }, []);
 
     const handleCreateRoom = () => {
         // TODO: implement create room flow
@@ -76,7 +35,7 @@ const Sidebar: React.FC = () => {
                     <button
                         className="p-2 rounded-full hover:bg-gray-100 transition"
                         title="Log out"
-                        onClick={confirmLogout}
+                        onClick={() => showModal(<LogoutModal/>)}
                     >
                         <ArrowRightStartOnRectangleIcon className="w-6 h-6 text-red-600" />
                     </button>
