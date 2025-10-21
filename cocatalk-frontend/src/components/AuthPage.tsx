@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { login, register} from '../api/auth';
+import { login, register } from '../api/auth';
 import { useNavigate } from 'react-router-dom';
 
 const AuthPage: React.FC = () => {

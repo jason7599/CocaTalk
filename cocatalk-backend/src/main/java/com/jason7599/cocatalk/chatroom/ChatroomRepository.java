@@ -11,17 +11,17 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
 
     @Query(value = """
             SELECT
-                r.id,
-                r.name,
+                r.id AS id,
+                r.name AS name,
                 m.content AS lastMessage,
                 r.last_message_at AS lastMessageAt
             FROM rooms r
             JOIN room_members rm ON r.id = rm.room_id
             LEFT JOIN messages m ON r.id = m.room_id AND r.last_seq = m.seq_no
             WHERE rm.user_id = :userId
-            ORDER BY r.last_message_at DESC
+            ORDER BY lastMessageAt DESC
             """, nativeQuery = true)
-    List<ChatroomSummary> loadUserChatroomSummaries(@Param("userId") Long userId);
+    List<ChatroomSummaryView> loadUserChatroomSummaries(@Param("userId") Long userId);
 
     @Modifying
     @Query(value = """

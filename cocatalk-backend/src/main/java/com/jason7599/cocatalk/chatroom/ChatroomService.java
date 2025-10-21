@@ -39,6 +39,12 @@ public class ChatroomService {
     }
 
     public List<ChatroomSummary> loadChatroomSummaries(Long userId) {
-        return chatroomRepository.loadUserChatroomSummaries(userId);
+        return chatroomRepository.loadUserChatroomSummaries(userId)
+                .stream().map(v -> new ChatroomSummary(
+                        v.getId(),
+                        v.getName(),
+                        v.getLastMessage(),
+                        v.getLastMessageAt().toInstant()
+                )).toList();
     }
 }
