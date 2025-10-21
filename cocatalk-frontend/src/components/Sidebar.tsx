@@ -8,13 +8,7 @@ import {
 import { useEffect, useState } from "react";
 import { loadChatrooms } from "../api/chatrooms";
 import { useModal } from "./MainLayout";
-
-type ChatroomSummary = {
-    id: number;
-    name: string;
-    lastMessage: string | null;
-    lastMessageAt: string | null;
-};
+import ChatroomList from "./ChatroomList";
 
 const Sidebar: React.FC = () => {
     const [chatrooms, setChatrooms] = useState<ChatroomSummary[]>([]);
@@ -98,27 +92,8 @@ const Sidebar: React.FC = () => {
                 />
             </div>
 
-            {/* CHAT LIST */}
-            <div className="flex-1 overflow-y-auto">
-                {error && <p className="p-4 text-red-500">{error}</p>}
-
-                {chatrooms.map((chat) => (
-                    <div
-                        key={chat.id}
-                        className="px-4 py-3 hover:bg-gray-100 cursor-pointer border-b"
-                    >
-                        <div className="font-medium">{chat.name}</div>
-                        <div className="text-sm text-gray-500">
-                            {chat.lastMessage ?? "No messages yet"}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                            {chat.lastMessageAt
-                                ? new Date(chat.lastMessageAt).toLocaleDateString()
-                                : ""}
-                        </div>
-                    </div>
-                ))}
-            </div>
+            {/* // TODO; */}
+            <ChatroomList onSelectChatroom={(id) => console.log("Selected:", id)}/>
         </aside>
     );
 };
