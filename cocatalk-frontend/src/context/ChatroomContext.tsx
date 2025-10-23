@@ -10,6 +10,8 @@ export type ChatroomSummary = {
 
 type ChatroomContextType = {
     chatrooms: ChatroomSummary[];
+    selectedRoom: ChatroomSummary | null;
+    selectRoom: (roomId: number) => void;
     addChatroom: (room: ChatroomSummary) => void;
     updateChatroom: (roomId: number, updates: Partial<ChatroomSummary>) => void;
     removeChatroom: (roomId: number) => void;
@@ -20,6 +22,7 @@ const ChatroomContext = createContext<ChatroomContextType | null>(null);
 
 export const ChatroomProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [chatrooms, setChatrooms] = useState<ChatroomSummary[]>([]);
+    const [selectedRoom, setSelectedRoom] = useState<ChatroomSummary | null>(null);
 
     // 🪄 Initial load
     const reloadChatrooms = async () => {
@@ -30,6 +33,11 @@ export const ChatroomProvider: React.FC<{ children: ReactNode }> = ({ children }
     useEffect(() => {
         reloadChatrooms();
     }, []);
+
+    const selectRoom = (roomId: number) => {
+        const room = chatrooms.find((r) => r.id === roomId) || null;
+        setSelectedRoom(room);
+    };
 
     // ✨ Public actions
     const addChatroom = (room: ChatroomSummary) => {
@@ -50,7 +58,15 @@ export const ChatroomProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     return (
         <ChatroomContext.Provider
-            value={{ chatrooms, addChatroom, updateChatroom, removeChatroom, reloadChatrooms }}
+            value={{
+                chatrooms,
+                selectedRoom,
+                selectRoom,
+                addChatroom,
+                updateChatroom,
+                removeChatroom,
+                reloadChatrooms 
+            }}
         >
             {children}
         </ChatroomContext.Provider>

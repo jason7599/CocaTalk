@@ -48,8 +48,7 @@ const Sidebar: React.FC = () => {
                 />
             </div>
 
-            {/* // TODO; */}
-            <ChatroomList onSelectChatroom={(id) => console.log("Selected:", id)}/>
+            <ChatroomList />
         </aside>
     );
 };
