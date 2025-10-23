@@ -1,13 +1,10 @@
 import React from "react";
 import { useModal } from "../context/ModalContext";
+import { useUser } from "../context/UserContext";
 
 const LogoutModal: React.FC = () => {
     const { closeModal } = useModal();
-
-    const handleLogout = () => {
-        localStorage.removeItem("token");
-        window.location.href = "/login";
-    }
+    const { logout } = useUser();
 
     return (
         <>
@@ -23,7 +20,7 @@ const LogoutModal: React.FC = () => {
                     Cancel
                 </button>
                 <button
-                    onClick={handleLogout}
+                    onClick={logout}
                     className="px-4 py-2 rounded-md bg-red-500 text-white hover:bg-red-600 transition"
                 >
                     Log Out

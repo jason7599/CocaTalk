@@ -19,7 +19,7 @@ const ChatroomList: React.FC = () => {
                     key={chatroom.id}
                     onClick={() => selectRoom(chatroom.id)}
                     className={`px-4 py-3 hover:bg-gray-100 cursor-pointer border-b transition ${
-                        selectedRoom?.id === chatroom.id ? "bg-green-50" : ""   
+                        selectedRoom?.id === chatroom.id ? "bg-red-100" : ""   
                     }`}
                 >
                     <div className="font-medium">{chatroom.name}</div>

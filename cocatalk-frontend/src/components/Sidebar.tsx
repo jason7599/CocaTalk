@@ -8,9 +8,11 @@ import ChatroomList from "./ChatroomList";
 import LogoutModal from "./LogoutModal";
 import CreateRoomModal from "./CreateRoomModal";
 import { useModal } from "../context/ModalContext";
+import { useUser } from "../context/UserContext";
 
 const Sidebar: React.FC = () => {
     const { showModal } = useModal();
+    const { user } = useUser();
 
     return (
         <aside className="w-1/4 border-r bg-white flex flex-col relative">
@@ -18,6 +20,9 @@ const Sidebar: React.FC = () => {
             <div className="flex items-center justify-between p-4 border-b">
                 <div className="relative">
                     <UserCircleIcon className="w-10 h-10 text-red-600" />
+                    <div>
+                        <p className="font-semibold">{user?.username}</p>
+                    </div>
                 </div>
 
                 <div className="flex gap-2">
