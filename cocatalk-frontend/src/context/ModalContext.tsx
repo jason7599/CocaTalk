@@ -1,22 +1,13 @@
-import type React from "react";
-import Sidebar from "./Sidebar";
-import ChatWindow from "./ChatWindow";
-import { createContext, useContext, useState, type ReactNode } from "react";
+import React, { createContext, useState, useContext, type ReactNode } from "react";
 
 type ModalContextType = {
-    showModal: (modal: ReactNode) => void;
+    showModal: (content: ReactNode) => void;
     closeModal: () => void;
 };
 
 const ModalContext = createContext<ModalContextType | null>(null);
 
-export const useModal = () => {
-    const ctx = useContext(ModalContext);
-    if (!ctx) throw new Error("useModal must be used inside ModalProvider");
-    return ctx;
-}
-
-const MainLayout: React.FC = () => {
+export const ModalProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [modalContent, setModalContent] = useState<ReactNode | null>(null);
 
     const showModal = (content: ReactNode) => setModalContent(content);
@@ -24,12 +15,8 @@ const MainLayout: React.FC = () => {
 
     return (
         <ModalContext.Provider value={{ showModal, closeModal }}>
-            <div className="h-screen flex">
-                <Sidebar />
-                <ChatWindow />
-            </div>
+            {children}
 
-            {/* Global Modal Layer */}
             {modalContent && (
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg shadow-lg p-6 relative">
@@ -39,6 +26,10 @@ const MainLayout: React.FC = () => {
             )}
         </ModalContext.Provider>
     );
-}
+};
 
-export default MainLayout;
+export const useModal = () => {
+    const ctx = useContext(ModalContext);
+    if (!ctx) throw new Error("useModal must be used inside a ModalProvider");
+    return ctx;
+};

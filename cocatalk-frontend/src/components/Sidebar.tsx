@@ -4,16 +4,13 @@ import {
     ArrowRightStartOnRectangleIcon,
     UserCircleIcon,
 } from "@heroicons/react/24/outline";
-import { useModal } from "./MainLayout";
 import ChatroomList from "./ChatroomList";
 import LogoutModal from "./LogoutModal";
+import CreateRoomModal from "./CreateRoomModal";
+import { useModal } from "../context/ModalContext";
 
 const Sidebar: React.FC = () => {
-    const { showModal, closeModal } = useModal();
-
-    const handleCreateRoom = () => {
-        // TODO: implement create room flow
-    };
+    const { showModal } = useModal();
 
     return (
         <aside className="w-1/4 border-r bg-white flex flex-col relative">
@@ -27,7 +24,7 @@ const Sidebar: React.FC = () => {
                     <button
                         className="p-2 rounded-full hover:bg-gray-100 transition"
                         title="Create Room"
-                        onClick={handleCreateRoom}
+                        onClick={() => showModal(<CreateRoomModal />)}
                     >
                         <PlusIcon className="w-6 h-6 text-green-600" />
                     </button>

@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import AuthPage from './components/AuthPage.tsx';
-import MainLayout from './components/MainLayout.tsx';
+import MainLayout from './MainLayout.tsx';
 
 function isLoggedIn(): boolean {
   const token = localStorage.getItem('token');

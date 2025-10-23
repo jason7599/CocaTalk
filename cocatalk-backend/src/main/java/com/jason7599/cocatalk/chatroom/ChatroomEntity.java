@@ -21,7 +21,6 @@ public class ChatroomEntity {
 
     private Long creatorId;
 
-    @Column(insertable = false)
     private String name;
 
     @Column(insertable = false)

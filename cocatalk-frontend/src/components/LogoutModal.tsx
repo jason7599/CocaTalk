@@ -1,5 +1,5 @@
 import React from "react";
-import { useModal } from "./MainLayout";
+import { useModal } from "../context/ModalContext";
 
 const LogoutModal: React.FC = () => {
     const { closeModal } = useModal();
