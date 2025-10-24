@@ -44,3 +44,8 @@ export async function getCurrentUser() {
     const response = await api.get("/users/me");
     return response.data;
 }
+
+export function isLoggedIn() {
+    const token = localStorage.getItem('token');
+    return !!token;
+}

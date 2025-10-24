@@ -1,11 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import AuthPage from './components/AuthPage.tsx';
 import MainLayout from './MainPage.tsx';
-
-function isLoggedIn(): boolean {
-    const token = localStorage.getItem('token');
-    return !!token;
-}
+import { isLoggedIn } from './api/auth.ts';
 
 export default function App() {
     return (
