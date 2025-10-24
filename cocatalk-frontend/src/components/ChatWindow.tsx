@@ -1,36 +1,56 @@
-import type React from "react";
+import React from "react";
+import { useChatrooms } from "../context/ChatroomContext";
+import { EllipsisVerticalIcon, UserPlusIcon } from "@heroicons/react/24/outline";
 
 const ChatWindow: React.FC = () => {
-    
-    return (
-        <main className="flex-1 flex flex-col">
-            {/* HEADER */}
-            <header className="px-6 py-6 bg-gray-200 border-b">
-                <h2 className="text-lg font-semibold">Swati - THN</h2>
-                <p className="text-sm text-gray-600">typing...</p>
-            </header>
+    const { selectedRoom } = useChatrooms();
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-chat-bg">
+    if (!selectedRoom) {
+        return (
+            <div className="flex-1 flex items-center justify-center text-gray-400 text-lg">
+                Select a chatroom to start chatting
             </div>
-            
-            {/* Input */}
-            <form
-                className="flex items-center gap-2 p-4 border-t bg-gray-50"
-            >
-                <input
-                    type="text"
-                    placeholder="Type a message..."
-                    className="flex-1 p-2 rounded-full border border-gray-300 focus:outline-none"
-                />
-                <button
-                    type="submit"
-                    className="px-4 py-2 bg-green-500 text-white rounded-full hover:bg-green-600 transition"
-                >
-                    Send
-                </button>
-            </form>
-        </main>
-    )
-}
+        );
+    }
+
+    return (
+        <div className="flex-1 flex flex-col bg-gray-50">
+            {/* TOP BAR */}
+            <div className="flex h-24 items-center justify-between p-4 border-b bg-white">
+                <div>
+                    <h2 className="text-lg font-semibold">{selectedRoom.name}</h2>
+                </div>
+
+                <div>
+                    <button
+                        title="Invite"
+                        className="p-2 rounded-full hover:bg-gray-100 transition">
+                        <UserPlusIcon className="w-6 h-6 text-gray-600" />
+                    </button>
+
+                    <button
+                        title="Room Options"
+                        className="p-2 rounded-full hover:bg-gray-100 transition">
+                        <EllipsisVerticalIcon className="w-6 h-6 text-gray-600" />
+                    </button>
+                </div>
+            </div>
+
+                {/* MESSAGES LIST */}
+                <div className="flex-1 flex items-center justify-center text-gray-400">
+                    Messages
+                </div>  
+
+                {/* INPUT */}
+                <div className="p-4 border-t bg-white">
+                    <input
+                        type="text"
+                        placeholder="Type a message..."
+                        className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+                    />    
+                </div>
+        </div>
+    );
+};
 
 export default ChatWindow;

@@ -17,7 +17,7 @@ const Sidebar: React.FC = () => {
     return (
         <aside className="w-1/4 border-r bg-white flex flex-col relative">
             {/* TOP BAR */}
-            <div className="flex items-center justify-between p-4 border-b">
+            <div className="flex h-24 items-center justify-between p-4 border-b">
                 <div className="relative">
                     <UserCircleIcon className="w-10 h-10 text-red-600" />
                     <div>

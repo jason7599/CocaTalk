@@ -10,10 +10,12 @@ const MainLayout: React.FC = () => {
         <UserProvider>
         <ChatroomProvider>
         <ModalProvider>
+
             <div className="h-screen flex">
                 <Sidebar />
                 <ChatWindow />
             </div>
+            
         </ModalProvider>
         </ChatroomProvider>
         </UserProvider>
