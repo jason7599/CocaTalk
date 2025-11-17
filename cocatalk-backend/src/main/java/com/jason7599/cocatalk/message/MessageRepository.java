@@ -10,11 +10,12 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
     @Query(value = """
             WITH next AS (
                 UPDATE rooms
-                SET last_seq = last_seq + 1
+                SET last_seq = last_seq + 1,
+                    last_message_at = NOW()
                 WHERE id = :roomId
                 RETURNING last_seq
             )
-            INSERT INTO messages(room_id, seq_no, user_id, content)
+            INSERT INTO messages (room_id, seq_no, user_id, content)
             SELECT :roomId, last_seq, :userId, :content
             FROM next
             RETURNING
@@ -24,7 +25,7 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
                 content,
                 created_at AS createdAt
             """, nativeQuery = true)
-    MessageResponseView save(@Param("roomId") Long roomId,
+    MessageResponseView insertMessage(@Param("roomId") Long roomId,
                              @Param("userId") Long userId,
                              @Param("content") String content);
 

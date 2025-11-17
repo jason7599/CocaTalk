@@ -24,7 +24,7 @@ public class ChatController {
             MessageRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         template.convertAndSend("/topic/rooms.%d".formatted(roomId),
-                messageService.send(
+                messageService.sendMessage(
                         roomId,
                         userDetails.getId(),
                         userDetails.getUsername(),
