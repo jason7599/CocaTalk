@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useChatrooms } from "../context/ChatroomContext";
 import { EllipsisVerticalIcon, PaperAirplaneIcon, UserPlusIcon } from "@heroicons/react/24/outline";
 
@@ -6,6 +6,11 @@ const ChatWindow: React.FC = () => {
     
     const { selectedRoom } = useChatrooms();
     const [message, setMessage] = useState("");
+
+    useEffect(() => {
+        // clear input upon switching rooms
+        setMessage("");
+    }, [selectedRoom]);
 
     if (!selectedRoom) {
         return (
