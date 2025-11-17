@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { useChatrooms } from "../context/ChatroomContext";
-import { EllipsisVerticalIcon, UserPlusIcon } from "@heroicons/react/24/outline";
+import { EllipsisVerticalIcon, PaperAirplaneIcon, UserPlusIcon } from "@heroicons/react/24/outline";
 
 const ChatWindow: React.FC = () => {
+    
     const { selectedRoom } = useChatrooms();
+    const [message, setMessage] = useState("");
 
     if (!selectedRoom) {
         return (
@@ -12,6 +14,26 @@ const ChatWindow: React.FC = () => {
             </div>
         );
     }
+
+    const canSend = message.trim().length > 0;
+
+    const handleSend = () => {
+        if (!canSend) {
+            return;
+        }
+
+        // TODO: actual api stuff here
+
+        // Clear input after sending
+        setMessage("");
+    };
+
+    const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            handleSend();
+        }
+    };
 
     return (
         <div className="flex-1 flex flex-col bg-gray-50">
@@ -43,11 +65,28 @@ const ChatWindow: React.FC = () => {
 
                 {/* INPUT */}
                 <div className="p-4 border-t bg-white">
-                    <input
-                        type="text"
-                        placeholder="Type a message..."
-                        className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-                    />    
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="text"
+                            placeholder="Type a message..."
+                            className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+                            value={message}
+                            onChange={(e) => setMessage(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                        />
+                        <button
+                            title="Send"
+                            onClick={handleSend}
+                            disabled={!canSend}
+                            className={`p-2 rounded-full transition ${
+                                canSend
+                                    ? "bg-red-600 hover:bg-red-700 cursor-pointer"
+                                    : "bg-red-300 cursor-not-allowed opacity-60"
+                            }`}
+                        >
+                            <PaperAirplaneIcon className="w-6 h-6 text-white" />
+                        </button>
+                    </div>
                 </div>
         </div>
     );
