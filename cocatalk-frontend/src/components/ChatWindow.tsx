@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useChatrooms } from "../context/ChatroomContext";
 import { EllipsisVerticalIcon, PaperAirplaneIcon, UserPlusIcon } from "@heroicons/react/24/outline";
 
@@ -7,18 +7,13 @@ const ChatWindow: React.FC = () => {
     const { selectedRoom } = useChatrooms();
     const [message, setMessage] = useState("");
 
+    const inputRef = useRef<HTMLInputElement>(null);
+
     useEffect(() => {
         // clear input upon switching rooms
         setMessage("");
+        inputRef.current?.focus();
     }, [selectedRoom]);
-
-    if (!selectedRoom) {
-        return (
-            <div className="flex-1 flex items-center justify-center text-gray-400 text-lg">
-                Select a chatroom to start chatting
-            </div>
-        );
-    }
 
     const canSend = message.trim().length > 0;
 
@@ -39,6 +34,14 @@ const ChatWindow: React.FC = () => {
             handleSend();
         }
     };
+
+    if (!selectedRoom) {
+        return (
+            <div className="flex-1 flex items-center justify-center text-gray-400 text-lg">
+                Select a chatroom to start chatting
+            </div>
+        );
+    }
 
     return (
         <div className="flex-1 flex flex-col bg-gray-50">
@@ -72,6 +75,7 @@ const ChatWindow: React.FC = () => {
                 <div className="p-4 border-t bg-white">
                     <div className="flex items-center gap-2">
                         <input
+                            ref={inputRef}
                             type="text"
                             placeholder="Type a message..."
                             className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
