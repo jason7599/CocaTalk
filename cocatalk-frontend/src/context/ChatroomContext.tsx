@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import { loadChatrooms } from "../api/chatrooms";
 
 export type ChatroomSummary = {
@@ -24,7 +24,7 @@ export const ChatroomProvider: React.FC<{ children: ReactNode }> = ({ children }
     const [chatrooms, setChatrooms] = useState<ChatroomSummary[]>([]);
     const [selectedRoom, setSelectedRoom] = useState<ChatroomSummary | null>(null);
 
-    // 🪄 Initial load
+    // Initial load
     const reloadChatrooms = async () => {
         const data = await loadChatrooms();
         setChatrooms(data);
@@ -39,7 +39,7 @@ export const ChatroomProvider: React.FC<{ children: ReactNode }> = ({ children }
         setSelectedRoom(room);
     };
 
-    // ✨ Public actions
+    // Public actions
     const addChatroom = (room: ChatroomSummary) => {
         setChatrooms((prev) => [room, ...prev]);
     };
@@ -73,7 +73,6 @@ export const ChatroomProvider: React.FC<{ children: ReactNode }> = ({ children }
     );
 };
 
-// 🔥 Hook for easy access anywhere
 export const useChatrooms = () => {
     const ctx = useContext(ChatroomContext);
     if (!ctx) throw new Error("useChatrooms must be used inside a ChatroomProvider");
