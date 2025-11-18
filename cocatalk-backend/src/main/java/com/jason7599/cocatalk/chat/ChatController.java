@@ -1,6 +1,7 @@
 package com.jason7599.cocatalk.chat;
 
 import com.jason7599.cocatalk.message.MessageRequest;
+import com.jason7599.cocatalk.message.MessageResponse;
 import com.jason7599.cocatalk.message.MessageService;
 import com.jason7599.cocatalk.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +12,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 
 @Controller
-@MessageMapping
 @RequiredArgsConstructor
 public class ChatController {
 
@@ -23,11 +23,14 @@ public class ChatController {
             @DestinationVariable Long roomId,
             MessageRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        template.convertAndSend("/topic/rooms.%d".formatted(roomId),
-                messageService.sendMessage(
-                        roomId,
-                        userDetails.getId(),
-                        userDetails.getUsername(),
-                        request));
+
+        MessageResponse messageResponse = messageService.sendMessage(
+                roomId,
+                userDetails.getId(),
+                userDetails.getUsername(),
+                request
+        );
+
+        template.convertAndSend("/topic/rooms.%d".formatted(roomId), messageResponse);
     }
 }
