@@ -21,6 +21,9 @@ public class ChatroomEntity {
 
     private String name;
 
+    @Enumerated(EnumType.STRING)
+    private ChatroomType type;
+
     @Column(insertable = false)
     private Long lastSeq;
 
@@ -30,7 +33,8 @@ public class ChatroomEntity {
     @Column(insertable = false)
     private Instant createdAt;
 
-    public ChatroomEntity(String name) {
+    public ChatroomEntity(String name, ChatroomType type) {
         this.name = name;
+        this.type = type;
     }
 }

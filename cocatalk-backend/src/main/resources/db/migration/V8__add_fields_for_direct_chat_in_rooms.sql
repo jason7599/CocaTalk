@@ -1,0 +1,3 @@
+ALTER TABLE rooms
+    ADD COLUMN type VARCHAR(10) NOT NULL DEFAULT 'GROUP',
+    ADD CONSTRAINT chk_room_type CHECK (type IN ('GROUP', 'DIRECT'));
