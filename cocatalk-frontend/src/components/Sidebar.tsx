@@ -80,7 +80,7 @@ const Sidebar: React.FC = () => {
             
             <button
                 onClick={handlePlusClick}
-                className="ml-3 p-2 rounded-full border-2 border-green-300 bg-green-100 hover:bg-green-200 transition mt-4"
+                className="m-3 p-2 rounded-full border-2 border-green-300 bg-green-100 hover:bg-green-200 transition mt-4"
             >
                 <PlusIcon className="w-full h-5 text-green-600" />
                 {activeTab === "friends"
