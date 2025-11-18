@@ -1,6 +1,7 @@
 import type React from "react";
 import {
     ArrowRightStartOnRectangleIcon,
+    PlusIcon,
     UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import ChatroomList from "./ChatroomList";
@@ -16,6 +17,14 @@ const Sidebar: React.FC = () => {
 
     const [activeTab, setActiveTab] = useState<"friends" | "rooms">("rooms");
 
+    const handlePlusClick = () => {
+        if (activeTab === "friends") {
+            
+        } else {
+
+        }
+    };
+
     return (
         <aside className="w-1/4 border-r bg-white flex flex-col relative">
             {/* TOP BAR */}
@@ -26,6 +35,7 @@ const Sidebar: React.FC = () => {
                         <p className="font-semibold">{user?.username}</p>
                     </div>
                 </div>
+                
 
                 <div className="px-4 w-full">
                     <div className="flex rounded-full bg-gray-100 p-1 text-sm font-medium">
@@ -56,6 +66,7 @@ const Sidebar: React.FC = () => {
                     </div>
                 </div>
 
+
                 <div className="flex gap-2">
                     <button
                         className="p-2 rounded-full hover:bg-gray-100 transition"
@@ -67,6 +78,16 @@ const Sidebar: React.FC = () => {
                 </div>
             </div>
             
+            <button
+                onClick={handlePlusClick}
+                className="ml-3 p-2 rounded-full border-2 border-green-300 bg-green-100 hover:bg-green-200 transition mt-4"
+            >
+                <PlusIcon className="w-full h-5 text-green-600" />
+                {activeTab === "friends"
+                    ? "Add Friend"
+                    : "Create Group Chat"}
+            </button>
+
             <div className="flex-1 overflow-y-auto mt-2">
                 {activeTab === "friends" ? <FriendList /> : <ChatroomList />}
             </div>
