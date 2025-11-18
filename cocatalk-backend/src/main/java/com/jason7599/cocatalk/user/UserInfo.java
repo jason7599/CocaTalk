@@ -1,7 +1,5 @@
 package com.jason7599.cocatalk.user;
 
-import java.time.Instant;
-
 public record UserInfo(
         Long id,
         String username

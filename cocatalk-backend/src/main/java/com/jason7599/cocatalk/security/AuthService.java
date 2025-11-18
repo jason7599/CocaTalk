@@ -1,10 +1,10 @@
 package com.jason7599.cocatalk.security;
 
-import com.jason7599.cocatalk.exception.UsernameTakenException;
+import com.jason7599.cocatalk.exception.ApiError;
 import com.jason7599.cocatalk.user.UserEntity;
 import com.jason7599.cocatalk.user.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +21,7 @@ public class AuthService {
     @Transactional
     public Long register(UserRegisterRequest request) {
         if (userRepository.existsByUsername(request.username())) {
-            throw new UsernameTakenException("Username Taken");
+            throw new ApiError(HttpStatus.CONFLICT, "Username Taken");
         }
 
         UserEntity user = new UserEntity(
@@ -35,10 +35,10 @@ public class AuthService {
     // returns jwt token
     public String login(UserLoginRequest request) {
         UserEntity user = userRepository.findByUsername(request.username())
-                .orElseThrow(() -> new BadCredentialsException("Bad Credentials"));
+                .orElseThrow(() -> new ApiError(HttpStatus.FORBIDDEN, "Bad Credentials"));
 
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
-            throw new BadCredentialsException("Bad Credentials");
+            throw new ApiError(HttpStatus.FORBIDDEN, "Bad Credentials");
         }
 
         return jwtService.generateToken(user.getId(), user.getUsername());
