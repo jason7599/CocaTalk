@@ -25,10 +25,13 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
 
     @Modifying
     @Query(value = """
-            INSERT INTO room_members(room_id, user_id, last_ack)
-            SELECT :roomId, :userId, last_seq
+            INSERT INTO room_members(room_id, user_id, last_ack, role)
+            SELECT :roomId, :userId, last_seq, :role
             FROM rooms
             WHERE id = :roomId
             """, nativeQuery = true)
-    void addUserToRoom(@Param("userId") Long userId, @Param("roomId") Long roomId);
+    void addUserToRoom(
+            @Param("userId") Long userId,
+            @Param("roomId") Long roomId,
+            @Param("role") ChatroomRole role);
 }

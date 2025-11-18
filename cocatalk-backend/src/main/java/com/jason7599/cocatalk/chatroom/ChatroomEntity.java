@@ -19,8 +19,6 @@ public class ChatroomEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long creatorId;
-
     private String name;
 
     @Column(insertable = false)
@@ -32,8 +30,7 @@ public class ChatroomEntity {
     @Column(insertable = false)
     private Instant createdAt;
 
-    public ChatroomEntity(Long creatorId, String name) {
-        this.creatorId = creatorId;
+    public ChatroomEntity(String name) {
         this.name = name;
     }
 }
