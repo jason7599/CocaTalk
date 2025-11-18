@@ -1,18 +1,20 @@
 import type React from "react";
 import {
-    PlusIcon,
     ArrowRightStartOnRectangleIcon,
     UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import ChatroomList from "./ChatroomList";
 import LogoutModal from "./LogoutModal";
-import CreateRoomModal from "./CreateRoomModal";
 import { useModal } from "../context/ModalContext";
 import { useUser } from "../context/UserContext";
+import { useState } from "react";
+import FriendList from "./FriendList";
 
 const Sidebar: React.FC = () => {
     const { showModal } = useModal();
     const { user } = useUser();
+
+    const [activeTab, setActiveTab] = useState<"friends" | "rooms">("rooms");
 
     return (
         <aside className="w-1/4 border-r bg-white flex flex-col relative">
@@ -25,15 +27,36 @@ const Sidebar: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="flex gap-2">
-                    <button
-                        className="p-2 rounded-full hover:bg-gray-100 transition"
-                        title="Create Room"
-                        onClick={() => showModal(<CreateRoomModal />)}
-                    >
-                        <PlusIcon className="w-6 h-6 text-green-600" />
-                    </button>
+                <div className="px-4 w-full">
+                    <div className="flex rounded-full bg-gray-100 p-1 text-sm font-medium">
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab("friends")}
+                            className={
+                                "flex-1 px-3 py-1 rounded-full text-center transition " +
+                                (activeTab === "friends"
+                                    ? "bg-white shadow text-gray-900"
+                                    : "text-gray-500 hover:text-gray-700")
+                            }
+                        >
+                            Friends
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab("rooms")}
+                            className={
+                                "flex-1 px-3 py-1 rounded-full text-center transition " +
+                                (activeTab === "rooms"
+                                    ? "bg-white shadow text-gray-900"
+                                    : "text-gray-500 hover:text-gray-700")
+                            }
+                        >
+                            Chatrooms
+                        </button>
+                    </div>
+                </div>
 
+                <div className="flex gap-2">
                     <button
                         className="p-2 rounded-full hover:bg-gray-100 transition"
                         title="Log out"
@@ -43,17 +66,10 @@ const Sidebar: React.FC = () => {
                     </button>
                 </div>
             </div>
-
-            {/* SEARCH BAR */}
-            <div className="p-4">
-                <input
-                    type="text"
-                    placeholder="Search"
-                    className="w-full p-2 rounded-full border border-gray-300"
-                />
+            
+            <div className="flex-1 overflow-y-auto mt-2">
+                {activeTab === "friends" ? <FriendList /> : <ChatroomList />}
             </div>
-
-            <ChatroomList />
         </aside>
     );
 };
