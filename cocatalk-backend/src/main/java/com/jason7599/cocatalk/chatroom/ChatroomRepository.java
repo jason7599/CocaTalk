@@ -9,6 +9,7 @@ import java.util.List;
 
 public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> {
 
+    // ChatroomSummary
     @Query(value = """
             SELECT
                 r.id AS id,
@@ -21,7 +22,7 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             WHERE rm.user_id = :userId
             ORDER BY lastMessageAt DESC
             """, nativeQuery = true)
-    List<ChatroomSummaryView> loadUserChatroomSummaries(@Param("userId") Long userId);
+    List<Object[]> loadUserChatroomSummaries(@Param("userId") Long userId);
 
     @Modifying
     @Query(value = """

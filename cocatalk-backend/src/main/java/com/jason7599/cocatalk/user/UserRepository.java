@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
@@ -50,8 +51,30 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
     @Modifying
     @Query(value = """
-            DELTE FROM friendships
+            DELETE FROM friendships
             WHERE id1 = LEAST(:id1, :id2) AND id2 = GREATEST(:id1, :id2)
             """, nativeQuery = true)
     void removeFriendship(@Param("id1") Long id1, @Param("id2") Long id2);
+
+    @Query(value = """
+            SELECT u.*
+            FROM users u
+            JOIN friendships f
+                ON (f.id1 = :userId AND f.id2 = u.id)
+                OR (f.id2 = :userId AND f.id1 = u.id)
+            """, nativeQuery = true)
+    List<UserEntity> listFriends(@Param("userId") Long userId);
+
+    // ReceiveFriendRequestDto
+    @Query(value = """
+            SELECT
+                f.sender_id,
+                u.username,
+                f.created_at
+            FROM friend_requests f JOIN users u
+                ON f.sender_id = u.id
+            WHERE f.receiver_id = :userId
+            ORDER BY f.created_at DESC
+            """, nativeQuery = true)
+    List<Object[]> listPendingFriendRequests(@Param("userId") Long userId);
 }

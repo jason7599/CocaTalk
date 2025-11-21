@@ -1,12 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import { loadChatrooms } from "../api/chatrooms";
-
-export type ChatroomSummary = {
-    id: number;
-    name: string;
-    lastMessage: string | null;
-    lastMessageAt: string | null;
-};
+import type { ChatroomSummary } from "../types";
 
 type ChatroomContextType = {
     chatrooms: ChatroomSummary[];
