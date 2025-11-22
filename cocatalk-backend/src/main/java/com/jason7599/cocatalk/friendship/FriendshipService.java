@@ -6,7 +6,6 @@ import com.jason7599.cocatalk.user.UserInfo;
 import com.jason7599.cocatalk.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +22,7 @@ public class FriendshipService {
     @Transactional
     public void addFriendRequest(Long senderId, String receiverName) {
         Long receiverId = userRepository.findByUsername(receiverName)
-                .orElseThrow(() -> new UsernameNotFoundException("This username does not exist"))
+                .orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND, "This username does not exist"))
                 .getId();
 
         if (senderId.equals(receiverId)) {
