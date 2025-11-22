@@ -1,6 +1,7 @@
 import type { ChatroomSummary } from "../types";
 import api from "./api";
 
+// todo: refac error handling
 export async function loadChatrooms(): Promise<ChatroomSummary[]> {
     const res = await api.get('/chatrooms');
     return res.data;

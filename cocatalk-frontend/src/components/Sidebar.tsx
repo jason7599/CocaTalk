@@ -10,6 +10,7 @@ import { useModal } from "../context/ModalContext";
 import { useUser } from "../context/UserContext";
 import { useState } from "react";
 import FriendList from "./FriendList";
+import FriendRequestModal from "./FriendRequestModal";
 
 const Sidebar: React.FC = () => {
     const { showModal } = useModal();
@@ -19,7 +20,7 @@ const Sidebar: React.FC = () => {
 
     const handlePlusClick = () => {
         if (activeTab === "friends") {
-            
+            showModal(<FriendRequestModal />)
         } else {
 
         }
