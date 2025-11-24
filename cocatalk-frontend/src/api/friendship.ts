@@ -1,9 +1,9 @@
 import api from "./api";
 
 export async function sendFriendRequest(receiverName: string) {
-    try {
-        await api.post('/friends/request', {receiverName});
-    } catch (err: any) {
-        throw new Error(err.response.data)
-    }
+    await api.post('/friends/requests', {receiverName});
+}
+
+export async function countPendingRequests() {
+    return await api.get('/friends/requests/count');
 }

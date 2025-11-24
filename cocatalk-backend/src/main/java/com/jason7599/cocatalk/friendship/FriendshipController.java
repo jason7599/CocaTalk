@@ -17,7 +17,7 @@ public class FriendshipController {
     private final FriendshipService friendshipService;
 
     // add friend request
-    @PostMapping("/request")
+    @PostMapping("/requests")
     public ResponseEntity<Void> sendFriendRequest(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody SendFriendRequestDto request
@@ -27,7 +27,7 @@ public class FriendshipController {
     }
 
     // accept friend request
-    @PostMapping("/request/{senderId}/accept")
+    @PostMapping("/requests/{senderId}/accept")
     public ResponseEntity<UserInfo> acceptFriendRequest(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long senderId
@@ -36,7 +36,7 @@ public class FriendshipController {
     }
 
     // delete friend request
-    @DeleteMapping("/request/{senderId}")
+    @DeleteMapping("/requests/{senderId}")
     public ResponseEntity<Void> removeFriendRequest(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long senderId

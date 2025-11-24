@@ -17,9 +17,16 @@ api.interceptors.request.use(
         }
         return config;
     },
-    (error) => {
-        return Promise.reject(error);
+    (err) => {
+        return Promise.reject(err);
     }
 );
+
+api.interceptors.response.use(
+    res => res,
+    err => {
+        throw new Error(err.response?.data || "Unknown Error");
+    }
+)
 
 export default api;
