@@ -5,5 +5,6 @@ export async function sendFriendRequest(receiverName: string) {
 }
 
 export async function countPendingRequests() {
-    return await api.get('/friends/requests/count');
+    const res = await api.get<number>('/friends/requests/count');
+    return res.data;
 }

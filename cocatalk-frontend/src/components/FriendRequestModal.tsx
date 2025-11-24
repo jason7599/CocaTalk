@@ -27,6 +27,7 @@ const FriendRequestModal: React.FC = () => {
 
         try {
             await sendFriendRequest(username.trim());
+            setSubmitResult({ type: "success", message: "Successfully sent!"});
         } catch (err: any) {
             setSubmitResult({ type: "error", message: err.message });
         } finally {
