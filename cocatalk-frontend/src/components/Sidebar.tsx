@@ -10,21 +10,12 @@ import { useModal } from "../context/ModalContext";
 import { useUser } from "../context/UserContext";
 import { useState } from "react";
 import FriendList from "./FriendList";
-import FriendRequestModal from "./FriendRequestModal";
 
 const Sidebar: React.FC = () => {
     const { showModal } = useModal();
     const { user } = useUser();
 
     const [activeTab, setActiveTab] = useState<"friends" | "rooms">("rooms");
-
-    const handlePlusClick = () => {
-        if (activeTab === "friends") {
-            showModal(<FriendRequestModal />)
-        } else {
-
-        }
-    };
 
     return (
         <aside className="w-1/4 border-r bg-white flex flex-col relative">
@@ -79,16 +70,6 @@ const Sidebar: React.FC = () => {
                 </div>
             </div>
             
-            <button
-                onClick={handlePlusClick}
-                className="m-3 p-2 rounded-full border-2 border-green-300 bg-green-100 hover:bg-green-200 transition mt-4"
-            >
-                <PlusIcon className="w-full h-5 text-green-600" />
-                {activeTab === "friends"
-                    ? "Add Friend"
-                    : "Create Group Chat"}
-            </button>
-
             <div className="flex-1 overflow-y-auto mt-2">
                 {activeTab === "friends" ? <FriendList /> : <ChatroomList />}
             </div>
