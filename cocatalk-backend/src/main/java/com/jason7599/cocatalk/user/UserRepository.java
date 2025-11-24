@@ -76,5 +76,13 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
             WHERE f.receiver_id = :userId
             ORDER BY f.created_at DESC
             """, nativeQuery = true)
-    List<Object[]> listPendingFriendRequests(@Param("userId") Long userId);
+    List<Object[]> listPendingRequests(@Param("userId") Long userId);
+
+    @Query(value = """
+            SELECT COUNT(*)
+            FROM friend_requests f JOIN users u
+                ON f.sender_id = u.id
+            WHERE f.receiver_id = :userId
+            """, nativeQuery = true)
+    int countPendingRequests(@Param("userId") Long userId);
 }

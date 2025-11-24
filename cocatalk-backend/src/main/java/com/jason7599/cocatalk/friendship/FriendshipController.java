@@ -55,10 +55,17 @@ public class FriendshipController {
 
     // list pending friend requests
     @GetMapping("/requests")
-    public ResponseEntity<List<ReceiveFriendRequestDto>> listPendingFriendRequests(
+    public ResponseEntity<List<ReceiveFriendRequestDto>> listPendingRequests(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ResponseEntity.ok(friendshipService.listPendingFriendRequests(userDetails.getId()));
+        return ResponseEntity.ok(friendshipService.listPendingRequests(userDetails.getId()));
+    }
+
+    @GetMapping("/requests/count")
+    public ResponseEntity<Integer> countPendingRequests(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return ResponseEntity.ok(friendshipService.countPendingRequests(userDetails.getId()));
     }
 
     @DeleteMapping("/{friendId}")

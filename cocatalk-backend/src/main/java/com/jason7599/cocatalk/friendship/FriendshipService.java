@@ -67,8 +67,8 @@ public class FriendshipService {
                 .stream().map(UserInfo::new).toList();
     }
 
-    public List<ReceiveFriendRequestDto> listPendingFriendRequests(Long userId) {
-        return userRepository.listPendingFriendRequests(userId)
+    public List<ReceiveFriendRequestDto> listPendingRequests(Long userId) {
+        return userRepository.listPendingRequests(userId)
                 .stream().map(row -> {
                     Long senderId = ((Number) row[0]).longValue();
                     String senderName = (String) row[1];
@@ -80,6 +80,10 @@ public class FriendshipService {
                             sentAt
                     );
                 }).toList();
+    }
+    
+    public int countPendingRequests(Long userId) {
+        return userRepository.countPendingRequests(userId);
     }
 
     @Transactional
