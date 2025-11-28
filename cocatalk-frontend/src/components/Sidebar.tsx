@@ -1,7 +1,6 @@
 import type React from "react";
 import {
     ArrowRightStartOnRectangleIcon,
-    PlusIcon,
     UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import ChatroomList from "./ChatroomList";
@@ -10,10 +9,12 @@ import { useModal } from "../context/ModalContext";
 import { useUser } from "../context/UserContext";
 import { useState } from "react";
 import FriendList from "./FriendList";
+import { usePendingRequests } from "../context/PendingRequestsContext";
 
 const Sidebar: React.FC = () => {
     const { showModal } = useModal();
     const { user } = useUser();
+    const { pendingCount } = usePendingRequests();
 
     const [activeTab, setActiveTab] = useState<"friends" | "rooms">("rooms");
 
@@ -35,13 +36,17 @@ const Sidebar: React.FC = () => {
                             type="button"
                             onClick={() => setActiveTab("friends")}
                             className={
-                                "flex-1 px-3 py-1 rounded-full text-center transition " +
+                                "relative flex-1 px-3 py-1 rounded-full text-center transition " +
                                 (activeTab === "friends"
                                     ? "bg-white shadow text-gray-900"
                                     : "text-gray-500 hover:text-gray-700")
                             }
                         >
                             Friends
+
+                            {pendingCount > 0 && (
+                                <span className="absolute top-0 right-1 block w-3 h-3 bg-red-500 rounded-full" />
+                            )}
                         </button>
                         <button
                             type="button"

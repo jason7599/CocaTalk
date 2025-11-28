@@ -2,28 +2,16 @@ import type React from "react";
 import { UserPlusIcon, BellIcon } from "@heroicons/react/24/solid";
 import { useModal } from "../context/ModalContext";
 import FriendRequestModal from "./FriendRequestModal";
-import { useEffect, useState } from "react";
-import { countPendingRequests } from "../api/friendship";
+import PendingRequestsModal from "./PendingRequestsModal";
+import { usePendingRequests } from "../context/PendingRequestsContext";
 
 
 const FriendList: React.FC = () => {
     const friends = [
     ];
 
-    const [pendingCount, setPendingCount] = useState(0);
-
     const { showModal } = useModal();
-
-    useEffect(() => {
-        (async() => {
-            try {
-                const count = await countPendingRequests();
-                setPendingCount(count);
-            } catch (err: any) {
-                console.log(err);
-            }
-        })();
-    }, []);
+    const { pendingCount } = usePendingRequests();
 
     return (
         <div className="flex flex-col gap-4 p-4">
@@ -38,8 +26,11 @@ const FriendList: React.FC = () => {
                     Add Friend
                 </button>
 
-                {/* Secondary Button */}
-                <button className="flex items-center gap-3 text-gray-700 bg-gray-100 hover:bg-gray-200 px-3 py-3 rounded-lg text-sm font-medium transition">
+                {/* Pending Requests */}
+                <button
+                    onClick={() => showModal(<PendingRequestsModal />)}
+                    className="flex items-center gap-3 text-gray-700 bg-gray-100 hover:bg-gray-200 px-3 py-3 rounded-lg text-sm font-medium transition"
+                >
                     <BellIcon className="w-5 h-5" />
                     Requests
 
