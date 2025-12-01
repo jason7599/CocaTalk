@@ -1,0 +1,11 @@
+services:
+  frontend:
+    build: ./cocatalk-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./cocatalk-frontend:/app
+      - node_modules:/app/node_modules
+
+volumes:
+  node_modules:
