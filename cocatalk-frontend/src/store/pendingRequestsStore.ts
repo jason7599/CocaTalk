@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import type { PendingRequest } from "../../types";
-import { acceptFriendRequest, listPendingRequests, removeFriendRequest } from "../friendship";
-
+import type { PendingRequest } from "../types";
+import { acceptFriendRequest, listPendingRequests, removeFriendRequest } from "../api/friendship";
+import { useFriendsStore } from "./friendsStore";
 
 type PendingRequestsState = {
     requests: PendingRequest[];
@@ -33,9 +33,11 @@ export const usePendingRequestsStore = create<PendingRequestsState>((set, get) =
     },
 
     accept: async (senderId: number) => {
-        await acceptFriendRequest(senderId);
+        const friend = await acceptFriendRequest(senderId);
         const updated = get().requests.filter((r) => r.senderId !== senderId);
         set({ requests: updated });
+
+        useFriendsStore.getState().addFriend(friend);
     },
 
     decline: async (senderId: number) => {

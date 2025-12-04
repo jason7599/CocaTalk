@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import type { ChatroomSummary } from "../../types"
-import { createRoom, loadChatrooms } from "../chatrooms";
+import type { ChatroomSummary } from "../types"
+import { createRoom, loadChatrooms } from "../api/chatrooms";
 
 type ChatroomsState = {
     chatrooms: ChatroomSummary[];

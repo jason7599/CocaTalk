@@ -9,7 +9,7 @@ import { useModal } from "../context/ModalContext";
 import { useUser } from "../context/UserContext";
 import { useState } from "react";
 import FriendList from "./FriendList";
-import { usePendingRequestsStore } from "../api/store/pendingRequestsStore";
+import { usePendingRequestsStore } from "../store/pendingRequestsStore";
 
 const Sidebar: React.FC = () => {
     const { showModal } = useModal();

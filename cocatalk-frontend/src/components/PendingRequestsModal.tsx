@@ -1,6 +1,6 @@
 import type React from "react";
 import { useModal } from "../context/ModalContext";
-import { usePendingRequestsStore } from "../api/store/pendingRequestsStore";
+import { usePendingRequestsStore } from "../store/pendingRequestsStore";
 import { useEffect } from "react";
 
 const PendingRequestsModal: React.FC = () => {

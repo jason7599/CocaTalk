@@ -4,12 +4,14 @@ import ChatWindow from "./components/ChatWindow";
 import { ModalProvider } from "./context/ModalContext";
 import { UserProvider } from "./context/UserContext";
 import { useEffect } from "react";
-import { usePendingRequestsStore } from "./api/store/pendingRequestsStore";
+import { usePendingRequestsStore } from "./store/pendingRequestsStore";
+import { useFriendsStore } from "./store/friendsStore";
 
 const MainLayout: React.FC = () => {
-    
+
     useEffect(() => {
         usePendingRequestsStore.getState().fetch();
+        useFriendsStore.getState().fetch();
     }, []);
 
     return (

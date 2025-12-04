@@ -3,13 +3,12 @@ import { UserPlusIcon, BellIcon } from "@heroicons/react/24/solid";
 import { useModal } from "../context/ModalContext";
 import FriendRequestModal from "./FriendRequestModal";
 import PendingRequestsModal from "./PendingRequestsModal";
-import { usePendingRequestsStore } from "../api/store/pendingRequestsStore";
+import { usePendingRequestsStore } from "../store/pendingRequestsStore";
+import { useFriendsStore } from "../store/friendsStore";
 
 
 const FriendList: React.FC = () => {
-    const friends = [
-    ];
-
+    const friends = useFriendsStore((s) => s.friends);
     const { showModal } = useModal();
     const pendingRequestCount = usePendingRequestsStore((s) => s.requests.length);
 

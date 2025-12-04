@@ -1,5 +1,5 @@
 import React from "react";
-import { useChatroomsStore } from "../api/store/chatroomsStore";
+import { useChatroomsStore } from "../store/chatroomsStore";
 
 const ChatroomList: React.FC = () => {
     const chatrooms = useChatroomsStore((s) => s.chatrooms);

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { EllipsisVerticalIcon, PaperAirplaneIcon, UserPlusIcon } from "@heroicons/react/24/outline";
-import { useChatroomsStore } from "../api/store/chatroomsStore";
+import { useChatroomsStore } from "../store/chatroomsStore";
 
 const ChatWindow: React.FC = () => {
     

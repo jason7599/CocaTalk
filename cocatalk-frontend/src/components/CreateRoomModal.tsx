@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useModal } from "../context/ModalContext";
-import { useChatroomsStore } from "../api/store/chatroomsStore";
+import { useChatroomsStore } from "../store/chatroomsStore";
 
 const CreateRoomModal: React.FC = () => {
     const { closeModal } = useModal();
