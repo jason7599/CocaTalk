@@ -1,31 +1,15 @@
 import { useState } from "react";
 import { useModal } from "../context/ModalContext";
-import { createRoom } from "../api/chatrooms";
-import { useChatrooms } from "../context/ChatroomContext";
+import { useChatroomsStore } from "../api/store/chatroomsStore";
 
 const CreateRoomModal: React.FC = () => {
     const { closeModal } = useModal();
-    const { addChatroom } = useChatrooms();
+
+    const addChatroom = useChatroomsStore((s) => s.addChatroom);
+    const loading = useChatroomsStore((s) => s.loading);
+    const error = useChatroomsStore((s) => s.error);
 
     const [name, setName] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    const handleCreate = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-
-            const newRoom = await createRoom(name.trim() || null );
-
-            addChatroom(newRoom);
-            closeModal();
-        } catch (err: any) {
-            setError("Failed to create room:" + err);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     return (
         <>
@@ -53,7 +37,7 @@ const CreateRoomModal: React.FC = () => {
                     Cancel
                 </button>
                 <button
-                    onClick={handleCreate}
+                    onClick={() => { addChatroom(name.trim() || null) }}
                     disabled={loading}
                     className={`px-4 py-2 rounded-md text-white ${loading ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
                         } transition`}

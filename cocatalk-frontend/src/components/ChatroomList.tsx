@@ -1,8 +1,10 @@
 import React from "react";
-import { useChatrooms } from "../context/ChatroomContext";
+import { useChatroomsStore } from "../api/store/chatroomsStore";
 
 const ChatroomList: React.FC = () => {
-    const { chatrooms, selectRoom, selectedRoom } = useChatrooms();
+    const chatrooms = useChatroomsStore((s) => s.chatrooms);
+    const selectedRoomId = useChatroomsStore((s) => s.selectedChatroomId);
+    const selectChatroom = useChatroomsStore((s) => s.selectChatroom);
 
     if (chatrooms.length === 0) {
         return (
@@ -17,9 +19,9 @@ const ChatroomList: React.FC = () => {
             {chatrooms.map((chatroom) => (
                 <div
                     key={chatroom.id}
-                    onClick={() => selectRoom(chatroom.id)}
+                    onClick={() => selectChatroom(chatroom.id)}
                     className={`px-4 py-3 hover:bg-gray-100 cursor-pointer border-b transition ${
-                        selectedRoom?.id === chatroom.id ? "bg-red-100" : ""   
+                        selectedRoomId === chatroom.id ? "bg-red-100" : ""   
                     }`}
                 >
                     <div className="font-medium">{chatroom.name}</div>

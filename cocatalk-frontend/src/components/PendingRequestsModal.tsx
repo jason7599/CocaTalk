@@ -1,11 +1,23 @@
 import type React from "react";
 import { useModal } from "../context/ModalContext";
-import { usePendingRequests } from "../context/PendingRequestsContext";
+import { usePendingRequestsStore } from "../api/store/pendingRequestsStore";
+import { useEffect } from "react";
 
 const PendingRequestsModal: React.FC = () => {
 
     const { closeModal } = useModal();
-    const { requests, loading, error, accept, decline } = usePendingRequests();
+
+    const requests = usePendingRequestsStore((s) => s.requests);
+    const loading = usePendingRequestsStore((s) => s.loading);
+    const error = usePendingRequestsStore((s) => s.error);
+
+    const accept = usePendingRequestsStore((s) => s.accept);
+    const decline = usePendingRequestsStore((s) => s.decline);
+    const fetch = usePendingRequestsStore((s) => s.fetch);
+
+    useEffect(() => {
+        fetch()
+    }, [fetch]);
 
     return (
         <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-4">

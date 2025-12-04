@@ -7,7 +7,7 @@ export async function loadChatrooms(): Promise<ChatroomSummary[]> {
     return res.data;
 };
 
-export async function createRoom(name: string): Promise<ChatroomSummary> {
+export async function createRoom(name: string | null): Promise<ChatroomSummary> {
     const res = await api.post('/chatrooms/create', { name });
     return res.data;
 }

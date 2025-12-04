@@ -2,8 +2,15 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import AuthPage from './components/AuthPage.tsx';
 import MainLayout from './MainPage.tsx';
 import { isLoggedIn } from './api/auth.ts';
+import { useEffect } from 'react';
+import { usePendingRequestsStore } from './api/store/pendingRequestsStore.ts';
 
 export default function App() {
+
+    useEffect(() => {
+        usePendingRequestsStore.getState().fetch();
+    }, []);
+
     return (
         <Router>
             <Routes>

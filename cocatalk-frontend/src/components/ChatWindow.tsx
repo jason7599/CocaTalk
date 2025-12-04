@@ -1,19 +1,24 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useChatrooms } from "../context/ChatroomContext";
 import { EllipsisVerticalIcon, PaperAirplaneIcon, UserPlusIcon } from "@heroicons/react/24/outline";
+import { useChatroomsStore } from "../api/store/chatroomsStore";
 
 const ChatWindow: React.FC = () => {
     
-    const { selectedRoom } = useChatrooms();
     const [message, setMessage] = useState("");
-
     const inputRef = useRef<HTMLInputElement>(null);
+
+    const chatrooms = useChatroomsStore((s) => s.chatrooms);
+    const selectedChatroomId = useChatroomsStore((s) => s.selectedChatroomId);
+
+    const selectedChatroom = 
+        selectedChatroomId &&
+        (chatrooms.find((r) => r.id === selectedChatroomId) ?? null);
 
     useEffect(() => {
         // clear input upon switching rooms
         setMessage("");
         inputRef.current?.focus();
-    }, [selectedRoom]);
+    }, [selectedChatroom]);
 
     const canSend = message.trim().length > 0;
 
@@ -35,7 +40,7 @@ const ChatWindow: React.FC = () => {
         }
     };
 
-    if (!selectedRoom) {
+    if (!selectedChatroom) {
         return (
             <div className="flex-1 flex items-center justify-center text-gray-400 text-lg">
                 Select a chatroom to start chatting
@@ -48,7 +53,7 @@ const ChatWindow: React.FC = () => {
             {/* TOP BAR */}
             <div className="flex h-24 items-center justify-between p-4 border-b bg-white">
                 <div>
-                    <h2 className="text-lg font-semibold">{selectedRoom.name}</h2>
+                    <h2 className="text-lg font-semibold">{selectedChatroom.name}</h2>
                 </div>
 
                 <div>

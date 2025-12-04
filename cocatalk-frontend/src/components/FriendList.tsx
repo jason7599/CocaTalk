@@ -3,7 +3,7 @@ import { UserPlusIcon, BellIcon } from "@heroicons/react/24/solid";
 import { useModal } from "../context/ModalContext";
 import FriendRequestModal from "./FriendRequestModal";
 import PendingRequestsModal from "./PendingRequestsModal";
-import { usePendingRequests } from "../context/PendingRequestsContext";
+import { usePendingRequestsStore } from "../api/store/pendingRequestsStore";
 
 
 const FriendList: React.FC = () => {
@@ -11,7 +11,7 @@ const FriendList: React.FC = () => {
     ];
 
     const { showModal } = useModal();
-    const { pendingCount } = usePendingRequests();
+    const pendingRequestCount = usePendingRequestsStore((s) => s.requests.length);
 
     return (
         <div className="flex flex-col gap-4 p-4">
@@ -34,9 +34,9 @@ const FriendList: React.FC = () => {
                     <BellIcon className="w-5 h-5" />
                     Requests
 
-                    {pendingCount > 0 && (
+                    {pendingRequestCount > 0 && (
                         <span className="ml-1 inline-flex items-center justify-center min-w-[1.25rem] px-1 h-5 text-[0.7rem] rounded-full bg-red-500 text-white font-semibold">
-                            {pendingCount}
+                            {pendingRequestCount}
                         </span>
                     )}
                 </button>
@@ -56,20 +56,6 @@ const FriendList: React.FC = () => {
                         >
                             <span className="font-medium text-gray-900">
                                 {friend.username}
-                            </span>
-
-                            {/* Status */}
-                            <span
-                                className={
-                                    "text-xs font-medium capitalize " +
-                                    (friend.status === "online"
-                                        ? "text-green-600"
-                                        : friend.status === "busy"
-                                        ? "text-yellow-600"
-                                        : "text-gray-400")
-                                }
-                            >
-                                {friend.status}
                             </span>
                         </button>
                     ))

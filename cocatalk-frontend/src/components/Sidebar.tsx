@@ -9,12 +9,12 @@ import { useModal } from "../context/ModalContext";
 import { useUser } from "../context/UserContext";
 import { useState } from "react";
 import FriendList from "./FriendList";
-import { usePendingRequests } from "../context/PendingRequestsContext";
+import { usePendingRequestsStore } from "../api/store/pendingRequestsStore";
 
 const Sidebar: React.FC = () => {
     const { showModal } = useModal();
     const { user } = useUser();
-    const { pendingCount } = usePendingRequests();
+    const { requests } = usePendingRequestsStore();
 
     const [activeTab, setActiveTab] = useState<"friends" | "rooms">("rooms");
 
@@ -44,7 +44,7 @@ const Sidebar: React.FC = () => {
                         >
                             Friends
 
-                            {pendingCount > 0 && (
+                            {requests.length > 0 && (
                                 <span className="absolute top-0 right-1 block w-3 h-3 bg-red-500 rounded-full" />
                             )}
                         </button>
