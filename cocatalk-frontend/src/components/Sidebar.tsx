@@ -4,12 +4,12 @@ import {
     UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import ChatroomList from "./ChatroomList";
-import LogoutModal from "./LogoutModal";
 import { useModal } from "../context/ModalContext";
 import { useUser } from "../context/UserContext";
 import { useState } from "react";
 import FriendList from "./FriendList";
 import { usePendingRequestsStore } from "../store/pendingRequestsStore";
+import LogoutModal from "./modals/LogoutModal";
 
 const Sidebar: React.FC = () => {
     const { showModal } = useModal();

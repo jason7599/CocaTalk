@@ -1,39 +1,17 @@
 import type React from "react";
-import { useModal } from "../context/ModalContext";
 import { useState } from "react";
-import { sendFriendRequest } from "../api/friendship";
-
-type SubmitResult = 
-    | { type: "error"; message: string }
-    | { type: "success"; message: string}
-    | null;
+import { useModal } from "../../context/ModalContext";
+import { useFriendsStore } from "../../store/friendsStore";
 
 const FriendRequestModal: React.FC = () => {
     const { closeModal } = useModal();
 
     const [username, setUsername] = useState("");
-    const [submitResult, setSubmitResult] = useState<SubmitResult>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!username.trim()) {
-            setSubmitResult({ type: "error", message: "Enter a username!" });
-            return;
-        }
-
-        setSubmitResult(null);
-        setIsSubmitting(true);
-
-        try {
-            await sendFriendRequest(username.trim());
-            setSubmitResult({ type: "success", message: "Successfully sent!"});
-        } catch (err: any) {
-            setSubmitResult({ type: "error", message: err.message });
-        } finally {
-            setIsSubmitting(false);
-        }
-    }
+    const friendRequestSubmitting = useFriendsStore((s) => s.friendRequestSubmitting);
+    const friendRequestError = useFriendsStore((s) => s.friendRequestError);
+    const friendRequestSuccess = useFriendsStore((s) => s.friendRequestSuccess);
+    const sendFriendRequest = useFriendsStore((s) => s.sendFriendRequest);
 
     return (
         <div className="w-100 bg-white rounded-xl">
@@ -42,7 +20,11 @@ const FriendRequestModal: React.FC = () => {
                 Enter your friend&apos;s username to send a request.
             </p>
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+            <form onSubmit={(e) => {
+                    e.preventDefault();
+                    sendFriendRequest(username);
+                }}
+                className="flex flex-col gap-3">
                 <div>
                     <input
                         id="friend-username"
@@ -53,13 +35,17 @@ const FriendRequestModal: React.FC = () => {
                         placeholder="Username"
                         autoFocus
                     />
-                    {submitResult && (
-                        <p
-                            className={`mt-1 text-sm ${
-                               submitResult.type === "error" ? "text-red-500" : "text-green-600" 
-                            }`}
-                        >
-                            {submitResult.message}
+                    {friendRequestError && (
+                        <p className="mt-1 text-sm text-red-500">
+                            {friendRequestError}
+                        </p>
+                    )}
+                    {friendRequestSuccess && (
+                        <p className={"mt-1 text-sm text-green-600"}>
+                            {friendRequestSuccess.type == "SENT"
+                                ? "Successfully sent!"
+                                : `You are now friends with ${friendRequestSuccess.friendInfo.username}`
+                            }
                         </p>
                     )}
                 </div>
@@ -69,16 +55,16 @@ const FriendRequestModal: React.FC = () => {
                         type="button"
                         onClick={closeModal}
                         className="px-3 py-2 text-sm rounded hover:bg-gray-100"
-                        disabled={isSubmitting}
+                        disabled={friendRequestSubmitting}
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
                         className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-60 disabled:cursor-not-allowed"
-                        disabled={isSubmitting}
+                        disabled={friendRequestSubmitting}
                     >
-                        {isSubmitting ? "Sending..." : "Send Request"}
+                        {friendRequestSubmitting ? "Sending..." : "Send Request"}
                     </button>
                 </div>
             </form>

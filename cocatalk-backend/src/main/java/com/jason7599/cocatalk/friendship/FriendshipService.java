@@ -20,30 +20,31 @@ public class FriendshipService {
     private final UserRepository userRepository;
 
     @Transactional
-    public void addFriendRequest(Long senderId, String receiverName) {
-        Long receiverId = userRepository.findByUsername(receiverName)
-                .orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND, "This username does not exist"))
-                .getId();
+    public FriendRequestSuccessDto addFriendRequest(Long senderId, String receiverName) {
+        UserEntity friend = userRepository.findByUsername(receiverName)
+                .orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND, "This username does not exist"));
+        Long friendId = friend.getId();
 
-        if (senderId.equals(receiverId)) {
+        if (senderId.equals(friendId)) {
             throw new ApiError(HttpStatus.BAD_REQUEST, "Cannot friend yourself");
         }
 
-        if (userRepository.friendshipExists(senderId, receiverId)) {
+        if (userRepository.friendshipExists(senderId, friendId)) {
             throw new ApiError(HttpStatus.CONFLICT, "Already friends");
         }
 
-        if (userRepository.friendRequestExists(senderId, receiverId)) {
+        if (userRepository.friendRequestExists(senderId, friendId)) {
             throw new ApiError(HttpStatus.CONFLICT, "Pending friend request already exists");
         }
 
         // Reverse friend request already exists - auto accept
-        if (userRepository.friendRequestExists(receiverId, senderId)) {
-            acceptFriendRequest(receiverId, senderId);
-            return;
+        if (userRepository.friendRequestExists(friendId, senderId)) {
+            acceptFriendRequest(friendId, senderId);
+            return new FriendRequestSuccessDto(new UserInfo(friend), FriendRequestSuccessType.AUTO_ACCEPT);
         }
 
-        userRepository.addFriendRequest(senderId, receiverId);
+        userRepository.addFriendRequest(senderId, friendId);
+        return new FriendRequestSuccessDto(new UserInfo(friend), FriendRequestSuccessType.SENT);
     }
 
     @Transactional

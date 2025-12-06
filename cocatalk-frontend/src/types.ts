@@ -1,17 +1,24 @@
-export type ChatroomSummary = {
+export interface ChatroomSummary {
     id: number;
     name: string;
     lastMessage: string | null;
     lastMessageAt: string | null;
 };
 
-export type PendingRequest = {
+export interface PendingRequest {
     senderId: number;
     senderName: string;
     sentAt: string;
 };
 
-export type UserInfo = {
+export interface UserInfo {
     id: number;
     username: string;
 };
+
+export type FriendRequestSuccessType = "SENT" | "AUTO_ACCEPT";
+
+export interface FriendRequestSuccessDto {
+    friendInfo: UserInfo;
+    type: FriendRequestSuccessType;
+}

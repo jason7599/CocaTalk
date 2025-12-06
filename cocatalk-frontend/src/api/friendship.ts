@@ -1,8 +1,8 @@
-import type { PendingRequest, UserInfo } from "../types";
+import type { FriendRequestSuccessDto, PendingRequest, UserInfo } from "../types";
 import api from "./api";
 
 export async function sendFriendRequest(receiverName: string) {
-    await api.post('/friends/requests', {receiverName});
+    return (await api.post<FriendRequestSuccessDto>('/friends/requests', {receiverName})).data;
 }
 
 export async function countPendingRequests() {

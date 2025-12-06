@@ -18,12 +18,11 @@ public class FriendshipController {
 
     // add friend request
     @PostMapping("/requests")
-    public ResponseEntity<Void> sendFriendRequest(
+    public ResponseEntity<FriendRequestSuccessDto> sendFriendRequest(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody SendFriendRequestDto request
     ) {
-        friendshipService.addFriendRequest(userDetails.getId(), request.receiverName());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(friendshipService.addFriendRequest(userDetails.getId(), request.receiverName()));
     }
 
     // accept friend request

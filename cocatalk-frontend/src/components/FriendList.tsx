@@ -1,10 +1,11 @@
 import type React from "react";
-import { UserPlusIcon, BellIcon } from "@heroicons/react/24/solid";
+import { UserPlusIcon, BellIcon, ChatBubbleLeftIcon, XMarkIcon } from "@heroicons/react/24/solid";
 import { useModal } from "../context/ModalContext";
-import FriendRequestModal from "./FriendRequestModal";
-import PendingRequestsModal from "./PendingRequestsModal";
 import { usePendingRequestsStore } from "../store/pendingRequestsStore";
 import { useFriendsStore } from "../store/friendsStore";
+import FriendRequestModal from "./modals/FriendRequestModal";
+import PendingRequestsModal from "./modals/PendingRequestsModal";
+import RemoveFriendModal from "./modals/RemoveFriendModal";
 
 
 const FriendList: React.FC = () => {
@@ -16,9 +17,9 @@ const FriendList: React.FC = () => {
         <div className="flex flex-col gap-4 p-4">
             {/* Top Controls */}
             <div className="flex items-center gap-3">
-                
+
                 {/* Primary CTA */}
-                <button 
+                <button
                     onClick={() => showModal(<FriendRequestModal />)}
                     className="flex w-full items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-3 py-3 rounded-lg text-sm font-medium transition-all shadow-sm">
                     <UserPlusIcon className="w-5 h-5" />
@@ -49,14 +50,40 @@ const FriendList: React.FC = () => {
                     </p>
                 ) : (
                     friends.map((friend) => (
-                        <button
+                        <div
                             key={friend.id}
-                            className="w-full flex items-center justify-between px-4 py-3 text-left text-sm hover:bg-gray-50 transition"
+                            className="flex items-center justify-between px-4 py-3 text-sm"
                         >
+                            {/* Left: Friend name (you could also add avatar here later) */}
                             <span className="font-medium text-gray-900">
                                 {friend.username}
                             </span>
-                        </button>
+
+                            {/* Right: Actions */}
+                            <div className="flex items-center gap-2">
+                                {/* DM button */}
+                                <button
+                                    onClick={() => {
+                                        // TODO
+                                    }}
+                                    className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 hover:border-gray-300 transition"
+                                >
+                                    <ChatBubbleLeftIcon className="w-4 h-4" />
+                                    <span>DM</span>
+                                </button>
+
+                                {/* Remove button */}
+                                <button
+                                    onClick={() => {
+                                        showModal(<RemoveFriendModal friendId={friend.id} friendName={friend.username}/>)
+                                    }}
+                                    className="inline-flex items-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 hover:border-red-300 transition"
+                                >
+                                    <XMarkIcon className="w-4 h-4" />
+                                    <span>Remove</span>
+                                </button>
+                            </div>
+                        </div>
                     ))
                 )}
             </div>

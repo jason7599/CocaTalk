@@ -1,6 +1,6 @@
 import React from "react";
-import { useModal } from "../context/ModalContext";
-import { useUser } from "../context/UserContext";
+import { useModal } from "../../context/ModalContext";
+import { useUser } from "../../context/UserContext";
 
 const LogoutModal: React.FC = () => {
     const { closeModal } = useModal();
