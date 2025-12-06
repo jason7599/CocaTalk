@@ -1,5 +1,5 @@
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useModal } from "../../context/ModalContext";
 import { useFriendsStore } from "../../store/friendsStore";
 
@@ -12,6 +12,9 @@ const FriendRequestModal: React.FC = () => {
     const friendRequestError = useFriendsStore((s) => s.friendRequestError);
     const friendRequestSuccess = useFriendsStore((s) => s.friendRequestSuccess);
     const sendFriendRequest = useFriendsStore((s) => s.sendFriendRequest);
+    const resetFriendRequestState = useFriendsStore((s) => s.resetFriendRequestState);
+
+    useEffect(() => { resetFriendRequestState(); }, [resetFriendRequestState]);
 
     return (
         <div className="w-100 bg-white rounded-xl">

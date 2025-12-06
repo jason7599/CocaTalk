@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, type ReactNode } from "react";
+import React, { createContext, useState, useContext, type ReactNode, useEffect } from "react";
 
 type ModalContextType = {
     showModal: (content: ReactNode) => void;
@@ -12,6 +12,22 @@ export const ModalProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const showModal = (content: ReactNode) => setModalContent(content);
     const closeModal = () => setModalContent(null);
+
+    useEffect(() => {
+        if (!modalContent) {
+            return;
+        }
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                e.stopPropagation();
+                closeModal();
+            }    
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [modalContent]);
 
     return (
         <ModalContext.Provider value={{ showModal, closeModal }}>

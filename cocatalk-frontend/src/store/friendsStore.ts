@@ -20,6 +20,8 @@ type FriendsState = {
 
     // ** purely client-side helper
     addFriendToList: (friend: UserInfo) => void;
+
+    resetFriendRequestState: () => void;
 };
 
 export const useFriendsStore = create<FriendsState>((set, get) => ({
@@ -95,4 +97,12 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
             if (state.friends.some((f) => f.id === friend.id)) return state;
             return { friends: [...state.friends, friend] };
         }),
+
+    resetFriendRequestState: () => {
+        set({
+            friendRequestError: null,
+            friendRequestSuccess: null,
+            friendRequestSubmitting: false
+        });
+    },
 }));
