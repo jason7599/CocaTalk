@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { FriendRequestSuccessDto, UserInfo } from "../types";
 import { listFriends, sendFriendRequest } from "../api/friendship";
+import { usePendingRequestsStore } from "./pendingRequestsStore";
 
 type FriendsState = {
     friends: UserInfo[];
@@ -80,6 +81,7 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
                         ? state.friends
                         : [...state.friends, friendInfo]
                 }));
+                usePendingRequestsStore.getState().removeFromList(friendInfo.id);
             }
         } catch (err: any) {
             set({ friendRequestError: err?.message ?? "Failed to send friend request" });

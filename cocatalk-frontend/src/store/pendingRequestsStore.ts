@@ -5,25 +5,29 @@ import { useFriendsStore } from "./friendsStore";
 
 type PendingRequestsState = {
     requests: PendingRequest[];
+
     loading: boolean;
     error: string | null;
 
     fetch: () => Promise<void>;
     accept: (senderId: number) => Promise<void>;
     decline: (senderId: number) => Promise<void>;
+
+    removeFromList: (senderId: number) => void;
 };
 
 export const usePendingRequestsStore = create<PendingRequestsState>((set, get) => ({
     requests: [],
+
     loading: false,
     error: null,
     pendingCount: 0,
 
     fetch: async () => {
         try {
-            set({ loading: true, error: null});
+            set({ loading: true, error: null });
             const data = await listPendingRequests();
-            set({requests: data});
+            set({ requests: data });
         } catch (err: any) {
             console.error(err);
             set({ error: err.message });
@@ -45,4 +49,9 @@ export const usePendingRequestsStore = create<PendingRequestsState>((set, get) =
         const updated = get().requests.filter((r) => r.senderId !== senderId);
         set({ requests: updated });
     },
+
+    removeFromList: (senderId: number) => {
+        const updated = get().requests.filter((r) => r.senderId !== senderId);
+        set({ requests: updated });
+    }
 }));
