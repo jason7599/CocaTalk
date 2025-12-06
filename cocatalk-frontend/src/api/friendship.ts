@@ -24,3 +24,7 @@ export async function removeFriendRequest(senderId: number) {
 export async function listFriends() {
     return (await api.get<UserInfo[]>('/friends')).data;
 }
+
+export async function removeFriend(friendId: number) {
+    await api.delete(`/friends/${friendId}`);
+}

@@ -1,11 +1,11 @@
 import { create } from "zustand";
 import type { FriendRequestSuccessDto, UserInfo } from "../types";
-import { listFriends, sendFriendRequest } from "../api/friendship";
+import { listFriends, removeFriend, sendFriendRequest } from "../api/friendship";
 import { usePendingRequestsStore } from "./pendingRequestsStore";
 
 type FriendsState = {
     friends: UserInfo[];
-    
+
     loading: boolean;
     loadError: string | null;
 
@@ -16,10 +16,10 @@ type FriendsState = {
     fetch: () => Promise<void>;
     sendFriendRequest: (username: string) => Promise<void>;
 
+    removeFriend: (friendId: number) => Promise<void>;
+
     // ** purely client-side helper
     addFriendToList: (friend: UserInfo) => void;
-
-    removeFriend: (friendId: number) => Promise<void>;
 };
 
 export const useFriendsStore = create<FriendsState>((set, get) => ({
@@ -46,14 +46,6 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
         }
     },
 
-    // Just a local helper to push a friend into the list
-    addFriendToList: (friend: UserInfo) =>
-        set((state) => {
-            // avoid duplicates
-            if (state.friends.some((f) => f.id === friend.id)) return state;
-            return { friends: [...state.friends, friend] };
-        }),
-
     sendFriendRequest: async (username: string) => {
         const trimmed = username.trim();
         if (!trimmed) {
@@ -71,9 +63,9 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
             // This should return FriendRequestSuccessDto
             const result = await sendFriendRequest(trimmed);
             const { friendInfo, type } = result;
-            
+
             set({ friendRequestSuccess: result });
-            
+
             if (type === "AUTO_ACCEPT") {
                 // Immediately add to friends
                 set((state) => ({
@@ -90,10 +82,17 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
         }
     },
 
-    // TODO: hook up real API
     removeFriend: async (friendId: number) => {
-        // e.g. await deleteFriend(friendId);
+        await removeFriend(friendId);
         const updated = get().friends.filter((f) => f.id !== friendId);
         set({ friends: updated });
     },
+
+    // Just a local helper to push a friend into the list
+    addFriendToList: (friend: UserInfo) =>
+        set((state) => {
+            // avoid duplicates
+            if (state.friends.some((f) => f.id === friend.id)) return state;
+            return { friends: [...state.friends, friend] };
+        }),
 }));
