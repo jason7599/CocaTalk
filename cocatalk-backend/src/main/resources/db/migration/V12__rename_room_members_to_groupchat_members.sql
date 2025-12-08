@@ -1,0 +1,1 @@
+ALTER TABLE room_members RENAME TO groupchat_members;
