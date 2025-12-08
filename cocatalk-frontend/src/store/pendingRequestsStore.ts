@@ -41,7 +41,7 @@ export const usePendingRequestsStore = create<PendingRequestsState>((set, get) =
         const updated = get().requests.filter((r) => r.senderId !== senderId);
         set({ requests: updated });
 
-        useFriendsStore.getState().addFriend(friend);
+        useFriendsStore.getState().addFriendToList(friend);
     },
 
     decline: async (senderId: number) => {
