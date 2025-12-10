@@ -34,5 +34,5 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
     void addUserToRoom(
             @Param("userId") Long userId,
             @Param("roomId") Long roomId,
-            @Param("role") ChatroomRole role);
+            @Param("role") ChatroomMemberRole role);
 }

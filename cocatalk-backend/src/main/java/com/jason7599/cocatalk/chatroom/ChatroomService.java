@@ -13,7 +13,7 @@ public class ChatroomService {
 
     private final ChatroomRepository chatroomRepository;
 
-    public void addUserToRoom(Long userId, Long roomId, ChatroomRole role) {
+    public void addUserToRoom(Long userId, Long roomId, ChatroomMemberRole role) {
         chatroomRepository.addUserToRoom(userId, roomId, role);
     }
 
