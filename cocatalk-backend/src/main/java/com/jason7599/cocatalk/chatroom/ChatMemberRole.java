@@ -1,6 +1,6 @@
 package com.jason7599.cocatalk.chatroom;
 
-public enum ChatroomMemberRole {
+public enum ChatMemberRole {
     MEMBER,
     OWNER,
     ADMIN
