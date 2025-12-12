@@ -1,5 +1,6 @@
 package com.jason7599.cocatalk.chatroom;
 
+import com.jason7599.cocatalk.user.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -35,4 +36,18 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             @Param("userId") Long userId,
             @Param("roomId") Long roomId,
             @Param("role") ChatMemberRole role);
+
+    @Query(value = """
+            SELECT COUNT(*) > 0
+            FROM room_members
+            WHERE user_id = :userId AND room_id = :roomId
+            """, nativeQuery = true)
+    boolean isChatroomMember(@Param("userId") Long userId, @Param("roomId") Long roomId);
+
+    @Query(value = """
+            SELECT u.*
+            FROM room_members r JOIN users u ON r.user_id = u.id
+            WHERE r.room_id = :roomId
+            """, nativeQuery = true)
+    List<UserEntity> getMembers(@Param("roomId") Long roomId);
 }

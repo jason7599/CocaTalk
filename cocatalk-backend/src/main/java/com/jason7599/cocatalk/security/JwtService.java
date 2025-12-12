@@ -7,7 +7,12 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -16,8 +21,12 @@ import java.time.Instant;
 import java.util.Date;
 
 @Service
+@RequiredArgsConstructor
 public class JwtService {
+
     private static final Duration ACCESS_TOKEN_TTL = Duration.ofDays(7);
+
+    private final UserDetailsService userDetailsService; // custom
 
     @Value("${jwt.secret}")
     private String secretBase64;
@@ -59,8 +68,10 @@ public class JwtService {
         }
     }
 
-    public Long extractUserId(String token) {
-        return Long.valueOf(parseClaims(token).getSubject());
+    public Authentication buildAuthentication(String token) {
+        String username = extractUsername(token);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
     }
 
     public String extractUsername(String token) {

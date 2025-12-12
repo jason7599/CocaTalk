@@ -22,3 +22,15 @@ export interface FriendRequestSuccessDto {
     friendInfo: UserInfo;
     type: FriendRequestSuccessType;
 }
+
+export interface MessageRequest {
+    content: string;
+};
+
+export interface MessageResponse {
+    roomId: number;
+    seqNo: number;
+    senderName: string;
+    content: string;
+    createdAt: string;
+};
