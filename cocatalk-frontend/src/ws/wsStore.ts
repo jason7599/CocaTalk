@@ -17,7 +17,7 @@ export const useWsStore = create<WsState>((set, get) => ({
     connect: () => {
         // avoid creating multiple clients
         if (get().client) return;
-
+        
         const client = createStompClient();
 
         client.onConnect = () => {

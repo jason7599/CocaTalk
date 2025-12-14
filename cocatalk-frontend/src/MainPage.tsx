@@ -10,19 +10,19 @@ import { useWsStore } from "./ws/wsStore";
 
 const MainLayout: React.FC = () => {
 
-    const connect = useWsStore((s) => s.connect);
-    const disconnect = useWsStore((s) => s.disconnect);
+    const connectWs = useWsStore((s) => s.connect);
+    const disconnectWs = useWsStore((s) => s.disconnect);
 
     useEffect(() => {
-        connect();
+        connectWs();
 
         usePendingRequestsStore.getState().fetch();
         useFriendsStore.getState().fetch();
 
         return () => {
-            disconnect();
+            disconnectWs();
         };
-    }, [connect, disconnect]);
+    }, [connectWs, disconnectWs]);
 
     return (
         <UserProvider>

@@ -68,6 +68,7 @@ public class FriendshipService {
                 .stream().map(UserInfo::new).toList();
     }
 
+    // TODO: I hate using Object arrays. Maybe consider creating another View interface
     public List<ReceiveFriendRequestDto> listPendingRequests(Long userId) {
         return userRepository.listPendingRequests(userId)
                 .stream().map(row -> {

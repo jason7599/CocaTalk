@@ -1,12 +1,12 @@
 package com.jason7599.cocatalk.chatroom;
 
-import com.jason7599.cocatalk.user.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> {
 
@@ -42,12 +42,45 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             FROM room_members
             WHERE user_id = :userId AND room_id = :roomId
             """, nativeQuery = true)
-    boolean isChatroomMember(@Param("userId") Long userId, @Param("roomId") Long roomId);
+    boolean isChatroomMember(@Param("userId") Long userId,
+                             @Param("roomId") Long roomId);
 
     @Query(value = """
-            SELECT u.*
-            FROM room_members r JOIN users u ON r.user_id = u.id
-            WHERE r.room_id = :roomId
+            SELECT
+                u.id AS id,
+                u.username AS name,
+                rm.role AS role,
+                rm.joined_at AS joinedAt
+            FROM room_members rm JOIN users u ON rm.user_id = u.id
+            WHERE rm.room_id = :roomId
+            ORDER BY u.username
             """, nativeQuery = true)
-    List<UserEntity> getMembers(@Param("roomId") Long roomId);
+    List<ChatMemberInfoView> getMembersInfo(@Param("roomId") Long roomId);
+
+    @Query(value = """
+            SELECT r.*
+            FROM rooms r JOIN direct_rooms dr ON dr.id = r.id
+            WHERE dr.user1_id = LEAST(:userId1, :userId2)
+              AND dr.user2_id = GREATEST(:userId1, :userId2)
+            """, nativeQuery = true)
+    Optional<ChatroomEntity> findDirectChatroom(@Param("userId1") Long userId1,
+                                                @Param("userId2") Long userId2);
+
+    // use in conjunction with save(chatroom).
+    // JPA does not allow 2 separate insertions within one native query method
+    @Modifying
+    @Query(value = """
+            INSERT INTO direct_rooms (room_id, user1_id, user2_id)
+            VALUES (:roomId, :userId1, :userId2)
+            """, nativeQuery = true)
+    void insertDirectChatroom(@Param("roomId") Long roomId,
+                              @Param("userId1") Long userId1,
+                              @Param("userId2") Long userId2);
+
+    @Query(value = """
+            SELECT last_ack
+            FROM room_members
+            WHERE room_id = :roomId AND user_id = :userId
+            """, nativeQuery = true)
+    Long getMyLastAck(@Param("roomId") Long roomId, @Param("userId") Long userId);
 }

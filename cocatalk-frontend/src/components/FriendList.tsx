@@ -7,7 +7,6 @@ import FriendRequestModal from "./modals/FriendRequestModal";
 import PendingRequestsModal from "./modals/PendingRequestsModal";
 import RemoveFriendModal from "./modals/RemoveFriendModal";
 
-
 const FriendList: React.FC = () => {
     const friends = useFriendsStore((s) => s.friends);
     const { showModal } = useModal();
@@ -75,7 +74,7 @@ const FriendList: React.FC = () => {
                                 {/* Remove button */}
                                 <button
                                     onClick={() => {
-                                        showModal(<RemoveFriendModal friendId={friend.id} friendName={friend.username}/>)
+                                        showModal(<RemoveFriendModal friendId={friend.id} friendName={friend.username} />)
                                     }}
                                     className="inline-flex items-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 hover:border-red-300 transition"
                                 >

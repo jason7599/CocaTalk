@@ -1,0 +1,2 @@
+ALTER TABLE room_members
+ALTER COLUMN last_ack SET DEFAULT 0;
