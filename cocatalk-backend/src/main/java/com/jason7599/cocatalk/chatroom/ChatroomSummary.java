@@ -1,11 +1,15 @@
 package com.jason7599.cocatalk.chatroom;
 
 import java.time.Instant;
+import java.util.List;
 
 public record ChatroomSummary(
         Long id,
-        String name,
+        ChatroomType type,
+        String alias,
         String lastMessage,
-        Instant lastMessageAt
+        Instant lastMessageAt,
+        List<String> memberNamesPreview,
+        int totalMemberCount
 ) {
 }

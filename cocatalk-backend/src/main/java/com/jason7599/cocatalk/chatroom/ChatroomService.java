@@ -2,17 +2,18 @@ package com.jason7599.cocatalk.chatroom;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import javax.swing.text.html.Option;
-import java.sql.Timestamp;
-import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class ChatroomService {
+
+    // TODO? Maybe later move this to a dedicated const file
+    public static final int MEMBER_NAME_PREVIEW_LIMIT = 3;
 
     private final ChatroomRepository chatroomRepository;
 
@@ -21,54 +22,68 @@ public class ChatroomService {
     }
 
     public List<ChatroomSummary> loadChatroomSummaries(Long userId) {
-        return chatroomRepository.loadUserChatroomSummaries(userId)
-                .stream().map(row -> {
-                    Long roomId = ((Number) row[0]).longValue();
-                    String roomName = (String) row[1];
-                    String lastMessage = (String) row[2];
-                    Instant lastMessageAt = ((Timestamp) row[3]).toInstant();
 
-                    return new ChatroomSummary(
-                            roomId,
-                            roomName,
-                            lastMessage,
-                            lastMessageAt
-                    );
-                }).toList();
-    }
+        // 1. Basic fetch
+        List<ChatroomSummaryRow> rows = chatroomRepository.fetchChatroomSummaries(userId);
 
-    public List<ChatMemberInfo> getMembersInfo(Long roomId) {
-        return chatroomRepository.getMembersInfo(roomId)
-                .stream().map(v -> new ChatMemberInfo(
-                        v.getId(),
-                        v.getName(),
-                        v.getRole(),
-                        v.getJoinedAt().toInstant()
-                )).toList();
+        // 2. Extract ids for batch fetch
+        Long[] roomIds = rows.stream()
+                .map(ChatroomSummaryRow::getId)
+                .toArray(Long[]::new);
+
+        // 3. Batch fetch member names per room
+        List<ChatMemberNameRow> memberNameRows = chatroomRepository.fetchChatMemberNamesExcept(roomIds, userId);
+
+        // 4. Collect member names & member count for each room
+        Map<Long, List<String>> roomMemberNames = new HashMap<>(); // don't include me
+        Map<Long, Integer> roomMemberCount = new HashMap<>();      // also don't include me
+
+        for (ChatMemberNameRow row : memberNameRows) {
+            Long roomId = row.getRoomId();
+
+            roomMemberCount.merge(roomId, 1, Integer::sum);
+
+            List<String> names = roomMemberNames.computeIfAbsent(
+                    roomId, k -> new ArrayList<>(MEMBER_NAME_PREVIEW_LIMIT));
+
+            if (names.size() < MEMBER_NAME_PREVIEW_LIMIT) {
+                names.add(row.getUsername());
+            }
+        }
+
+        // 5. Map and return final DTO.
+        return rows.stream().map(row -> new ChatroomSummary(
+                row.getId(),
+                row.getType(),
+                row.getAlias(),
+                row.getLastMessage(),
+                row.getLastMessageAt() != null ? row.getLastMessageAt().toInstant() : null,
+                roomMemberNames.getOrDefault(row.getId(), List.of()),
+                roomMemberCount.getOrDefault(row.getId(), 0)
+        )).toList();
     }
 
     public Long getMyLastAck(Long roomId, Long userId) {
         return chatroomRepository.getMyLastAck(roomId, userId);
     }
 
-    @Transactional
-    public ChatroomDetail getOrCreateDirectChatroom(Long myId, Long otherId) {
-        Optional<ChatroomEntity> chatroomOpt = chatroomRepository.findDirectChatroom(myId, otherId);
-        if (chatroomOpt.isPresent()) {
-            ChatroomEntity chatroom = chatroomOpt.get();
-
-            return new ChatroomDetail(
-                    chatroom.getId(),
-                    chatroom.getName(),
-                    chatroom.getType(), // should always be DIRECT, duh
-                    getMembersInfo(chatroom.getId()),
-                    getMyLastAck(chatroom.getId(), myId),
-                    chatroom.getCreatedAt()
-            );
-        }
-
-        ChatroomEntity chatroom = new ChatroomEntity(
-
-        );
-    }
+//    @Transactional
+//    public ChatroomDetail getOrCreateDirectChatroom(Long myId, Long otherId) {
+//        Optional<ChatroomEntity> chatroomOpt = chatroomRepository.findDirectChatroom(myId, otherId);
+//        if (chatroomOpt.isPresent()) {
+//            ChatroomEntity chatroom = chatroomOpt.get();
+//
+//            return new ChatroomDetail(
+//                    chatroom.getId(),
+//                    chatroom.getType(), // should always be DIRECT, duh
+//                    getMembersInfo(chatroom.getId()),
+//                    getMyLastAck(chatroom.getId(), myId),
+//                    chatroom.getCreatedAt()
+//            );
+//        }
+//
+//        ChatroomEntity chatroom = new ChatroomEntity(
+//
+//        );
+//    }
 }

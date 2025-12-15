@@ -1,5 +1,6 @@
 import React from "react";
 import { useChatroomsStore } from "../store/chatroomsStore";
+import { getChatroomDisplayName } from "../utils/chatroomName";
 
 const ChatroomList: React.FC = () => {
     const chatrooms = useChatroomsStore((s) => s.chatrooms);
@@ -24,7 +25,7 @@ const ChatroomList: React.FC = () => {
                         selectedRoomId === chatroom.id ? "bg-red-100" : ""   
                     }`}
                 >
-                    <div className="font-medium">{chatroom.name}</div>
+                    <div className="font-medium">{getChatroomDisplayName(chatroom)}</div>
                     <div className="text-sm text-gray-500">
                         {chatroom.lastMessage ?? "No messages yet"}
                     </div>

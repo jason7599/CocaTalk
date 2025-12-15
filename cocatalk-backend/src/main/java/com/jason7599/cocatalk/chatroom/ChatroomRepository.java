@@ -10,20 +10,33 @@ import java.util.Optional;
 
 public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> {
 
-    // ChatroomSummary
     @Query(value = """
             SELECT
                 r.id AS id,
-                r.name AS name,
+                r.type AS type,
+                rm.alias AS alias,
                 m.content AS lastMessage,
                 r.last_message_at AS lastMessageAt
             FROM rooms r
-            JOIN room_members rm ON r.id = rm.room_id
-            LEFT JOIN messages m ON r.id = m.room_id AND r.last_seq = m.seq_no
+            JOIN room_members rm ON rm.room_id = r.id
+            LEFT JOIN messages m
+                ON m.room_id = r.id
+                AND m.seq_no = r.last_seq
             WHERE rm.user_id = :userId
-            ORDER BY lastMessageAt DESC
+            ORDER BY r.last_message_at DESC
             """, nativeQuery = true)
-    List<Object[]> loadUserChatroomSummaries(@Param("userId") Long userId);
+    List<ChatroomSummaryRow> fetchChatroomSummaries(@Param("userId") Long userId);
+
+    @Query(value = """
+            SELECT
+                rm.room_id AS roomId,
+                u.username AS username,
+            FROM room_members rm JOIN users u ON rm.user_id = u.id
+            WHERE rm.id = ANY(:roomIds) AND u.id <> :userId
+            ORDER BY rm.joined_at
+            """, nativeQuery = true)
+    List<ChatMemberNameRow> fetchChatMemberNamesExcept(@Param("roomIds") Long[] roomIds,
+                                                       @Param("userId") Long userId);
 
     @Modifying
     @Query(value = """
@@ -46,18 +59,6 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
                              @Param("roomId") Long roomId);
 
     @Query(value = """
-            SELECT
-                u.id AS id,
-                u.username AS name,
-                rm.role AS role,
-                rm.joined_at AS joinedAt
-            FROM room_members rm JOIN users u ON rm.user_id = u.id
-            WHERE rm.room_id = :roomId
-            ORDER BY u.username
-            """, nativeQuery = true)
-    List<ChatMemberInfoView> getMembersInfo(@Param("roomId") Long roomId);
-
-    @Query(value = """
             SELECT r.*
             FROM rooms r JOIN direct_rooms dr ON dr.id = r.id
             WHERE dr.user1_id = LEAST(:userId1, :userId2)
@@ -73,7 +74,7 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             INSERT INTO direct_rooms (room_id, user1_id, user2_id)
             VALUES (:roomId, :userId1, :userId2)
             """, nativeQuery = true)
-    void insertDirectChatroom(@Param("roomId") Long roomId,
+    void setDirectChatroom(@Param("roomId") Long roomId,
                               @Param("userId1") Long userId1,
                               @Param("userId2") Long userId2);
 
@@ -83,4 +84,5 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             WHERE room_id = :roomId AND user_id = :userId
             """, nativeQuery = true)
     Long getMyLastAck(@Param("roomId") Long roomId, @Param("userId") Long userId);
+
 }

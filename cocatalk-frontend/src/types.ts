@@ -1,8 +1,13 @@
+export type ChatroomType = "DIRECT" | "GROUP";
+
 export interface ChatroomSummary {
     id: number;
-    name: string;
+    type: ChatroomType;
+    alias: string | null;
     lastMessage: string | null;
     lastMessageAt: string | null;
+    memberNamesPreview: string[];
+    totalMemberCount: number;
 };
 
 export interface PendingRequest {
