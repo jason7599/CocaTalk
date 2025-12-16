@@ -1,13 +1,10 @@
-import type { ChatroomSummary } from "../types";
+import type { ChatroomSummary, DirectChatroomRequest } from "../types";
 import api from "./api";
 
-// todo: refac error handling
 export async function loadChatrooms(): Promise<ChatroomSummary[]> {
-    const res = await api.get('/chatrooms');
-    return res.data;
+    return (await api.get('/chatrooms')).data;
 };
 
-export async function createRoom(name: string | null): Promise<ChatroomSummary> {
-    const res = await api.post('/chatrooms/create', { name });
-    return res.data;
-}
+export async function getOrCreateDirectChatroom(request: DirectChatroomRequest): Promise<ChatroomSummary> {
+    return (await api.post('/chatrooms/direct', request)).data;
+} 

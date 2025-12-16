@@ -1,13 +1,14 @@
 package com.jason7599.cocatalk.chatroom;
 
+import com.jason7599.cocatalk.user.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatroomService {
@@ -16,9 +17,10 @@ public class ChatroomService {
     public static final int MEMBER_NAME_PREVIEW_LIMIT = 3;
 
     private final ChatroomRepository chatroomRepository;
+    private final UserRepository userRepository;
 
     public void addUserToRoom(Long userId, Long roomId, ChatMemberRole role) {
-        chatroomRepository.addUserToRoom(userId, roomId, role);
+        chatroomRepository.addUserToRoom(roomId, userId, role);
     }
 
     public List<ChatroomSummary> loadChatroomSummaries(Long userId) {
@@ -58,6 +60,7 @@ public class ChatroomService {
                 row.getAlias(),
                 row.getLastMessage(),
                 row.getLastMessageAt() != null ? row.getLastMessageAt().toInstant() : null,
+                row.getCreatedAt().toInstant(),
                 roomMemberNames.getOrDefault(row.getId(), List.of()),
                 roomMemberCount.getOrDefault(row.getId(), 0)
         )).toList();
@@ -67,23 +70,40 @@ public class ChatroomService {
         return chatroomRepository.getMyLastAck(roomId, userId);
     }
 
-//    @Transactional
-//    public ChatroomDetail getOrCreateDirectChatroom(Long myId, Long otherId) {
-//        Optional<ChatroomEntity> chatroomOpt = chatroomRepository.findDirectChatroom(myId, otherId);
-//        if (chatroomOpt.isPresent()) {
-//            ChatroomEntity chatroom = chatroomOpt.get();
-//
-//            return new ChatroomDetail(
-//                    chatroom.getId(),
-//                    chatroom.getType(), // should always be DIRECT, duh
-//                    getMembersInfo(chatroom.getId()),
-//                    getMyLastAck(chatroom.getId(), myId),
-//                    chatroom.getCreatedAt()
-//            );
-//        }
-//
-//        ChatroomEntity chatroom = new ChatroomEntity(
-//
-//        );
-//    }
+    @Transactional
+    public ChatroomSummary getOrCreateDirectChatroom(Long myId, Long otherId) {
+        Optional<ChatroomEntity> chatroomOpt = chatroomRepository.findDirectChatroom(myId, otherId);
+        if (chatroomOpt.isPresent()) {
+            ChatroomEntity chatroom = chatroomOpt.get();
+
+            return new ChatroomSummary(
+                    chatroom.getId(),
+                    chatroom.getType(),
+                    chatroomRepository.getAlias(chatroom.getId(), myId),
+                    chatroomRepository.getLastMessage(chatroom.getId()),
+                    chatroom.getLastMessageAt(),
+                    chatroom.getCreatedAt(),
+                    List.of(userRepository.findById(otherId).orElseThrow().getUsername()),
+                    1
+            );
+        }
+
+        ChatroomEntity chatroom = chatroomRepository.save(new ChatroomEntity(ChatroomType.DIRECT));
+
+        chatroomRepository.setDirectChatroom(chatroom.getId(), myId, otherId);
+
+        chatroomRepository.addUserToRoom(chatroom.getId(), myId, ChatMemberRole.MEMBER);
+        chatroomRepository.addUserToRoom(chatroom.getId(), otherId, ChatMemberRole.MEMBER);
+
+        return new ChatroomSummary(
+                chatroom.getId(),
+                ChatroomType.DIRECT,
+                null,
+                null,
+                null,
+                chatroom.getCreatedAt(),
+                List.of(userRepository.findById(otherId).orElseThrow().getUsername()),
+                1
+        );
+    }
 }

@@ -17,6 +17,7 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
                 rm.alias AS alias,
                 m.content AS lastMessage,
                 r.last_message_at AS lastMessageAt
+                r.created_at AS createdAt
             FROM rooms r
             JOIN room_members rm ON rm.room_id = r.id
             LEFT JOIN messages m
@@ -41,13 +42,13 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
     @Modifying
     @Query(value = """
             INSERT INTO room_members(room_id, user_id, last_ack, role)
-            SELECT :roomId, :userId, last_seq, :role
+            SELECT :roomId, :userId, last_seq, :#{#role.name()}
             FROM rooms
             WHERE id = :roomId
             """, nativeQuery = true)
     void addUserToRoom(
-            @Param("userId") Long userId,
             @Param("roomId") Long roomId,
+            @Param("userId") Long userId,
             @Param("role") ChatMemberRole role);
 
     @Query(value = """
@@ -55,12 +56,12 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             FROM room_members
             WHERE user_id = :userId AND room_id = :roomId
             """, nativeQuery = true)
-    boolean isChatroomMember(@Param("userId") Long userId,
-                             @Param("roomId") Long roomId);
+    boolean isChatroomMember(@Param("roomId") Long roomId,
+                             @Param("userId") Long userId);
 
     @Query(value = """
             SELECT r.*
-            FROM rooms r JOIN direct_rooms dr ON dr.id = r.id
+            FROM rooms r JOIN direct_rooms dr ON dr.room_id = r.id
             WHERE dr.user1_id = LEAST(:userId1, :userId2)
               AND dr.user2_id = GREATEST(:userId1, :userId2)
             """, nativeQuery = true)
@@ -72,11 +73,21 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
     @Modifying
     @Query(value = """
             INSERT INTO direct_rooms (room_id, user1_id, user2_id)
-            VALUES (:roomId, :userId1, :userId2)
+            VALUES (:roomId, LEAST(:userId1, :userId2), GREATEST(:userId1, :userId2))
             """, nativeQuery = true)
     void setDirectChatroom(@Param("roomId") Long roomId,
                               @Param("userId1") Long userId1,
                               @Param("userId2") Long userId2);
+
+    @Query(value = """
+            SELECT m.content
+            FROM rooms r
+            LEFT JOIN messages m
+                ON r.id = m.room_id
+                AND r.last_seq = m.seq_no
+            WHERE r.id = :roomId
+            """, nativeQuery = true)
+    String getLastMessage(@Param("roomId") Long roomId);
 
     @Query(value = """
             SELECT last_ack
@@ -85,4 +96,10 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             """, nativeQuery = true)
     Long getMyLastAck(@Param("roomId") Long roomId, @Param("userId") Long userId);
 
+    @Query(value = """
+            SELECT alias
+            FROM room_members
+            WHERE room_id = :roomId AND user_id = :userId
+            """, nativeQuery = true)
+    String getAlias(@Param("roomId") Long roomId, @Param("userId") Long userId);
 }

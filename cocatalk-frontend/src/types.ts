@@ -6,8 +6,9 @@ export interface ChatroomSummary {
     alias: string | null;
     lastMessage: string | null;
     lastMessageAt: string | null;
+    createdAt: string;
     memberNamesPreview: string[];
-    totalMemberCount: number;
+    otherMemberCount: number;
 };
 
 export interface PendingRequest {
@@ -38,4 +39,8 @@ export interface MessageResponse {
     senderName: string;
     content: string;
     createdAt: string;
+};
+
+export interface DirectChatroomRequest {
+    otherUserId: number;
 };

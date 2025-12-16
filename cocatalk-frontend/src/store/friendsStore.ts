@@ -19,7 +19,7 @@ type FriendsState = {
     removeFriend: (friendId: number) => Promise<void>;
 
     // ** purely client-side helper
-    addFriendToList: (friend: UserInfo) => void;
+    upsertFriend: (friend: UserInfo) => void;
 
     resetFriendRequestState: () => void;
 };
@@ -91,7 +91,7 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
     },
 
     // Just a local helper to push a friend into the list
-    addFriendToList: (friend: UserInfo) =>
+    upsertFriend: (friend: UserInfo) =>
         set((state) => {
             // avoid duplicates
             if (state.friends.some((f) => f.id === friend.id)) return state;

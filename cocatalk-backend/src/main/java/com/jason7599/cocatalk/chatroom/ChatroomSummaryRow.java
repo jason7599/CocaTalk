@@ -10,4 +10,5 @@ public interface ChatroomSummaryRow {
     String getAlias();
     String getLastMessage();
     Timestamp getLastMessageAt();
+    Timestamp getCreatedAt();
 }

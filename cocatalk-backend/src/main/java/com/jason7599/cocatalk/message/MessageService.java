@@ -15,7 +15,7 @@ public class MessageService {
 
     public MessageResponse sendMessage(Long roomId, Long userId, String username, MessageRequest request) {
 
-        if (!chatroomRepository.isChatroomMember(userId, roomId)) {
+        if (!chatroomRepository.isChatroomMember(roomId, userId)) {
             throw new ApiError(HttpStatus.FORBIDDEN, "Attempt to send message in an unjoined room");
         }
 

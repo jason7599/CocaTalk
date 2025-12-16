@@ -31,4 +31,7 @@ public class ChatroomEntity {
     @Column(insertable = false)
     private Instant createdAt;
 
+    public ChatroomEntity(ChatroomType type) {
+        this.type = type;
+    }
 }

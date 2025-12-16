@@ -9,7 +9,8 @@ public record ChatroomSummary(
         String alias,
         String lastMessage,
         Instant lastMessageAt,
+        Instant createdAt,
         List<String> memberNamesPreview,
-        int totalMemberCount
+        int otherMemberCount
 ) {
 }

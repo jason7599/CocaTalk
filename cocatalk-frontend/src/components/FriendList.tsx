@@ -6,9 +6,11 @@ import { useFriendsStore } from "../store/friendsStore";
 import FriendRequestModal from "./modals/FriendRequestModal";
 import PendingRequestsModal from "./modals/PendingRequestsModal";
 import RemoveFriendModal from "./modals/RemoveFriendModal";
+import { useChatroomsStore } from "../store/chatroomsStore";
 
 const FriendList: React.FC = () => {
     const friends = useFriendsStore((s) => s.friends);
+    const openDirectChatroom = useChatroomsStore((s) => s.openDirectChatroom);
     const { showModal } = useModal();
     const pendingRequestCount = usePendingRequestsStore((s) => s.requests.length);
 
@@ -53,7 +55,6 @@ const FriendList: React.FC = () => {
                             key={friend.id}
                             className="flex items-center justify-between px-4 py-3 text-sm"
                         >
-                            {/* Left: Friend name (you could also add avatar here later) */}
                             <span className="font-medium text-gray-900">
                                 {friend.username}
                             </span>
@@ -63,7 +64,7 @@ const FriendList: React.FC = () => {
                                 {/* DM button */}
                                 <button
                                     onClick={() => {
-                                        // TODO
+                                        openDirectChatroom(friend.id);
                                     }}
                                     className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 hover:border-gray-300 transition"
                                 >
