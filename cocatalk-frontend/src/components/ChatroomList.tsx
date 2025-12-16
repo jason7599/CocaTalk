@@ -30,9 +30,7 @@ const ChatroomList: React.FC = () => {
                         {chatroom.lastMessage ?? "No messages yet"}
                     </div>
                     <div className="text-xs text-gray-400">
-                        {chatroom.lastMessageAt
-                            ? new Date(chatroom.lastMessageAt).toLocaleString()
-                            : ""}
+                        {new Date(chatroom.lastMessageAt).toLocaleString()}
                     </div>
                 </div>
             ))}

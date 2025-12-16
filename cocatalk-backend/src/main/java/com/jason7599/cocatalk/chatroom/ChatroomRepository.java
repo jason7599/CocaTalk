@@ -16,7 +16,7 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
                 r.type AS type,
                 rm.alias AS alias,
                 m.content AS lastMessage,
-                r.last_message_at AS lastMessageAt
+                r.last_message_at AS lastMessageAt,
                 r.created_at AS createdAt
             FROM rooms r
             JOIN room_members rm ON rm.room_id = r.id
@@ -31,9 +31,9 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
     @Query(value = """
             SELECT
                 rm.room_id AS roomId,
-                u.username AS username,
+                u.username AS username
             FROM room_members rm JOIN users u ON rm.user_id = u.id
-            WHERE rm.id = ANY(:roomIds) AND u.id <> :userId
+            WHERE rm.room_id = ANY(:roomIds) AND u.id <> :userId
             ORDER BY rm.joined_at
             """, nativeQuery = true)
     List<ChatMemberNameRow> fetchChatMemberNamesExcept(@Param("roomIds") Long[] roomIds,

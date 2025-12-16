@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { usePendingRequestsStore } from "./store/pendingRequestsStore";
 import { useFriendsStore } from "./store/friendsStore";
 import { useWsStore } from "./ws/wsStore";
+import { useChatroomsStore } from "./store/chatroomsStore";
 
 const MainLayout: React.FC = () => {
 
@@ -18,6 +19,7 @@ const MainLayout: React.FC = () => {
 
         usePendingRequestsStore.getState().fetch();
         useFriendsStore.getState().fetch();
+        useChatroomsStore.getState().fetch();
 
         return () => {
             disconnectWs();

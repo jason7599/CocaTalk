@@ -50,8 +50,8 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
             return {
                 chatrooms: [room, ...s.chatrooms].sort(
                     (a, b) =>
-                        new Date(b.lastMessageAt || 0).getTime() -
-                        new Date(a.lastMessageAt || 0).getTime()
+                        new Date(b.lastMessageAt).getTime() -
+                        new Date(a.lastMessageAt).getTime()
                 )
             };
         })
@@ -74,7 +74,7 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
         const updated =
             get().chatrooms
                 .map((r) => (r.id === roomId ? { ...r, ...updates } : r))
-                .sort((a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime());
+                .sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
 
         set({ chatrooms: updated });
     },
@@ -85,14 +85,15 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
     },
 
     fetch: async (): Promise<void> => {
+
         set({ loading: true, error: null });
         try {
             const data = await loadChatrooms();
 
             const sorted = [...data].sort(
                 (a, b) =>
-                    new Date(b.lastMessageAt || 0).getTime() -
-                    new Date(a.lastMessageAt || 0).getTime()
+                    new Date(b.lastMessageAt).getTime() -
+                    new Date(a.lastMessageAt).getTime()
             );
 
             set({ chatrooms: sorted, loading: false });

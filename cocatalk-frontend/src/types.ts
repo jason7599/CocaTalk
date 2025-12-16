@@ -5,7 +5,7 @@ export interface ChatroomSummary {
     type: ChatroomType;
     alias: string | null;
     lastMessage: string | null;
-    lastMessageAt: string | null;
+    lastMessageAt: string;
     createdAt: string;
     memberNamesPreview: string[];
     otherMemberCount: number;

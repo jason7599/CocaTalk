@@ -59,7 +59,7 @@ public class ChatroomService {
                 row.getType(),
                 row.getAlias(),
                 row.getLastMessage(),
-                row.getLastMessageAt() != null ? row.getLastMessageAt().toInstant() : null,
+                row.getLastMessageAt().toInstant(),
                 row.getCreatedAt().toInstant(),
                 roomMemberNames.getOrDefault(row.getId(), List.of()),
                 roomMemberCount.getOrDefault(row.getId(), 0)

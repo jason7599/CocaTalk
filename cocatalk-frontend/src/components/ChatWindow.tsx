@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { EllipsisVerticalIcon, PaperAirplaneIcon, UserPlusIcon } from "@heroicons/react/24/outline";
 import { useChatroomsStore } from "../store/chatroomsStore";
+import { getChatroomDisplayName } from "../utils/chatroomName";
 
 const ChatWindow: React.FC = () => {
     
@@ -53,7 +54,7 @@ const ChatWindow: React.FC = () => {
             {/* TOP BAR */}
             <div className="flex h-24 items-center justify-between p-4 border-b bg-white">
                 <div>
-                    <h2 className="text-lg font-semibold">{selectedChatroom.name}</h2>
+                    <h2 className="text-lg font-semibold">{getChatroomDisplayName(selectedChatroom)}</h2>
                 </div>
 
                 <div>
