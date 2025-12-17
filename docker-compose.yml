@@ -1,10 +1,10 @@
 services:
   frontend:
-    build: ./cocatalk-frontend
+    build: ./frontend
     ports:
       - "5173:5173"
     volumes:
-      - ./cocatalk-frontend:/app
+      - ./frontend:/app
       - node_modules:/app/node_modules
     depends_on:
       - db
