@@ -35,9 +35,11 @@ public class ChatWsController {
                 request
         );
 
+        // This is for the users connected to topic/room.%d = users who have this chat window open
         messagingTemplate.convertAndSend("/topic/room.%d".formatted(roomId), messageResponse);
 
         // TODO: fanout notification, /user/queue/...
+        // This is for the other members, for the sidebar update.
         Set<Long> members = membershipCache.getMembers(roomId);
     }
 }
