@@ -29,7 +29,7 @@ build/
 !**/src/test/**/build/
 
 # Spring config
-application.properties
+# application.properties
 
 # ----------------------------
 # IDE / Editors
@@ -80,5 +80,6 @@ Thumbs.db
 # ----------------------------
 
 .env
+.env.local
 *.keystore
 *.jks
