@@ -26,8 +26,8 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
                 created_at AS createdAt
             """, nativeQuery = true)
     MessageResponseView insertMessage(@Param("roomId") Long roomId,
-                             @Param("userId") Long userId,
-                             @Param("content") String content);
+                                      @Param("userId") Long userId,
+                                      @Param("content") String content);
 
     @Override
     @Deprecated // DONT USE

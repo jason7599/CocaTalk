@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> {
 
@@ -27,6 +28,13 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             ORDER BY r.last_message_at DESC
             """, nativeQuery = true)
     List<ChatroomSummaryRow> fetchChatroomSummaries(@Param("userId") Long userId);
+
+    @Query(value = """
+            SELECT user_id
+            FROM room_members
+            WHERE room_id = :roomId
+            """, nativeQuery = true)
+    Set<Long> getMembersId(@Param("roomId") Long roomId);
 
     @Query(value = """
             SELECT

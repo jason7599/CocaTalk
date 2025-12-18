@@ -12,12 +12,15 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 
+import java.util.Set;
+
 @Controller
 @RequiredArgsConstructor
 public class ChatWsController {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final MessageService messageService;
+    private final RoomMembershipCache membershipCache;
 
     @MessageMapping("/chat.send.{roomId}")
     public void sendMessage(
@@ -35,5 +38,6 @@ public class ChatWsController {
         messagingTemplate.convertAndSend("/topic/room.%d".formatted(roomId), messageResponse);
 
         // TODO: fanout notification, /user/queue/...
+        Set<Long> members = membershipCache.getMembers(roomId);
     }
 }
