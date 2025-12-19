@@ -1,5 +1,6 @@
 package com.jason7599.cocatalk.chat;
 
+import com.jason7599.cocatalk.message.MessagePreview;
 import com.jason7599.cocatalk.message.MessageRequest;
 import com.jason7599.cocatalk.message.MessageResponse;
 import com.jason7599.cocatalk.message.MessageService;
@@ -12,7 +13,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 
-import java.util.Set;
+import java.time.Instant;
 
 @Controller
 @RequiredArgsConstructor
@@ -20,7 +21,7 @@ public class ChatWsController {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final MessageService messageService;
-    private final RoomMembershipCache membershipCache;
+    private final RoomMembershipService membershipCache;
 
     @MessageMapping("/chat.send.{roomId}")
     public void sendMessage(
@@ -38,8 +39,22 @@ public class ChatWsController {
         // This is for the users connected to topic/room.%d = users who have this chat window open
         messagingTemplate.convertAndSend("/topic/room.%d".formatted(roomId), messageResponse);
 
-        // TODO: fanout notification, /user/queue/...
-        // This is for the other members, for the sidebar update.
-        Set<Long> members = membershipCache.getMembers(roomId);
+        // fanout notification, /user/queue/...
+        // This is for the sidebar updates.
+        // TODO: this might get heavy. Maybe consider delegating to a message broker
+        for (Long memberId : membershipCache.loadMemberIds(roomId)) {
+            if (!memberId.equals(userDetails.getId())) {
+                messagingTemplate.convertAndSendToUser(
+                        userDetails.getUsername(),
+                        "/queue/notifications",
+                        new MessagePreview(
+                                roomId,
+                                userDetails.getUsername(),
+                                request.content(),
+                                Instant.now()
+                        )
+                );
+            }
+        }
     }
 }

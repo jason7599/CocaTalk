@@ -107,7 +107,7 @@ public class ChatroomService {
         );
     }
 
-    public Set<Long> getMembersId(Long roomId) {
+    public Set<Long> getMemberIds(Long roomId) {
         return chatroomRepository.getMembersId(roomId);
     }
 }

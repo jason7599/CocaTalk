@@ -16,7 +16,7 @@ public class MessageService {
     public MessageResponse sendMessage(Long roomId, Long userId, String username, MessageRequest request) {
 
         if (!chatroomRepository.isChatroomMember(roomId, userId)) {
-            throw new ApiError(HttpStatus.FORBIDDEN, "Attempt to send message in an unjoined room");
+            throw new ApiError(HttpStatus.FORBIDDEN, "Attempt to send message in a room not a member of");
         }
 
         // This step and this DTO are required to map Timestamp -> Instant

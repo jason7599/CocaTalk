@@ -1,5 +1,9 @@
 package com.jason7599.cocatalk.security;
 
+import com.jason7599.cocatalk.exception.ApiError;
+import com.jason7599.cocatalk.user.UserEntity;
+import com.jason7599.cocatalk.user.UserInfoService;
+import com.jason7599.cocatalk.user.UserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
@@ -9,6 +13,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,7 +31,7 @@ public class JwtService {
 
     private static final Duration ACCESS_TOKEN_TTL = Duration.ofDays(7);
 
-    private final UserDetailsService userDetailsService; // custom
+    private final UserRepository userRepository;
 
     @Value("${jwt.secret}")
     private String secretBase64;
@@ -69,9 +74,17 @@ public class JwtService {
     }
 
     public Authentication buildAuthentication(String token) {
-        String username = extractUsername(token);
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        Long id = extractUserId(token);
+
+        UserEntity user = userRepository.findById(id)
+                .orElseThrow(() -> new ApiError(HttpStatus.FORBIDDEN, "userid not found"));
+
+        UserDetails userDetails = new CustomUserDetails(user);
         return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+    }
+
+    public Long extractUserId(String token) {
+        return Long.valueOf(parseClaims(token).getSubject());
     }
 
     public String extractUsername(String token) {

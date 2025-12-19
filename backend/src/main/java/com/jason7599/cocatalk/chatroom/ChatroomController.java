@@ -4,6 +4,7 @@ import com.jason7599.cocatalk.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class ChatroomController {
 
     @GetMapping
     public ResponseEntity<List<ChatroomSummary>> loadChatroomSummaries(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        System.out.println(SecurityContextHolder.getContext().getAuthentication().getName());
         return ResponseEntity.ok(chatroomService.loadChatroomSummaries(userDetails.getId()));
     }
 
