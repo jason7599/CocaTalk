@@ -10,6 +10,7 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 
@@ -26,8 +27,10 @@ public class ChatWsController {
     @MessageMapping("/chat.send.{roomId}")
     public void sendMessage(
             @DestinationVariable Long roomId,
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Payload MessageRequest request) {
+            @Payload MessageRequest request,
+            Authentication authentication) {
+
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
         MessageResponse messageResponse = messageService.sendMessage(
                 roomId,
@@ -37,7 +40,7 @@ public class ChatWsController {
         );
 
         // This is for the users connected to topic/room.%d = users who have this chat window open
-        messagingTemplate.convertAndSend("/topic/room.%d".formatted(roomId), messageResponse);
+        messagingTemplate.convertAndSend("/topic/rooms.%d".formatted(roomId), messageResponse);
 
         // fanout notification, /user/queue/...
         // This is for the sidebar updates.

@@ -8,19 +8,14 @@ const FriendRequestModal: React.FC = () => {
 
     const [username, setUsername] = useState("");
 
-    const friendRequestSubmitting = useFriendsStore((s) => s.friendRequestSubmitting);
-    const friendRequestError = useFriendsStore((s) => s.friendRequestError);
-    const friendRequestSuccess = useFriendsStore((s) => s.friendRequestSuccess);
     const sendFriendRequest = useFriendsStore((s) => s.sendFriendRequest);
-    const resetFriendRequestState = useFriendsStore((s) => s.resetFriendRequestState);
-
-    useEffect(() => { resetFriendRequestState(); }, [resetFriendRequestState]);
+    const friendRequestState = useFriendsStore((s) => s.friendRequestState);
 
     return (
         <div className="w-100 bg-white rounded-xl">
             <h2 className="text-lg font-semibold mb-2">Add Friend</h2>
             <p className="text-s text-gray-500 mb-4">
-                Enter your friend&apos;s username to send a request.
+                Enter your friend's username to send a request.
             </p>
 
             <form onSubmit={(e) => {
@@ -38,16 +33,16 @@ const FriendRequestModal: React.FC = () => {
                         placeholder="Username"
                         autoFocus
                     />
-                    {friendRequestError && (
+                    {friendRequestState.error && (
                         <p className="mt-1 text-sm text-red-500">
-                            {friendRequestError}
+                            {friendRequestState.error}
                         </p>
                     )}
-                    {friendRequestSuccess && (
+                    {friendRequestState.success && (
                         <p className={"mt-1 text-sm text-green-600"}>
-                            {friendRequestSuccess.type == "SENT"
+                            {friendRequestState.success.type == "SENT"
                                 ? "Successfully sent!"
-                                : `You are now friends with ${friendRequestSuccess.friendInfo.username}`
+                                : `You are now friends with ${friendRequestState.success.friendInfo.username}`
                             }
                         </p>
                     )}
@@ -58,16 +53,16 @@ const FriendRequestModal: React.FC = () => {
                         type="button"
                         onClick={closeModal}
                         className="px-3 py-2 text-sm rounded hover:bg-gray-100"
-                        disabled={friendRequestSubmitting}
+                        disabled={friendRequestState.submitting}
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
                         className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-60 disabled:cursor-not-allowed"
-                        disabled={friendRequestSubmitting}
+                        disabled={friendRequestState.submitting}
                     >
-                        {friendRequestSubmitting ? "Sending..." : "Send Request"}
+                        {friendRequestState.submitting ? "Sending..." : "Send Request"}
                     </button>
                 </div>
             </form>

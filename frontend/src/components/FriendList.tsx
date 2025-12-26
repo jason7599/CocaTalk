@@ -13,6 +13,7 @@ const FriendList: React.FC = () => {
     const openDirectChatroom = useChatroomsStore((s) => s.openDirectChatroom);
     const { showModal } = useModal();
     const pendingRequestCount = usePendingRequestsStore((s) => s.requests.length);
+    const setActiveRoomId = useChatroomsStore((s) => s.setActiveRoomId);
 
     return (
         <div className="flex flex-col gap-4 p-4">
@@ -63,8 +64,9 @@ const FriendList: React.FC = () => {
                             <div className="flex items-center gap-2">
                                 {/* DM button */}
                                 <button
-                                    onClick={() => {
-                                        openDirectChatroom(friend.id);
+                                    onClick={async () => {
+                                        const room = await openDirectChatroom(friend.id);
+                                        setActiveRoomId(room ? room.id : null);
                                     }}
                                     className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 hover:border-gray-300 transition"
                                 >

@@ -1,105 +1,99 @@
 import { create } from "zustand";
-import type { ChatroomSummary } from "../types"
+import type { ChatroomSummary } from "../types";
 import { getOrCreateDirectChatroom, loadChatrooms } from "../api/chatrooms";
 
 type ChatroomsState = {
     chatrooms: ChatroomSummary[];
+
+    activeRoomId: number | null;
+
     loading: boolean;
     error: string | null;
 
-    selectedChatroomId: number | null;
+    // "reducers" (pure-ish)
+    setAll: (rooms: ChatroomSummary[]) => void;
+    upsert: (room: ChatroomSummary) => void;
+    update: (roomId: number, updates: Partial<ChatroomSummary>) => void;
+    remove: (roomId: number) => void;
 
-    selectChatroom: (roomId: number | null) => void;
-    addChatroom: (roomName: string | null) => Promise<void>;
-    upsertChatroom: (room: ChatroomSummary) => void;
-    openDirectChatroom: (otherUserId: number) => Promise<void>;
-    updateChatroom: (roomId: number, updates: Partial<ChatroomSummary>) => void;
-    removeChatroom: (roomId: number) => void;
+    setActiveRoomId: (roomId: number | null) => void;
+
+    // "commands" (async, call API then reducers)
     fetch: () => Promise<void>;
+    openDirectChatroom: (otherUserId: number) => Promise<ChatroomSummary | null>;
+
+    // "WS reducer" (called by websocket notification handler)
+    applyRoomActivity: (room: ChatroomSummary) => void;
+};
+
+function sortByLastMessageAtDesc(rooms: ChatroomSummary[]) {
+    return [...rooms].sort(
+        (a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()
+    );
 }
 
 export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
     chatrooms: [],
+    activeRoomId: null,
     loading: false,
     error: null,
-    selectedChatroomId: null,
 
-    selectChatroom: (roomId: number | null): void => {
-        set({ selectedChatroomId: roomId });
-    },
+    setAll: (rooms) => set({ chatrooms: sortByLastMessageAtDesc(rooms) }),
 
-    addChatroom: async (roomName: string | null): Promise<void> => {
-        // set({ loading: true, error: null });
-        // try {
-        //     const newRoom = await createRoom(roomName);
-
-        //     set((s) => ({
-        //         chatrooms: [newRoom, ...s.chatrooms],
-        //         loading: false,
-        //         selectedChatroomId: newRoom.id
-        //     }));
-        // } catch (err: any) {
-        //     set({ error: err.message, loading: false });
-        // }
-    },
-
-    upsertChatroom: (room: ChatroomSummary): void => {
+    upsert: (room) =>
         set((s) => {
-            if (s.chatrooms.some((r) => r.id === room.id)) return s;
+            const exists = s.chatrooms.some((r) => r.id === room.id);
+            const merged = exists ? s.chatrooms : [room, ...s.chatrooms];
+            return { chatrooms: sortByLastMessageAtDesc(merged) };
+        }),
 
-            return {
-                chatrooms: [room, ...s.chatrooms].sort(
-                    (a, b) =>
-                        new Date(b.lastMessageAt).getTime() -
-                        new Date(a.lastMessageAt).getTime()
-                )
-            };
-        })
+    update: (roomId, updates) =>
+        set((s) => ({
+            chatrooms: sortByLastMessageAtDesc(
+                s.chatrooms.map((r) => (r.id === roomId ? { ...r, ...updates } : r))
+            ),
+        })),
+
+    remove: (roomId) =>
+        set((s) => ({
+            chatrooms: s.chatrooms.filter((r) => r.id !== roomId),
+        })),
+
+    setActiveRoomId: (roomId: number | null) => {
+        // console.log(`setActiveRoomId(${roomId})`);
+        set({activeRoomId: roomId});
     },
 
-    openDirectChatroom: async (otherUserId: number): Promise<void> => {
+    fetch: async () => {
         set({ loading: true, error: null });
         try {
-            const room = await getOrCreateDirectChatroom({ otherUserId });
-            get().upsertChatroom(room);
-            get().selectChatroom(room.id);
+            const data = await loadChatrooms();
+            get().setAll(data);
         } catch (err: any) {
-            set({ error: err.message });
+            console.error(err);
+            set({ error: err.message ?? "Failed to load chatrooms" });
         } finally {
             set({ loading: false });
         }
     },
 
-    updateChatroom: (roomId: number, updates: Partial<ChatroomSummary>): void => {
-        const updated =
-            get().chatrooms
-                .map((r) => (r.id === roomId ? { ...r, ...updates } : r))
-                .sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
-
-        set({ chatrooms: updated });
-    },
-
-    removeChatroom: (roomId: number): void => {
-        const updated = get().chatrooms.filter((r) => r.id !== roomId);
-        set({ chatrooms: updated });
-    },
-
-    fetch: async (): Promise<void> => {
-
+    openDirectChatroom: async (otherUserId: number) => {
         set({ loading: true, error: null });
         try {
-            const data = await loadChatrooms();
-
-            const sorted = [...data].sort(
-                (a, b) =>
-                    new Date(b.lastMessageAt).getTime() -
-                    new Date(a.lastMessageAt).getTime()
-            );
-
-            set({ chatrooms: sorted, loading: false });
+            const room = await getOrCreateDirectChatroom({ otherUserId });
+            get().upsert(room);
+            return room; // let UI decide what to do (select it, navigate, etc.)
         } catch (err: any) {
-            console.error(err);
-            set({ error: err.message ?? "Failed to load chatrooms", loading: false });
+            set({ error: err.message ?? "Failed to open direct chatroom" });
+            return null;
+        } finally {
+            set({ loading: false });
         }
+    },
+
+    // WS reducer
+    applyRoomActivity: (room) => {
+        // When a notification says "this room changed", we upsert + sort.
+        get().upsert(room);
     },
 }));

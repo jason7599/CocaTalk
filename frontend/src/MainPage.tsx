@@ -6,28 +6,20 @@ import { UserProvider } from "./context/UserContext";
 import { useEffect } from "react";
 import { usePendingRequestsStore } from "./store/pendingRequestsStore";
 import { useFriendsStore } from "./store/friendsStore";
-import { useWsStore } from "./ws/wsStore";
 import { useChatroomsStore } from "./store/chatroomsStore";
+import { StompProvider } from "./ws/StompContext";
 
-const MainLayout: React.FC = () => {
-
-    const connectWs = useWsStore((s) => s.connect);
-    const disconnectWs = useWsStore((s) => s.disconnect);
+const MainPage: React.FC = () => {
 
     useEffect(() => {
-        connectWs();
-
         usePendingRequestsStore.getState().fetch();
         useFriendsStore.getState().fetch();
         useChatroomsStore.getState().fetch();
-
-        return () => {
-            disconnectWs();
-        };
-    }, [connectWs, disconnectWs]);
+    }, []);
 
     return (
         <UserProvider>
+        <StompProvider>
         <ModalProvider>
 
             <div className="h-screen flex">
@@ -36,8 +28,9 @@ const MainLayout: React.FC = () => {
             </div>
 
         </ModalProvider>
+        </StompProvider>
         </UserProvider>
     );
 }
 
-export default MainLayout;
+export default MainPage;

@@ -4,8 +4,8 @@ import { getChatroomDisplayName } from "../utils/chatroomName";
 
 const ChatroomList: React.FC = () => {
     const chatrooms = useChatroomsStore((s) => s.chatrooms);
-    const selectedRoomId = useChatroomsStore((s) => s.selectedChatroomId);
-    const selectChatroom = useChatroomsStore((s) => s.selectChatroom);
+    const activeRoomId = useChatroomsStore((s) => s.activeRoomId);
+    const setActiveRoomId = useChatroomsStore((s) => s.setActiveRoomId);
 
     if (chatrooms.length === 0) {
         return (
@@ -20,9 +20,9 @@ const ChatroomList: React.FC = () => {
             {chatrooms.map((chatroom) => (
                 <div
                     key={chatroom.id}
-                    onClick={() => selectChatroom(chatroom.id)}
+                    onClick={() => setActiveRoomId(chatroom.id)}
                     className={`px-4 py-3 hover:bg-gray-100 cursor-pointer border-b transition ${
-                        selectedRoomId === chatroom.id ? "bg-red-100" : ""   
+                        activeRoomId === chatroom.id ? "bg-red-100" : ""   
                     }`}
                 >
                     <div className="font-medium">{getChatroomDisplayName(chatroom)}</div>
