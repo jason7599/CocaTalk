@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface MessageRepository extends JpaRepository<MessageEntity, MessageId> {
 
     @Query(value = """
@@ -28,6 +30,22 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
     MessageResponseView insertMessage(@Param("roomId") Long roomId,
                                       @Param("userId") Long userId,
                                       @Param("content") String content);
+
+    @Query(value = """
+            SELECT *
+            FROM (
+                SELECT *
+                FROM messages
+                WHERE room_id = :roomId
+                    AND seq_no < :cursor
+                ORDER BY seq_no DESC
+                LIMIT :limit + 1 --Inner DESC gets newest + 1 extra (sentinel)
+            )
+            ORDER BY seq_no ASC
+            """, nativeQuery = true)
+    List<MessageResponseView> loadMessages(@Param("roomId") Long roomId,
+                                           @Param("cursor") Long cursor,
+                                           @Param("limit") int limit);
 
     @Override
     @Deprecated // DONT USE

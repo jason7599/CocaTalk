@@ -4,8 +4,8 @@ import java.time.Instant;
 
 public record MessageResponse(
         Long roomId,
+        Long senderId,
         Long seqNo,
-        String senderName,
         String content,
         Instant createdAt
 ) {

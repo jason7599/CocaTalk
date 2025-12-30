@@ -35,8 +35,8 @@ export interface MessageRequest {
 
 export interface MessageResponse {
     roomId: number;
+    senderId: number;
     seqNo: number;
-    senderName: string;
     content: string;
     createdAt: string;
 };

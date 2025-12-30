@@ -11,7 +11,6 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 
 import java.time.Instant;
@@ -35,7 +34,6 @@ public class ChatWsController {
         MessageResponse messageResponse = messageService.sendMessage(
                 roomId,
                 userDetails.getId(),
-                userDetails.getUsername(),
                 request
         );
 
