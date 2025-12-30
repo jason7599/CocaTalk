@@ -13,7 +13,7 @@ const RemoveFriendModal: React.FC<RemoveFriendModalProps> = ({
     friendName,
 }) => {
     const { closeModal } = useModal();
-    const removeFriend = useFriendsStore((s) => s.removeFriend);
+    const removeFriend = useFriendsStore(s => s.removeFriend);
 
     const handleConfirm = () => {
         removeFriend(friendId);

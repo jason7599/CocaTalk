@@ -38,7 +38,7 @@ public class MessageService {
     public MessagePage loadMessages(Long roomId, Long cursor, int limit) {
         // Query intentionally modifies the actual limit to :limit + 1
         // So that we know there are more items if this result's size is greater than the limit param
-        List<MessageResponse> messages = messageRepository.loadMessages(roomId, cursor, limit)
+        List<MessageResponse> messages = messageRepository.loadMessages(roomId, cursor == null ? Long.MAX_VALUE : cursor, limit)
                 .stream().map((v) -> new MessageResponse(
                         v.getRoomId(),
                         v.getUserId(),

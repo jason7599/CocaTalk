@@ -9,11 +9,11 @@ import RemoveFriendModal from "./modals/RemoveFriendModal";
 import { useChatroomsStore } from "../store/chatroomsStore";
 
 const FriendList: React.FC = () => {
-    const friends = useFriendsStore((s) => s.friends);
-    const openDirectChatroom = useChatroomsStore((s) => s.openDirectChatroom);
+    const friends = useFriendsStore(s => s.friends);
+    const openDirectChatroom = useChatroomsStore(s => s.openDirectChatroom);
     const { showModal } = useModal();
-    const pendingRequestCount = usePendingRequestsStore((s) => s.requests.length);
-    const setActiveRoomId = useChatroomsStore((s) => s.setActiveRoomId);
+    const pendingRequestCount = usePendingRequestsStore(s => s.requests.length);
+    const setActiveRoomId = useChatroomsStore(s => s.setActiveRoomId);
 
     return (
         <div className="flex flex-col gap-4 p-4">

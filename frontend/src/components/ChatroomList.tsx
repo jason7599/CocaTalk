@@ -3,9 +3,9 @@ import { useChatroomsStore } from "../store/chatroomsStore";
 import { getChatroomDisplayName } from "../utils/chatroomName";
 
 const ChatroomList: React.FC = () => {
-    const chatrooms = useChatroomsStore((s) => s.chatrooms);
-    const activeRoomId = useChatroomsStore((s) => s.activeRoomId);
-    const setActiveRoomId = useChatroomsStore((s) => s.setActiveRoomId);
+    const chatrooms = useChatroomsStore(s => s.chatrooms);
+    const activeRoomId = useChatroomsStore(s => s.activeRoomId);
+    const setActiveRoomId = useChatroomsStore(s => s.setActiveRoomId);
 
     if (chatrooms.length === 0) {
         return (

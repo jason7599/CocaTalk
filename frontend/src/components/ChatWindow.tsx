@@ -6,15 +6,22 @@ import type { IMessage } from "@stomp/stompjs";
 import { useStomp } from "../ws/StompContext";
 import { useActiveRoomSubscription } from "../ws/useActiveRoomSub";
 import { useStompPublisher } from "../ws/useStompPublisher";
+import { useMessagesStore } from "../store/messagesStore";
 
 const ChatWindow: React.FC = () => {
     const { connected } = useStomp();
     const { publish } = useStompPublisher();
 
-    const activeRoomId = useChatroomsStore((s) => s.activeRoomId);
-    const activeRoom = useChatroomsStore((s) =>
+    const activeRoomId = useChatroomsStore(s => s.activeRoomId);
+    const activeRoom = useChatroomsStore(s =>
         s.activeRoomId == null ? null : s.chatrooms.find((r) => r.id === s.activeRoomId) ?? null
     );
+
+    const loadInitial = useMessagesStore(s => s.loadInitial);
+    const messages = useMessagesStore(s => s.messages);
+    const loadingInitial = useMessagesStore(s => s.loadingInitial);
+    const messageLoadError = useMessagesStore(s => s.error);
+    const upsertMessage = useMessagesStore(s => s.upsert);
 
     const [message, setMessage] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
@@ -24,11 +31,22 @@ const ChatWindow: React.FC = () => {
         inputRef.current?.focus();
     }, [activeRoomId]);
 
-    const onRoomMessage = useCallback(
-        (roomId: number, msg: IMessage) => {
-            console.log(`${roomId} Message: ${msg}`);
-        }, []
-    );
+    useEffect(() => {
+        if (activeRoomId != null) {
+            loadInitial(activeRoomId);
+        }
+    }, [activeRoomId, loadInitial]);
+
+    const onRoomMessage = useCallback((roomId: number, msg: IMessage) => {
+        const body = JSON.parse(msg.body);
+        upsertMessage(roomId, {
+            roomId,
+            senderId: body.senderId,
+            seqNo: body.seqNo,
+            content: body.content,
+            createdAt: body.createdAt
+        });
+    }, [upsertMessage]);
 
     useActiveRoomSubscription(activeRoomId, onRoomMessage);
 
@@ -77,17 +95,19 @@ const ChatWindow: React.FC = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto p-4">
-                {/* {messages.length === 0 ? (
+                {messages.length === 0 ? (
                     <div className="h-full flex items-center justify-center text-gray-400">No messages yet</div>
                 ) : (
                     <div className="flex flex-col gap-2">
-                        {messages.map((m: any) => (
-                            <div key={m.id ?? `${m.senderId}-${m.createdAt}`} className="text-sm">
-                                <span className="font-semibold">{m.senderId}</span>: {m.content}
+                        {messages.map((m) => (
+                            <div key={m.seqNo} className="text-sm">
+                                <span className="font-semibold">
+                                    {m.senderId}
+                                </span>: {m.content}
                             </div>
                         ))}
                     </div>
-                )} */}
+                )}
             </div>
 
             <div className="p-4 border-t bg-white">

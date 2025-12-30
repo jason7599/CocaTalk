@@ -1,4 +1,4 @@
-import type { ChatroomSummary, DirectChatroomRequest } from "../types";
+import type { ChatroomSummary, DirectChatroomRequest, MessagePage } from "../types";
 import api from "./api";
 
 export async function loadChatrooms(): Promise<ChatroomSummary[]> {
@@ -7,4 +7,23 @@ export async function loadChatrooms(): Promise<ChatroomSummary[]> {
 
 export async function getOrCreateDirectChatroom(request: DirectChatroomRequest): Promise<ChatroomSummary> {
     return (await api.post('/chatrooms/direct', request)).data;
-} 
+}
+
+// omit cursor for inital load - loading latest messages
+// limit is defaulted to 30 in the backend.
+export async function loadMessages(roomId: number, options?: { cursor?: number; limit?: number; }): Promise<MessagePage> {
+    const params = new URLSearchParams();
+
+    if (options?.cursor !== undefined) {
+        params.set("cursor", String(options.cursor));
+    }
+
+    if (options?.limit !== undefined) {
+        params.set("limit", String(options.limit));
+    }
+
+    const query = params.toString();
+    const url = `/chatrooms/${roomId}/messages${query ? `?${query}` : ""}`;
+
+    return (await api.get(url)).data;
+}

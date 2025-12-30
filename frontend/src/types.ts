@@ -44,3 +44,9 @@ export interface MessageResponse {
 export interface DirectChatroomRequest {
     otherUserId: number;
 };
+
+export interface MessagePage {
+    messages: MessageResponse[];
+    nextCursor: number | null;
+    hasMore: boolean;
+};

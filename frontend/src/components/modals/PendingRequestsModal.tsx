@@ -7,13 +7,13 @@ const PendingRequestsModal: React.FC = () => {
 
     const { closeModal } = useModal();
 
-    const requests = usePendingRequestsStore((s) => s.requests);
-    const loading = usePendingRequestsStore((s) => s.loading);
-    const error = usePendingRequestsStore((s) => s.error);
+    const requests = usePendingRequestsStore(s => s.requests);
+    const loading = usePendingRequestsStore(s => s.loading);
+    const error = usePendingRequestsStore(s => s.error);
 
-    const accept = usePendingRequestsStore((s) => s.accept);
-    const decline = usePendingRequestsStore((s) => s.decline);
-    const fetch = usePendingRequestsStore((s) => s.fetch);
+    const accept = usePendingRequestsStore(s => s.accept);
+    const decline = usePendingRequestsStore(s => s.decline);
+    const fetch = usePendingRequestsStore(s => s.fetch);
 
     useEffect(() => {
         fetch()

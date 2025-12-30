@@ -36,7 +36,7 @@ public class ChatroomController {
     @GetMapping("/{roomId}/messages")
     public ResponseEntity<MessagePage> loadMessages(
             @PathVariable Long roomId,
-            @RequestParam(defaultValue = "" + Long.MAX_VALUE) Long cursor,
+            @RequestParam(required = false) Long cursor,
             @RequestParam(defaultValue = "" + MESSAGE_FETCH_DEFAULT_LIMIT) @Min(1) @Max(100) int limit
     ) {
         return ResponseEntity.ok(messageService.loadMessages(roomId, cursor, limit));
