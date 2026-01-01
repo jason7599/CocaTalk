@@ -1,27 +1,28 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { EllipsisVerticalIcon, PaperAirplaneIcon, UserPlusIcon } from "@heroicons/react/24/outline";
 import { getChatroomDisplayName } from "../utils/chatroomName";
-import { useChatroomsStore } from "../store/chatroomsStore";
-import type { IMessage } from "@stomp/stompjs";
 import { useStomp } from "../ws/StompContext";
-import { useActiveRoomSubscription } from "../ws/useActiveRoomSub";
 import { useStompPublisher } from "../ws/useStompPublisher";
-import { useMessagesStore } from "../store/messagesStore";
+import { useActiveRoomStore } from "../store/activeRoomStore";
+import { useChatroomsStore } from "../store/chatroomsStore";
 
 const ChatWindow: React.FC = () => {
     const { connected } = useStomp();
     const { publish } = useStompPublisher();
 
-    const activeRoomId = useChatroomsStore(s => s.activeRoomId);
-    const activeRoom = useChatroomsStore(s =>
-        s.activeRoomId == null ? null : s.chatrooms.find((r) => r.id === s.activeRoomId) ?? null
+    const activeRoomId = useActiveRoomStore(s => s.activeRoomId); // * re-renders upon activeRoomId change
+    const activeRoom = useChatroomsStore((s) =>
+        activeRoomId === null
+            ? null
+            : s.chatrooms.find((r) => r.id === activeRoomId) ?? null
     );
 
-    const loadInitial = useMessagesStore(s => s.loadInitial);
-    const messages = useMessagesStore(s => s.messages);
-    const loadingInitial = useMessagesStore(s => s.loadingInitial);
-    const messageLoadError = useMessagesStore(s => s.error);
-    const upsertMessage = useMessagesStore(s => s.upsert);
+    const roomStatus = useActiveRoomStore(s => s.status);
+
+    const messages = useActiveRoomStore(s => s.messages);
+    const hasMoreMessages = useActiveRoomStore(s => s.hasMoreMessages);
+    const loadingOlderMessages = useActiveRoomStore(s => s.loadingOlderMessages);
+    const loadOlderMessages = useActiveRoomStore(s => s.loadOlderMessages);
 
     const [message, setMessage] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
@@ -31,32 +32,11 @@ const ChatWindow: React.FC = () => {
         inputRef.current?.focus();
     }, [activeRoomId]);
 
-    useEffect(() => {
-        if (activeRoomId != null) {
-            loadInitial(activeRoomId);
-        }
-    }, [activeRoomId, loadInitial]);
-
-    const onRoomMessage = useCallback((roomId: number, msg: IMessage) => {
-        const body = JSON.parse(msg.body);
-        upsertMessage(roomId, {
-            roomId,
-            senderId: body.senderId,
-            seqNo: body.seqNo,
-            content: body.content,
-            createdAt: body.createdAt
-        });
-    }, [upsertMessage]);
-
-    useActiveRoomSubscription(activeRoomId, onRoomMessage);
-
     const canSend = connected && activeRoomId != null && message.trim().length > 0;
 
     const handleSend = () => {
         if (!canSend || activeRoomId == null) return;
-
         publish(`/app/chat.send.${activeRoomId}`, { content: message });
-
         setMessage("");
         inputRef.current?.focus();
     };
@@ -68,7 +48,7 @@ const ChatWindow: React.FC = () => {
         }
     };
 
-    if (!activeRoomId || !activeRoom) {
+    if (!activeRoomId) {
         return (
             <div className="flex-1 flex items-center justify-center text-gray-400 text-lg">
                 Select a chatroom to start chatting
@@ -95,15 +75,25 @@ const ChatWindow: React.FC = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto p-4">
-                {messages.length === 0 ? (
+                {roomStatus === "LOADING" ? (
+                    <div className="h-full flex items-center justify-center text-gray-400">Loading…</div>
+                ) : messages.length === 0 ? (
                     <div className="h-full flex items-center justify-center text-gray-400">No messages yet</div>
                 ) : (
                     <div className="flex flex-col gap-2">
+                        {hasMoreMessages && (
+                            <button
+                                onClick={loadOlderMessages}
+                                disabled={loadingOlderMessages}
+                                className="self-center mb-2 px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-60"
+                            >
+                                {loadingOlderMessages ? "Loading…" : "Load older"}
+                            </button>
+                        )}
+
                         {messages.map((m) => (
                             <div key={m.seqNo} className="text-sm">
-                                <span className="font-semibold">
-                                    {m.senderId}
-                                </span>: {m.content}
+                                <span className="font-semibold">{m.senderId}</span>: {m.content}
                             </div>
                         ))}
                     </div>

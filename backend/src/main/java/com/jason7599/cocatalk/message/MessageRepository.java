@@ -39,7 +39,7 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
                 WHERE room_id = :roomId
                     AND seq_no < :cursor
                 ORDER BY seq_no DESC
-                LIMIT :limit + 1 --Inner DESC gets newest + 1 extra (sentinel)
+                LIMIT :limit + 1
             )
             ORDER BY seq_no ASC
             """, nativeQuery = true)

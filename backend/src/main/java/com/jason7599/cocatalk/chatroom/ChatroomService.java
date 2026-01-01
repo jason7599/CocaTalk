@@ -1,5 +1,8 @@
 package com.jason7599.cocatalk.chatroom;
 
+import com.jason7599.cocatalk.message.MessagePage;
+import com.jason7599.cocatalk.message.MessageRepository;
+import com.jason7599.cocatalk.message.MessageResponse;
 import com.jason7599.cocatalk.user.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -7,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -17,6 +21,7 @@ public class ChatroomService {
     public static final int MEMBER_NAME_PREVIEW_LIMIT = 3;
 
     private final ChatroomRepository chatroomRepository;
+    private final MessageRepository messageRepository;
     private final UserRepository userRepository;
 
     public void addUserToRoom(Long userId, Long roomId, ChatMemberRole role) {
@@ -109,5 +114,47 @@ public class ChatroomService {
 
     public Set<Long> getMemberIds(Long roomId) {
         return chatroomRepository.getMembersId(roomId);
+    }
+
+    public MessagePage loadMessages(Long roomId, Long cursor, int limit) {
+        // Query intentionally modifies the actual limit to :limit + 1
+        // So that we know there are more items if this result's size is greater than the limit param
+        List<MessageResponse> messages = messageRepository.loadMessages(roomId, cursor == null ? Long.MAX_VALUE : cursor, limit)
+                .stream().map((v) -> new MessageResponse(
+                        v.getRoomId(),
+                        v.getUserId(),
+                        v.getSeqNo(),
+                        v.getContent(),
+                        v.getCreatedAt().toInstant()
+                )).collect(Collectors.toCollection(ArrayList::new)); // collect to ArrayList so it is modifiable
+
+        if (messages.isEmpty()) {
+            return new MessagePage(
+                    List.of(),
+                    null,
+                    false
+            );
+        }
+
+        boolean hasMore = messages.size() > limit;
+        if (hasMore) {
+            messages.removeFirst();
+        }
+
+        return new MessagePage(
+                messages,
+                messages.getFirst().seqNo(),
+                hasMore
+        );
+    }
+
+    public List<ChatMemberInfo> getMembersInfo(Long roomId) {
+        return chatroomRepository.loadMemberInfos(roomId)
+                .stream().map(v -> new ChatMemberInfo(
+                        v.getId(),
+                        v.getUsername(),
+                        v.getRole(),
+                        v.getJoinedAt().toInstant()
+                )).toList();
     }
 }

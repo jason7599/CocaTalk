@@ -21,7 +21,7 @@ public class ChatWsController {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final MessageService messageService;
-    private final RoomMembershipService membershipCache;
+    private final RoomMembershipService membershipCache; // redis
 
     @MessageMapping("/chat.send.{roomId}")
     public void sendMessage(

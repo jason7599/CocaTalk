@@ -5,8 +5,6 @@ import { getOrCreateDirectChatroom, loadChatrooms } from "../api/chatrooms";
 type ChatroomsState = {
     chatrooms: ChatroomSummary[];
 
-    activeRoomId: number | null;
-
     loading: boolean;
     error: string | null;
 
@@ -15,8 +13,6 @@ type ChatroomsState = {
     upsert: (room: ChatroomSummary) => void;
     update: (roomId: number, updates: Partial<ChatroomSummary>) => void;
     remove: (roomId: number) => void;
-
-    setActiveRoomId: (roomId: number | null) => void;
 
     // "commands" (async, call API then reducers)
     fetch: () => Promise<void>;
@@ -34,7 +30,6 @@ function sortByLastMessageAtDesc(rooms: ChatroomSummary[]) {
 
 export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
     chatrooms: [],
-    activeRoomId: null,
     loading: false,
     error: null,
 
@@ -58,11 +53,6 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
         set((s) => ({
             chatrooms: s.chatrooms.filter((r) => r.id !== roomId),
         })),
-
-    setActiveRoomId: (roomId: number | null) => {
-        // console.log(`setActiveRoomId(${roomId})`);
-        set({activeRoomId: roomId});
-    },
 
     fetch: async () => {
         set({ loading: true, error: null });

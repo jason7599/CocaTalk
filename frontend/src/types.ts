@@ -50,3 +50,12 @@ export interface MessagePage {
     nextCursor: number | null;
     hasMore: boolean;
 };
+
+export type ChatMemberRole = "MEMBER" | "OWNER" | "ADMIN";
+
+export interface ChatMemberInfo {
+    id: number;
+    username: string | null;
+    role: ChatMemberRole;
+    joinedAt: string;
+};

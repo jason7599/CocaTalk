@@ -110,4 +110,15 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             WHERE room_id = :roomId AND user_id = :userId
             """, nativeQuery = true)
     String getAlias(@Param("roomId") Long roomId, @Param("userId") Long userId);
+
+    @Query(value = """
+            SELECT
+                rm.user_id AS id,
+                u.username AS username,
+                rm.role AS role,
+                rm.joined_at AS joinedAt
+            FROM room_members rm JOIN users u ON rm.user_id = u.id
+            WHERE rm.room_id = :roomId
+            """, nativeQuery = true)
+    List<ChatMemberInfoView> loadMemberInfos(@Param("roomId") Long roomId);
 }

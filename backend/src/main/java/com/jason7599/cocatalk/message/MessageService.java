@@ -6,10 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Service
 @RequiredArgsConstructor
 public class MessageService {
@@ -32,38 +28,6 @@ public class MessageService {
                 view.getSeqNo(),
                 view.getContent(),
                 view.getCreatedAt().toInstant()
-        );
-    }
-
-    public MessagePage loadMessages(Long roomId, Long cursor, int limit) {
-        // Query intentionally modifies the actual limit to :limit + 1
-        // So that we know there are more items if this result's size is greater than the limit param
-        List<MessageResponse> messages = messageRepository.loadMessages(roomId, cursor == null ? Long.MAX_VALUE : cursor, limit)
-                .stream().map((v) -> new MessageResponse(
-                        v.getRoomId(),
-                        v.getUserId(),
-                        v.getSeqNo(),
-                        v.getContent(),
-                        v.getCreatedAt().toInstant()
-                )).collect(Collectors.toCollection(ArrayList::new)); // collect to ArrayList so it is modifiable
-
-        if (messages.isEmpty()) {
-            return new MessagePage(
-                    List.of(),
-                    null,
-                    false
-            );
-        }
-
-        boolean hasMore = messages.size() > limit;
-        if (hasMore) {
-            messages.removeFirst();
-        }
-
-        return new MessagePage(
-                messages,
-                messages.getFirst().seqNo(),
-                hasMore
         );
     }
 }
