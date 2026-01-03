@@ -5,6 +5,34 @@ import { useStomp } from "../ws/StompContext";
 import { useStompPublisher } from "../ws/useStompPublisher";
 import { useActiveRoomStore } from "../store/activeRoomStore";
 import { useChatroomsStore } from "../store/chatroomsStore";
+import type { MessageResponse } from "../types";
+import { useUser } from "../context/UserContext";
+
+const ChatMessageBubble = ({ message }: { message: MessageResponse}) => {
+    const isMe = message.senderId === useUser().user?.id;
+
+    return (
+        <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+            <div
+                className={`
+                    max-w-[70%] px-4 py-2 rounded-2xl text-sm leading-relaxed
+                    shadow-sm transition-all
+                    ${isMe
+                        ? "bg-gradient-to-br from-red-500 to-pink-500 text-white rounded-br-md"
+                        : "bg-white text-gray-800 rounded-bl-md border"
+                    }
+                `}
+            >
+                {!isMe && (
+                    <div className="text-xs font-semibold text-gray-500 mb-1">
+                        {message.senderId}
+                    </div>
+                )}
+                {message.content}
+            </div>
+        </div>
+    );
+};
 
 const ChatWindow: React.FC = () => {
     const { connected } = useStomp();
@@ -56,10 +84,13 @@ const ChatWindow: React.FC = () => {
     }
 
     return (
+        // HEADER
         <div className="flex-1 flex flex-col bg-gray-50">
             <div className="flex h-24 items-center justify-between p-4 border-b bg-white">
                 <div>
-                    <h2 className="text-lg font-semibold">{getChatroomDisplayName(activeRoom)}</h2>
+                    <h2 className="text-lg font-semibold tracking-tight">
+                        {getChatroomDisplayName(activeRoom)}
+                    </h2>
                     {!connected && <div className="text-xs text-gray-400">Connecting…</div>}
                 </div>
 
@@ -73,39 +104,36 @@ const ChatWindow: React.FC = () => {
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4">
+            {/* LIST */}
+            <div className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-gray-50 to-gray-100">
                 {roomStatus === "LOADING" ? (
                     <div className="h-full flex items-center justify-center text-gray-400">Loading…</div>
                 ) : messages.length === 0 ? (
                     <div className="h-full flex items-center justify-center text-gray-400">No messages yet</div>
                 ) : (
                     <div className="flex flex-col gap-2">
-                        {hasMoreMessages && (
-                            <button
-                                onClick={loadOlderMessages}
-                                disabled={loadingOlderMessages}
-                                className="self-center mb-2 px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-60"
-                            >
-                                {loadingOlderMessages ? "Loading…" : "Load older"}
-                            </button>
+                        {messages.map((m) =>
+                            <ChatMessageBubble message={m}/>
                         )}
-
-                        {messages.map((m) => (
-                            <div key={m.seqNo} className="text-sm">
-                                <span className="font-semibold">{m.senderId}</span>: {m.content}
-                            </div>
-                        ))}
                     </div>
                 )}
             </div>
 
+            {/* INPUT */}
             <div className="p-4 border-t bg-white">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                     <input
                         ref={inputRef}
                         type="text"
                         placeholder={connected ? "Type a message..." : "Connecting..."}
-                        className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+                        className="
+                            w-full px-4 py-3 rounded-full
+                            bg-gray-100 focus:bg-white
+                            border border-transparent
+                            focus:border-red-400
+                            focus:ring-2 focus:ring-red-300
+                            outline-none transition
+                        "
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         onKeyDown={handleKeyDown}
@@ -115,10 +143,15 @@ const ChatWindow: React.FC = () => {
                         title="Send"
                         onClick={handleSend}
                         disabled={!canSend}
-                        className={`p-2 rounded-full transition ${canSend ? "bg-red-600 hover:bg-red-700 cursor-pointer" : "bg-red-300 cursor-not-allowed opacity-60"
-                            }`}
+                        className={`
+                            p-3 rounded-full transition-all
+                            ${canSend
+                                ? "bg-gradient-to-br from-red-500 to-pink-500 hover:scale-105 shadow-lg"
+                                : "bg-gray-500 opacity-50"
+                            }
+                        `}
                     >
-                        <PaperAirplaneIcon className="w-6 h-6 text-white" />
+                        <PaperAirplaneIcon className="w-6 h-6 text-white -rotate-45" />
                     </button>
                 </div>
             </div>

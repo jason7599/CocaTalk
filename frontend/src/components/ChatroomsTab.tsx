@@ -2,8 +2,9 @@ import React from "react";
 import { useChatroomsStore } from "../store/chatroomsStore";
 import { getChatroomDisplayName } from "../utils/chatroomName";
 import { useActiveRoomStore } from "../store/activeRoomStore";
+import type { ChatroomSummary } from "../types";
 
-const ChatroomList: React.FC = () => {
+const ChatroomsTab: React.FC = () => {
     const chatrooms = useChatroomsStore(s => s.chatrooms);
     const activeRoomId = useActiveRoomStore(s => s.activeRoomId);
     const setActiveRoom = useActiveRoomStore(s => s.setActiveRoom);
@@ -16,12 +17,18 @@ const ChatroomList: React.FC = () => {
         );
     }
 
+    const handleClick = (chatroom: ChatroomSummary) => {
+        if (chatroom.id !== activeRoomId) {
+            setActiveRoom(chatroom.id);
+        }
+    };
+
     return (
         <div className="flex-1 overflow-y-auto">
             {chatrooms.map((chatroom) => (
                 <div
                     key={chatroom.id}
-                    onClick={() => setActiveRoom(chatroom.id)}
+                    onClick={() => handleClick(chatroom)}
                     className={`px-4 py-3 hover:bg-gray-100 cursor-pointer border-b transition ${
                         activeRoomId === chatroom.id ? "bg-red-100" : ""   
                     }`}
@@ -39,4 +46,4 @@ const ChatroomList: React.FC = () => {
     );
 };
 
-export default ChatroomList;
+export default ChatroomsTab;

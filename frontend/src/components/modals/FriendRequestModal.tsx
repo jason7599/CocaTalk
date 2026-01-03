@@ -59,7 +59,7 @@ const FriendRequestModal: React.FC = () => {
                     </button>
                     <button
                         type="submit"
-                        className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed transition"
                         disabled={friendRequestState.submitting}
                     >
                         {friendRequestState.submitting ? "Sending..." : "Send Request"}

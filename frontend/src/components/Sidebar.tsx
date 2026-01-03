@@ -1,60 +1,109 @@
 import type React from "react";
+import { useMemo, useState } from "react";
 import {
     ArrowRightStartOnRectangleIcon,
     UserCircleIcon,
 } from "@heroicons/react/24/outline";
-import ChatroomList from "./ChatroomList";
+import ChatroomsTab from "./ChatroomsTab";
 import { useModal } from "../context/ModalContext";
 import { useUser } from "../context/UserContext";
-import { useState } from "react";
-import FriendList from "./FriendList";
 import { usePendingRequestsStore } from "../store/pendingRequestsStore";
 import LogoutModal from "./modals/LogoutModal";
+import FriendsTab from "./FriendsTab";
 
 const Sidebar: React.FC = () => {
     const { showModal } = useModal();
     const { user } = useUser();
-    const { requests } = usePendingRequestsStore();
 
     const [activeTab, setActiveTab] = useState<"friends" | "rooms">("rooms");
 
-    return (
-        <aside className="w-1/4 border-r bg-white flex flex-col relative">
-            {/* TOP BAR */}
-            <div className="flex h-24 items-center justify-between p-4 border-b">
-                <div className="relative">
-                    <UserCircleIcon className="w-10 h-10 text-red-600" />
-                    <div>
-                        <p className="font-semibold">{user?.username}</p>
-                    </div>
-                </div>
-                
+    const pendingCount = usePendingRequestsStore((s) => s.requests.length);
 
-                <div className="px-4 w-full">
-                    <div className="flex rounded-full bg-gray-100 p-1 text-sm font-medium">
+    const pendingLabel = useMemo(() => {
+        if (pendingCount <= 0) return "";
+        return String(pendingCount);
+    }, [pendingCount]);
+
+    return (
+        <aside className="w-1/4 min-w-[320px] border-r bg-white/70 backdrop-blur flex flex-col">
+            {/* HEADER */}
+            <div className="sticky top-0 z-10 border-b bg-white/70 backdrop-blur">
+                {/* Row 1: user + logout */}
+                <div className="flex items-center justify-between px-4 pt-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="relative">
+                            <UserCircleIcon className="w-10 h-10 text-rose-500" />
+                        </div>
+
+                        <div className="min-w-0">
+                            <p className="truncate font-semibold text-gray-900 leading-tight">
+                                {user?.username}
+                            </p>
+                        </div>
+                    </div>
+
+                    <button
+                        className="
+                            p-2 rounded-full
+                            hover:bg-rose-50 transition
+                            focus:outline-none focus:ring-2 focus:ring-rose-200
+                        "
+                        title="Log out"
+                        onClick={() => showModal(<LogoutModal />)}
+                    >
+                        <ArrowRightStartOnRectangleIcon className="w-6 h-6 text-rose-500" />
+                    </button>
+                </div>
+
+                {/* Row 2: segmented control */}
+                <div className="px-4 pb-4 pt-3">
+                    <div className="relative flex rounded-full bg-gray-100/80 p-1 text-sm font-semibold">
+                        {/* slider background */}
+                        <div
+                            className={
+                                "absolute top-1 bottom-1 w-1/2 rounded-full bg-white shadow-sm transition-transform " +
+                                (activeTab === "friends" ? "translate-x-0" : "translate-x-full")
+                            }
+                            aria-hidden="true"
+                        />
+
                         <button
                             type="button"
                             onClick={() => setActiveTab("friends")}
                             className={
-                                "relative flex-1 px-3 py-1 rounded-full text-center transition " +
+                                "relative z-10 flex-1 px-3 py-2 rounded-full text-center transition " +
                                 (activeTab === "friends"
-                                    ? "bg-white shadow text-gray-900"
+                                    ? "text-gray-900"
                                     : "text-gray-500 hover:text-gray-700")
                             }
                         >
-                            Friends
-
-                            {requests.length > 0 && (
-                                <span className="absolute top-0 right-1 block w-3 h-3 bg-red-500 rounded-full" />
-                            )}
+                            <span className="inline-flex items-center justify-center gap-2">
+                                Friends
+                                {pendingCount > 0 && (
+                                    <span
+                                        className="
+                                            inline-flex items-center justify-center
+                                            min-w-[1.25rem] h-5 px-1
+                                            text-[0.7rem] font-bold text-white
+                                            rounded-full
+                                            bg-gradient-to-br from-pink-500 to-red-500
+                                            shadow-sm shadow-rose-200/60
+                                        "
+                                        title={`${pendingCount} pending request${pendingCount === 1 ? "" : "s"}`}
+                                    >
+                                        {pendingLabel}
+                                    </span>
+                                )}
+                            </span>
                         </button>
+
                         <button
                             type="button"
                             onClick={() => setActiveTab("rooms")}
                             className={
-                                "flex-1 px-3 py-1 rounded-full text-center transition " +
+                                "relative z-10 flex-1 px-3 py-2 rounded-full text-center transition " +
                                 (activeTab === "rooms"
-                                    ? "bg-white shadow text-gray-900"
+                                    ? "text-gray-900"
                                     : "text-gray-500 hover:text-gray-700")
                             }
                         >
@@ -62,21 +111,11 @@ const Sidebar: React.FC = () => {
                         </button>
                     </div>
                 </div>
-
-
-                <div className="flex gap-2">
-                    <button
-                        className="p-2 rounded-full hover:bg-gray-100 transition"
-                        title="Log out"
-                        onClick={() => showModal(<LogoutModal/>)}
-                    >
-                        <ArrowRightStartOnRectangleIcon className="w-6 h-6 text-red-600" />
-                    </button>
-                </div>
             </div>
-            
-            <div className="flex-1 overflow-y-auto mt-2">
-                {activeTab === "friends" ? <FriendList /> : <ChatroomList />}
+
+            {/* CONTENT */}
+            <div className="flex-1 overflow-y-auto">
+                {activeTab === "friends" ? <FriendsTab /> : <ChatroomsTab />}
             </div>
         </aside>
     );

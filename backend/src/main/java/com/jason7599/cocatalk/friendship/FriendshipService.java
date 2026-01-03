@@ -49,13 +49,13 @@ public class FriendshipService {
 
     @Transactional
     public UserInfo acceptFriendRequest(Long senderId, Long receiverId) {
-        UserEntity receiver = userRepository.findById(receiverId)
-                .orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND, "Accept error - invalid receiver id"));
+        UserEntity sender = userRepository.findById(senderId)
+                .orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND, "Invalid sender id"));
 
         userRepository.removeFriendRequest(senderId, receiverId);
         userRepository.addFriendship(senderId, receiverId);
 
-        return new UserInfo(receiver);
+        return new UserInfo(sender);
     }
 
     @Transactional
