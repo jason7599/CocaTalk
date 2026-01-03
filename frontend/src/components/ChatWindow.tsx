@@ -18,7 +18,6 @@ const ChatWindow: React.FC = () => {
     );
 
     const roomStatus = useActiveRoomStore(s => s.status);
-
     const messages = useActiveRoomStore(s => s.messages);
     const hasMoreMessages = useActiveRoomStore(s => s.hasMoreMessages);
     const loadingOlderMessages = useActiveRoomStore(s => s.loadingOlderMessages);

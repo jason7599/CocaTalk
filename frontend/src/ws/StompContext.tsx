@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Client } from "@stomp/stompjs";
+import { useActiveRoomStore } from "../store/activeRoomStore";
 
 const WS_URL = import.meta.env.VITE_WS_URL;
 
@@ -10,10 +11,6 @@ type StompContextValue = {
 
 const StompContext = createContext<StompContextValue>({ client: null, connected: false });
 
-function getToken() {
-    return localStorage.getItem("token");
-}
-
 export const StompProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [connected, setConnected] = useState(false);
 
@@ -23,12 +20,13 @@ export const StompProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             reconnectDelay: 3000,
             heartbeatIncoming: 10000,
             heartbeatOutgoing: 10000,
-            // TODO
+
+            // todo: remove
             debug: (str) => console.log("[STOMP]", str),
 
             // Ensure latest token is used on every connect/reconnect
             beforeConnect: async () => {
-                c.connectHeaders = { Authorization: `Bearer ${getToken()}` };
+                c.connectHeaders = { Authorization: `Bearer ${localStorage.getItem("token")}` };
             },
 
             onConnect: () => setConnected(true),
@@ -43,10 +41,12 @@ export const StompProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     useEffect(() => {
         if (!client.active) client.activate();
-        return () => {
-            client.deactivate();
-        };
+        return () => { client.deactivate(); };
     }, [client]);
+
+    useEffect(() => {
+        useActiveRoomStore.getState().bindStomp(client, connected);
+    }, [client, connected]);
 
     return <StompContext.Provider value={{ client, connected }}>{children}</StompContext.Provider>;
 };

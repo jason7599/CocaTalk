@@ -53,7 +53,8 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => ({
     _abort: null,
     _epoch: 0,
 
-    
+    // bind stomp & active room lifecycle together
+    // re-runs every time stomp client updates, thanks to StompBinder.tsx
     bindStomp: (client, connected) => {
         set({ stompClient: client, stompConnected: connected });
 
@@ -99,9 +100,11 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => ({
         });
 
         if (stompClient && stompConnected) {
-            const destination = `/topics/rooms.${roomId}`;
+            const destination = `/topic/rooms.${roomId}`;
             const sub = stompClient.subscribe(destination, (frame: IMessage) => {
                 const msg: MessageResponse = JSON.parse(frame.body);
+
+                console.log(msg);
 
                 const { activeRoomId: cur } = get();
                 if (cur !== msg.roomId) {
