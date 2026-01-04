@@ -8,8 +8,13 @@ import { useChatroomsStore } from "../store/chatroomsStore";
 import type { MessageResponse } from "../types";
 import { useUser } from "../context/UserContext";
 
-const ChatMessageBubble = ({ message }: { message: MessageResponse}) => {
-    const isMe = message.senderId === useUser().user?.id;
+const MessageBubble = ({ message }: { message: MessageResponse}) => {
+    const { user } = useUser();
+    const isMe = message.senderId === user?.id;
+
+    const senderUsername = useActiveRoomStore(
+        s => s.members[message.senderId]?.username ?? ""
+    );
 
     return (
         <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
@@ -25,7 +30,7 @@ const ChatMessageBubble = ({ message }: { message: MessageResponse}) => {
             >
                 {!isMe && (
                     <div className="text-xs font-semibold text-gray-500 mb-1">
-                        {message.senderId}
+                        {senderUsername}
                     </div>
                 )}
                 {message.content}
@@ -75,7 +80,7 @@ const ChatWindow: React.FC = () => {
         }
     };
 
-    if (!activeRoomId) {
+    if (activeRoomId == null) {
         return (
             <div className="flex-1 flex items-center justify-center text-gray-400 text-lg">
                 Select a chatroom to start chatting
@@ -113,7 +118,7 @@ const ChatWindow: React.FC = () => {
                 ) : (
                     <div className="flex flex-col gap-2">
                         {messages.map((m) =>
-                            <ChatMessageBubble message={m}/>
+                            <MessageBubble message={m} key={m.seqNo}/>
                         )}
                     </div>
                 )}
