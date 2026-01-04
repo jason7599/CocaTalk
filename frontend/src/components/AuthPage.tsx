@@ -55,7 +55,7 @@ const AuthPage: React.FC = () => {
                 setMessage("Login success!");
                 setIsError(false);
 
-                navigate("/chatrooms", { replace: true });
+                navigate("/app", { replace: true });
                 window.location.reload();
             } else {
                 await register(u, p);

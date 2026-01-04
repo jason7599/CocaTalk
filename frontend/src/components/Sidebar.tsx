@@ -57,12 +57,14 @@ const Sidebar: React.FC = () => {
 
                 {/* Row 2: segmented control */}
                 <div className="px-4 pb-4 pt-3">
-                    <div className="relative flex rounded-full bg-gray-100/80 p-1 text-sm font-semibold">
-                        {/* slider background */}
+                    <div className="relative flex rounded-full bg-gray-100/80 p-1 text-sm font-semibold overflow-hidden">
                         <div
                             className={
-                                "absolute top-1 bottom-1 w-1/2 rounded-full bg-white shadow-sm transition-transform " +
-                                (activeTab === "friends" ? "translate-x-0" : "translate-x-full")
+                                "absolute top-1 bottom-1 left-1 rounded-full bg-white shadow-sm " +
+                                "w-[calc(50%-0.25rem)] transition-transform duration-200 ease-out " +
+                                (activeTab === "friends"
+                                    ? "translate-x-0"
+                                    : "translate-x-[calc(100%)]")
                             }
                             aria-hidden="true"
                         />

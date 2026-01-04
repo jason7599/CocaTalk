@@ -9,8 +9,8 @@ export default function App() {
     return (
         <Router>
             <Routes>
-                <Route path='/login' element={isLoggedIn() ? <Navigate to='/chatrooms' /> : <AuthPage />} />
-                <Route path='/chatrooms' element={isLoggedIn() ? <MainPage /> : <Navigate to='/login' />} />
+                <Route path='/login' element={isLoggedIn() ? <Navigate to='/app' /> : <AuthPage />} />
+                <Route path='/app' element={isLoggedIn() ? <MainPage /> : <Navigate to='/login' />} />
                 <Route path='*' element={<Navigate to='/login' />} />
             </Routes>
         </Router>
