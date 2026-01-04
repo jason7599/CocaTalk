@@ -83,6 +83,7 @@ const ChatWindow: React.FC = () => {
 
     // auto scroll behavior
     const listRef = useRef<HTMLDivElement>(null);
+    const userScrolledUpRef = useRef(false);
     const [isNearBottom, setIsNearBottom] = useState(true);
 
     const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
@@ -109,7 +110,11 @@ const ChatWindow: React.FC = () => {
             // how close can the view be to be considered near bottom
             const threshold = 120; // px
             const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-            setIsNearBottom(distanceFromBottom < threshold);
+
+            const nearBottom = distanceFromBottom < threshold;
+
+            setIsNearBottom(nearBottom);
+            userScrolledUpRef.current = !nearBottom;
         };
 
         onScroll();
@@ -118,13 +123,15 @@ const ChatWindow: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        scrollToBottom("auto");
+        scrollToBottom();
     }, [activeRoomId]);
 
     // scroll on new messages only if user is near bottom
     useEffect(() => {
-        if (isNearBottom) scrollToBottom();
-    }, [messages.length, isNearBottom]);
+        if (!userScrolledUpRef.current) {
+            scrollToBottom("smooth");
+        }
+    }, [messages.length]);
 
     if (activeRoomId == null) {
         return (
@@ -135,8 +142,9 @@ const ChatWindow: React.FC = () => {
     }
 
     return (
-        // HEADER
         <div className="flex-1 flex flex-col bg-gray-50">
+            
+            {/* HEADER */}
             <div className="flex h-24 items-center justify-between p-4 border-b bg-white">
                 <div>
                     <h2 className="text-lg font-semibold tracking-tight">
