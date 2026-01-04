@@ -1,5 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
-import { EllipsisVerticalIcon, PaperAirplaneIcon, UserPlusIcon } from "@heroicons/react/24/outline";
+import {
+    EllipsisVerticalIcon,
+    PaperAirplaneIcon,
+    UserPlusIcon,
+} from "@heroicons/react/24/outline";
 import { getChatroomDisplayName } from "../utils/chatroomName";
 import { useStomp } from "../ws/StompContext";
 import { useStompPublisher } from "../ws/useStompPublisher";
@@ -13,27 +17,42 @@ const MessageBubble = ({ message }: { message: MessageResponse }) => {
     const isMe = message.senderId === user?.id;
 
     const senderUsername = useActiveRoomStore(
-        s => s.members[message.senderId]?.username ?? ""
+        (s) => s.members[message.senderId]?.username ?? ""
     );
 
     return (
         <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-            <div
-                className={`
-                    max-w-[70%] px-4 py-2 rounded-2xl text-sm leading-relaxed
-                    shadow-sm transition-all
-                    ${isMe
-                        ? "bg-gradient-to-br from-red-500 to-pink-500 text-white rounded-br-md"
-                        : "bg-white text-gray-800 rounded-bl-md border"
-                    }
-                `}
-            >
-                {!isMe && (
-                    <div className="text-xs font-semibold text-gray-500 mb-1">
+            <div className="max-w-[76%]">
+                {!isMe && senderUsername && (
+                    <div className="mb-1 px-1 text-xs font-semibold text-slate-400">
                         {senderUsername}
                     </div>
                 )}
-                {message.content}
+
+                <div
+                    className={[
+                        "px-4 py-2.5 rounded-2xl text-sm leading-relaxed",
+                        "border backdrop-blur-xl",
+                        "transition",
+                        isMe
+                            ? [
+                                "text-white",
+                                "bg-gradient-to-br from-pink-500 via-rose-500 to-red-500",
+                                "border-rose-400/20",
+                                "shadow-[0_8px_30px_rgba(244,63,94,0.18)]",
+                                "rounded-br-md",
+                            ].join(" ")
+                            : [
+                                "text-slate-100",
+                                "bg-white/5",
+                                "border-white/10",
+                                "shadow-[0_8px_26px_rgba(0,0,0,0.25)]",
+                                "rounded-bl-md",
+                            ].join(" "),
+                    ].join(" ")}
+                >
+                    {message.content}
+                </div>
             </div>
         </div>
     );
@@ -43,23 +62,17 @@ const ChatWindow: React.FC = () => {
     const { connected } = useStomp();
     const { publish } = useStompPublisher();
 
-    const activeRoomId = useActiveRoomStore(s => s.activeRoomId); // * re-renders upon activeRoomId change
+    const activeRoomId = useActiveRoomStore((s) => s.activeRoomId);
     const activeRoom = useChatroomsStore((s) =>
-        activeRoomId === null
-            ? null
-            : s.chatrooms.find((r) => r.id === activeRoomId) ?? null
+        activeRoomId === null ? null : s.chatrooms.find((r) => r.id === activeRoomId) ?? null
     );
 
-    const roomStatus = useActiveRoomStore(s => s.status);
-    const messages = useActiveRoomStore(s => s.messages);
-    const hasMoreMessages = useActiveRoomStore(s => s.hasMoreMessages);
-    const loadingOlderMessages = useActiveRoomStore(s => s.loadingOlderMessages);
-    const loadOlderMessages = useActiveRoomStore(s => s.loadOlderMessages);
+    const roomStatus = useActiveRoomStore((s) => s.status);
+    const messages = useActiveRoomStore((s) => s.messages);
 
     const [message, setMessage] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // focus on input
     useEffect(() => {
         setMessage("");
         inputRef.current?.focus();
@@ -81,7 +94,7 @@ const ChatWindow: React.FC = () => {
         }
     };
 
-    // auto scroll behavior
+    // scroll behavior
     const listRef = useRef<HTMLDivElement>(null);
     const userScrolledUpRef = useRef(false);
     const [isNearBottom, setIsNearBottom] = useState(true);
@@ -92,27 +105,21 @@ const ChatWindow: React.FC = () => {
 
         const doScroll = () => {
             const top = el.scrollHeight - el.clientHeight + 2;
-            if (behavior === "smooth") {
-                el.scrollTo({ top, behavior });
-            } else {
-                el.scrollTop = top;
-            }
+            if (behavior === "smooth") el.scrollTo({ top, behavior });
+            else el.scrollTop = top;
         };
 
         requestAnimationFrame(() => requestAnimationFrame(doScroll));
-    }
+    };
 
     useEffect(() => {
         const el = listRef.current;
         if (!el) return;
 
         const onScroll = () => {
-            // how close can the view be to be considered near bottom
-            const threshold = 120; // px
+            const threshold = 140;
             const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-
             const nearBottom = distanceFromBottom < threshold;
-
             setIsNearBottom(nearBottom);
             userScrolledUpRef.current = !nearBottom;
         };
@@ -126,106 +133,144 @@ const ChatWindow: React.FC = () => {
         scrollToBottom();
     }, [activeRoomId]);
 
-    // scroll on new messages only if user is near bottom
     useEffect(() => {
-        if (!userScrolledUpRef.current) {
-            scrollToBottom("smooth");
-        }
+        if (!userScrolledUpRef.current) scrollToBottom("smooth");
     }, [messages.length]);
 
     if (activeRoomId == null) {
         return (
-            <div className="flex-1 flex items-center justify-center text-gray-400 text-lg">
+            <div className="flex-1 flex items-center justify-center text-slate-400 text-lg bg-[#0b0b14]">
                 Select a chatroom to start chatting
             </div>
         );
     }
 
     return (
-        <div className="flex-1 flex flex-col bg-gray-50">
-            
-            {/* HEADER */}
-            <div className="flex h-24 items-center justify-between p-4 border-b bg-white">
-                <div>
-                    <h2 className="text-lg font-semibold tracking-tight">
-                        {getChatroomDisplayName(activeRoom)}
-                    </h2>
-                    {!connected && <div className="text-xs text-gray-400">Connecting…</div>}
-                </div>
+        <div className="flex-1 flex flex-col bg-[#0b0b14] text-slate-100 relative overflow-hidden">
+            {/* Ambient background wash (subtle) */}
+            <div className="pointer-events-none absolute inset-0 opacity-70">
+                <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-pink-500/10 blur-3xl" />
+                <div className="absolute -bottom-28 -right-28 h-96 w-96 rounded-full bg-red-500/10 blur-3xl" />
+            </div>
 
-                <div>
-                    <button title="Invite" className="p-2 rounded-full hover:bg-gray-100 transition">
-                        <UserPlusIcon className="w-6 h-6 text-gray-600" />
-                    </button>
-                    <button title="Room Options" className="p-2 rounded-full hover:bg-gray-100 transition">
-                        <EllipsisVerticalIcon className="w-6 h-6 text-gray-600" />
-                    </button>
+            {/* HEADER */}
+            <div className="relative z-10 border-b border-white/10 bg-[#0f0f18]/70 backdrop-blur-xl">
+                <div className="flex h-24 items-center justify-between px-5">
+                    <div className="min-w-0">
+                        <h2 className="truncate text-lg font-semibold tracking-tight text-slate-100">
+                            {getChatroomDisplayName(activeRoom)}
+                        </h2>
+                        {!connected && (
+                            <div className="text-xs text-slate-400">Connecting…</div>
+                        )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <button
+                            title="Invite"
+                            className="
+                                p-2 rounded-xl
+                                text-slate-300 hover:text-slate-100
+                                hover:bg-white/5 transition
+                                focus:outline-none focus:ring-2 focus:ring-rose-300/25
+                            "
+                        >
+                            <UserPlusIcon className="w-6 h-6" />
+                        </button>
+
+                        <button
+                            title="Room Options"
+                            className="
+                                p-2 rounded-xl
+                                text-slate-300 hover:text-slate-100
+                                hover:bg-white/5 transition
+                                focus:outline-none focus:ring-2 focus:ring-rose-300/25
+                            "
+                        >
+                            <EllipsisVerticalIcon className="w-6 h-6" />
+                        </button>
+                    </div>
                 </div>
             </div>
 
             {/* LIST */}
-            <div
-                ref={listRef}
-                className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-gray-50 to-gray-100">
+            <div ref={listRef} className="relative z-0 flex-1 overflow-y-auto px-4 py-4">
+                {/* list surface gradient */}
+                <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[#0b0b14] via-[#0c0c16] to-[#0a0a12]" />
+
                 {roomStatus === "LOADING" ? (
-                    <div className="h-full flex items-center justify-center text-gray-400">Loading…</div>
+                    <div className="h-full flex items-center justify-center text-slate-400">
+                        Loading…
+                    </div>
                 ) : messages.length === 0 ? (
-                    <div className="h-full flex items-center justify-center text-gray-400">No messages yet</div>
+                    <div className="h-full flex items-center justify-center text-slate-400">
+                        No messages yet
+                    </div>
                 ) : (
                     <div className="flex flex-col gap-2">
-                        {messages.map((m) =>
+                        {messages.map((m) => (
                             <MessageBubble message={m} key={m.seqNo} />
-                        )}
+                        ))}
                     </div>
                 )}
 
                 {!isNearBottom && (
-                    <div className="sticky bottom-2 flex justify-center">
+                    <div className="sticky bottom-3 flex justify-center">
                         <button
                             onClick={() => scrollToBottom("smooth")}
-                            className="px-3 py-1 rounded-full text-xs bg-white border shadow-sm hover:bg-gray-50"
+                            className="
+                                rounded-full px-4 py-2 text-xs font-semibold
+                                text-slate-100
+                                border border-white/10 bg-white/5 backdrop-blur-xl
+                                hover:bg-white/10 transition
+                                shadow-[0_12px_30px_rgba(0,0,0,0.35)]
+                                focus:outline-none focus:ring-2 focus:ring-rose-300/25
+                            "
                         >
-                            Jump To Latest
+                            Jump to latest
                         </button>
                     </div>
                 )}
             </div>
 
-
             {/* INPUT */}
-            <div className="p-4 border-t bg-white">
-                <div className="flex items-center gap-3">
-                    <input
-                        ref={inputRef}
-                        type="text"
-                        placeholder={connected ? "Type a message..." : "Connecting..."}
-                        className="
-                            w-full px-4 py-3 rounded-full
-                            bg-gray-100 focus:bg-white
-                            border border-transparent
-                            focus:border-red-400
-                            focus:ring-2 focus:ring-red-300
-                            outline-none transition
-                        "
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        disabled={!connected}
-                    />
-                    <button
-                        title="Send"
-                        onClick={handleSend}
-                        disabled={!canSend}
-                        className={`
-                            p-3 rounded-full transition-all
-                            ${canSend
-                                ? "bg-gradient-to-br from-red-500 to-pink-500 hover:scale-105 shadow-lg"
-                                : "bg-gray-500 opacity-50"
-                            }
-                        `}
-                    >
-                        <PaperAirplaneIcon className="w-6 h-6 text-white -rotate-45" />
-                    </button>
+            <div className="relative z-10 border-t border-white/10 bg-[#0f0f18]/70 backdrop-blur-xl">
+                <div className="p-4">
+                    <div className="flex items-center gap-3">
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            placeholder={connected ? "Type a message…" : "Connecting…"}
+                            className="
+                                w-full px-5 py-3 rounded-full
+                                bg-white/5 border border-white/10
+                                text-slate-100 placeholder:text-slate-500
+                                outline-none transition
+                                focus:bg-white/7 focus:border-rose-400/50
+                                focus:ring-2 focus:ring-rose-300/25
+                                disabled:opacity-60
+                            "
+                            value={message}
+                            onChange={(e) => setMessage(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            disabled={!connected}
+                        />
+
+                        <button
+                            title="Send"
+                            onClick={handleSend}
+                            disabled={!canSend}
+                            className={[
+                                "p-3 rounded-full transition-all",
+                                "focus:outline-none focus:ring-2 focus:ring-rose-300/35",
+                                canSend
+                                    ? "bg-gradient-to-br from-pink-500 via-rose-500 to-red-500 hover:brightness-110 hover:scale-[1.03] shadow-lg shadow-rose-500/20"
+                                    : "bg-white/5 border border-white/10 opacity-50 cursor-not-allowed",
+                            ].join(" ")}
+                        >
+                            <PaperAirplaneIcon className="w-6 h-6 text-white -rotate-45" />
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

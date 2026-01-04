@@ -18,25 +18,42 @@ const Sidebar: React.FC = () => {
     const [activeTab, setActiveTab] = useState<"friends" | "rooms">("rooms");
 
     const pendingCount = usePendingRequestsStore((s) => s.requests.length);
-
     const pendingLabel = useMemo(() => {
         if (pendingCount <= 0) return "";
         return String(pendingCount);
     }, [pendingCount]);
 
     return (
-        <aside className="w-1/4 min-w-[320px] border-r bg-white/70 backdrop-blur flex flex-col">
+        <aside className="
+                w-1/4 min-w-[320px] flex flex-col
+                border-r border-white/10
+                bg-gradient-to-b from-[#0d0d16]/80 via-[#0c0c14]/85 to-[#0a0a12]/90
+                backdrop-blur-xl
+                relative
+                overflow-hidden
+        ">
+            <div className="pointer-events-none absolute inset-0 -z-10">
+                <div className="absolute -top-32 -left-24 h-72 w-72 rounded-full bg-pink-500/10 blur-3xl" />
+                <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-red-500/10 blur-3xl" />
+            </div>
+
             {/* HEADER */}
-            <div className="sticky top-0 z-10 border-b bg-white/70 backdrop-blur">
+            <div className="
+                sticky top-0 z-10
+                border-b border-white/10
+                bg-[#0f0f18]/70
+                backdrop-blur-xl
+            ">
                 {/* Row 1: user + logout */}
                 <div className="flex items-center justify-between px-4 pt-4">
                     <div className="flex items-center gap-3 min-w-0">
                         <div className="relative">
-                            <UserCircleIcon className="w-10 h-10 text-rose-500" />
+                            <UserCircleIcon className="w-10 h-10 text-rose-400 drop-shadow-[0_0_12px_rgba(244,63,94,0.35)]" />
+
                         </div>
 
                         <div className="min-w-0">
-                            <p className="truncate font-semibold text-gray-900 leading-tight">
+                            <p className="truncate font-semibold text-slate-100 leading-tight">
                                 {user?.username}
                             </p>
                         </div>
@@ -51,24 +68,31 @@ const Sidebar: React.FC = () => {
                         title="Log out"
                         onClick={() => showModal(<LogoutModal />)}
                     >
-                        <ArrowRightStartOnRectangleIcon className="w-6 h-6 text-rose-500" />
+                        <ArrowRightStartOnRectangleIcon className="w-6 h-6 text-rose-400" />
+
                     </button>
                 </div>
 
                 {/* Row 2: segmented control */}
                 <div className="px-4 pb-4 pt-3">
-                    <div className="relative flex rounded-full bg-gray-100/80 p-1 text-sm font-semibold overflow-hidden">
+                    <div className="
+                        relative flex rounded-full p-1 text-sm font-semibold overflow-hidden
+                        bg-white/5
+                        border border-white/10
+                        backdrop-blur
+                    ">
                         <div
                             className={
-                                "absolute top-1 bottom-1 left-1 rounded-full bg-white shadow-sm " +
-                                "w-[calc(50%-0.25rem)] transition-transform duration-200 ease-out " +
+                                "absolute top-1 bottom-1 left-1 rounded-full " +
+                                "w-[calc(50%-0.25rem)] transition-transform duration-300 ease-out " +
+                                "bg-gradient-to-br from-pink-500 via-rose-500 to-red-500 " +
+                                "shadow-lg shadow-rose-500/30 " +
                                 (activeTab === "friends"
                                     ? "translate-x-0"
                                     : "translate-x-[calc(100%)]")
                             }
                             aria-hidden="true"
                         />
-
                         <button
                             type="button"
                             onClick={() => setActiveTab("friends")}
@@ -76,7 +100,7 @@ const Sidebar: React.FC = () => {
                                 "relative z-10 flex-1 px-3 py-2 rounded-full text-center transition " +
                                 (activeTab === "friends"
                                     ? "text-gray-900"
-                                    : "text-gray-500 hover:text-gray-700")
+                                    : "text-slate-400 hover:text-slate-200")
                             }
                         >
                             <span className="inline-flex items-center justify-center gap-2">
@@ -116,9 +140,17 @@ const Sidebar: React.FC = () => {
             </div>
 
             {/* CONTENT */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto bg-black/10">
                 {activeTab === "friends" ? <FriendsTab /> : <ChatroomsTab />}
             </div>
+
+            <div
+                className="pointer-events-none absolute inset-0 opacity-[0.03]"
+                style={{
+                    backgroundImage:
+                        "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\"><filter id=\"n\"><feTurbulence type=\"fractalNoise\" baseFrequency=\"0.8\" numOctaves=\"4\"/></filter><rect width=\"100\" height=\"100\" filter=\"url(%23n)\"/></svg>')",
+                }}
+            />
         </aside>
     );
 };
