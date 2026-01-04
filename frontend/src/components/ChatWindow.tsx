@@ -8,7 +8,7 @@ import { useChatroomsStore } from "../store/chatroomsStore";
 import type { MessageResponse } from "../types";
 import { useUser } from "../context/UserContext";
 
-const MessageBubble = ({ message }: { message: MessageResponse}) => {
+const MessageBubble = ({ message }: { message: MessageResponse }) => {
     const { user } = useUser();
     const isMe = message.senderId === user?.id;
 
@@ -59,6 +59,7 @@ const ChatWindow: React.FC = () => {
     const [message, setMessage] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
 
+    // focus on input
     useEffect(() => {
         setMessage("");
         inputRef.current?.focus();
@@ -79,6 +80,51 @@ const ChatWindow: React.FC = () => {
             handleSend();
         }
     };
+
+    // auto scroll behavior
+    const listRef = useRef<HTMLDivElement>(null);
+    const [isNearBottom, setIsNearBottom] = useState(true);
+
+    const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
+        const el = listRef.current;
+        if (!el) return;
+
+        const doScroll = () => {
+            const top = el.scrollHeight - el.clientHeight + 2;
+            if (behavior === "smooth") {
+                el.scrollTo({ top, behavior });
+            } else {
+                el.scrollTop = top;
+            }
+        };
+
+        requestAnimationFrame(() => requestAnimationFrame(doScroll));
+    }
+
+    useEffect(() => {
+        const el = listRef.current;
+        if (!el) return;
+
+        const onScroll = () => {
+            // how close can the view be to be considered near bottom
+            const threshold = 120; // px
+            const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+            setIsNearBottom(distanceFromBottom < threshold);
+        };
+
+        onScroll();
+        el.addEventListener("scroll", onScroll, { passive: true });
+        return () => el.removeEventListener("scroll", onScroll);
+    }, []);
+
+    useEffect(() => {
+        scrollToBottom("auto");
+    }, [activeRoomId]);
+
+    // scroll on new messages only if user is near bottom
+    useEffect(() => {
+        if (isNearBottom) scrollToBottom();
+    }, [messages.length, isNearBottom]);
 
     if (activeRoomId == null) {
         return (
@@ -110,7 +156,9 @@ const ChatWindow: React.FC = () => {
             </div>
 
             {/* LIST */}
-            <div className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-gray-50 to-gray-100">
+            <div
+                ref={listRef}
+                className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-gray-50 to-gray-100">
                 {roomStatus === "LOADING" ? (
                     <div className="h-full flex items-center justify-center text-gray-400">Loading…</div>
                 ) : messages.length === 0 ? (
@@ -118,11 +166,23 @@ const ChatWindow: React.FC = () => {
                 ) : (
                     <div className="flex flex-col gap-2">
                         {messages.map((m) =>
-                            <MessageBubble message={m} key={m.seqNo}/>
+                            <MessageBubble message={m} key={m.seqNo} />
                         )}
                     </div>
                 )}
+
+                {!isNearBottom && (
+                    <div className="sticky bottom-2 flex justify-center">
+                        <button
+                            onClick={() => scrollToBottom("smooth")}
+                            className="px-3 py-1 rounded-full text-xs bg-white border shadow-sm hover:bg-gray-50"
+                        >
+                            Jump To Latest
+                        </button>
+                    </div>
+                )}
             </div>
+
 
             {/* INPUT */}
             <div className="p-4 border-t bg-white">
