@@ -70,6 +70,7 @@ const ChatroomsTab: React.FC = () => {
                         <MagnifyingGlassIcon className="h-5 w-5 text-slate-400" />
                         <input
                             value={query}
+                            autoComplete="off"
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder="Search chatrooms…"
                             className="
@@ -99,7 +100,7 @@ const ChatroomsTab: React.FC = () => {
             </div>
 
             {/* List */}
-            <div className="flex flex-col gap-2">
+            <div className="flex px-2 flex-col gap-2">
                 {sorted.map((chatroom) => {
                     const isActive = activeRoomId === chatroom.id;
                     const lastText = chatroom.lastMessage ?? "No messages yet";

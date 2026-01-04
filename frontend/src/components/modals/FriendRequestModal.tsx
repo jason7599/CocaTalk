@@ -78,6 +78,7 @@ const FriendRequestModal: React.FC = () => {
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 placeholder="username"
+                                autoComplete="off"
                                 autoFocus
                                 disabled={friendRequestState.submitting}
                                 className="
