@@ -20,7 +20,7 @@ public class FriendshipController {
     @PostMapping("/requests")
     public ResponseEntity<FriendRequestSuccessDto> sendFriendRequest(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody SendFriendRequestDto request
+            @RequestBody CreateFriendRequestDto request
     ) {
         return ResponseEntity.ok(friendshipService.addFriendRequest(userDetails.getId(), request.receiverName()));
     }
@@ -52,12 +52,18 @@ public class FriendshipController {
         return ResponseEntity.ok(friendshipService.listFriends(userDetails.getId()));
     }
 
-    // list pending friend requests
-    @GetMapping("/requests")
-    public ResponseEntity<List<ReceiveFriendRequestDto>> listPendingRequests(
+    @GetMapping("/requests/incoming")
+    public ResponseEntity<List<ReceiveFriendRequestDto>> listReceivedRequests(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ResponseEntity.ok(friendshipService.listPendingRequests(userDetails.getId()));
+        return ResponseEntity.ok(friendshipService.listReceivedRequests(userDetails.getId()));
+    }
+
+    @GetMapping("/requests/outgoing")
+    public ResponseEntity<List<SentFriendRequestDto>> listSentRequests(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return ResponseEntity.ok(friendshipService.listSentRequests(userDetails.getId()));
     }
 
     @GetMapping("/requests/count")

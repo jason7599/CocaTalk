@@ -1,6 +1,7 @@
 package com.jason7599.cocatalk.friendship;
 
-public record SendFriendRequestDto(
+// For sending requests
+public record CreateFriendRequestDto(
         String receiverName
 ) {
 }

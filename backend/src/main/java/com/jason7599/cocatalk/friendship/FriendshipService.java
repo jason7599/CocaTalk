@@ -9,8 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Timestamp;
-import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -68,20 +66,22 @@ public class FriendshipService {
                 .stream().map(UserInfo::new).toList();
     }
 
-    // TODO: I hate using Object arrays. Maybe consider creating another View interface
-    public List<ReceiveFriendRequestDto> listPendingRequests(Long userId) {
-        return userRepository.listPendingRequests(userId)
-                .stream().map(row -> {
-                    Long senderId = ((Number) row[0]).longValue();
-                    String senderName = (String) row[1];
-                    Instant sentAt = ((Timestamp) row[2]).toInstant();
+    public List<ReceiveFriendRequestDto> listReceivedRequests(Long userId) {
+        return userRepository.listReceivedRequests(userId)
+                .stream().map(v -> new ReceiveFriendRequestDto(
+                        v.getId(),
+                        v.getUsername(),
+                        v.getSentAt().toInstant()
+                )).toList();
+    }
 
-                    return new ReceiveFriendRequestDto(
-                            senderId,
-                            senderName,
-                            sentAt
-                    );
-                }).toList();
+    public List<SentFriendRequestDto> listSentRequests(Long userId) {
+        return userRepository.listSentRequests(userId)
+                .stream().map(v -> new SentFriendRequestDto(
+                        v.getId(),
+                        v.getUsername(),
+                        v.getSentAt().toInstant()
+                )).toList();
     }
     
     public int countPendingRequests(Long userId) {

@@ -1,5 +1,6 @@
 package com.jason7599.cocatalk.user;
 
+import com.jason7599.cocatalk.friendship.FriendRequestView;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -65,18 +66,29 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
             """, nativeQuery = true)
     List<UserEntity> listFriends(@Param("userId") Long userId);
 
-    // ReceiveFriendRequestDto
     @Query(value = """
             SELECT
-                f.sender_id,
-                u.username,
-                f.created_at
+                f.sender_id AS id,
+                u.username AS username,
+                f.created_at AS sentAt
             FROM friend_requests f JOIN users u
                 ON f.sender_id = u.id
             WHERE f.receiver_id = :userId
             ORDER BY f.created_at DESC
             """, nativeQuery = true)
-    List<Object[]> listPendingRequests(@Param("userId") Long userId);
+    List<FriendRequestView> listReceivedRequests(@Param("userId") Long userId);
+
+    @Query(value = """
+            SELECT
+                f.receiver_id AS id,
+                u.username AS username,
+                f.created_at AS sentAt
+            FROM friend_requests f JOIN users u
+                ON f.receiver_id = u.id
+            WHERE f.sender_id = :userId
+            ORDER BY f.created_at DESC
+            """, nativeQuery = true)
+    List<FriendRequestView> listSentRequests(@Param("userId") Long userId);
 
     @Query(value = """
             SELECT COUNT(*)
