@@ -1,7 +1,6 @@
 import type React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useModal } from "../../context/ModalContext";
-import { useFriendsStore } from "../../store/friendsStore";
 import { useFriendRequestsStore } from "../../store/friendRequestsStore";
 import {
     UserPlusIcon,
@@ -40,7 +39,7 @@ const FriendRequestsModal: React.FC = () => {
 
     const sentRequests = useFriendRequestsStore((s) => s.sentRequests);
     const receivedRequests = useFriendRequestsStore((s) => s.receivedRequests);
-    
+
     const acceptRequest = useFriendRequestsStore((s) => s.acceptRequest);
     const declineRequest = useFriendRequestsStore((s) => s.declineRequest);
     const cancelRequest = useFriendRequestsStore((s) => s.cancelRequest);
@@ -54,6 +53,12 @@ const FriendRequestsModal: React.FC = () => {
             ? "Request sent"
             : `You are now friends with ${submitState.success.friendInfo.username}`;
     }, [submitState.success]);
+
+    const receivedReqCount = receivedRequests.length;
+    const receivedReqLabel = useMemo(() => {
+        if (receivedReqCount <= 0) return "";
+        return String(receivedReqCount);
+    }, [receivedReqCount]);
 
     const onSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -93,7 +98,7 @@ const FriendRequestsModal: React.FC = () => {
                                         Friend requests
                                     </h2>
                                     <p className="mt-1 text-sm text-slate-400">
-                                        Send a request, cancel sent ones, or acceptRequest received requests.
+                                        Send a request, cancel sent ones, or accept received requests.
                                     </p>
                                 </div>
                             </div>
@@ -145,7 +150,23 @@ const FriendRequestsModal: React.FC = () => {
                                         activeTab === "received" ? "text-white" : "text-slate-300 hover:text-slate-100",
                                     ].join(" ")}
                                 >
-                                    Received
+                                    <span className="inline-flex items-center justify-center gap-2">
+                                        Received
+                                        {receivedReqCount > 0 && (
+                                            <span
+                                                className="
+                                                    inline-flex items-center justify-center
+                                                    min-w-[1.25rem] h-5 px-1
+                                                    text-[0.7rem] font-bold text-white
+                                                    rounded-full
+                                                    bg-gradient-to-br from-pink-500 to-red-700
+                                                    shadow-sm shadow-rose-200/60
+                                                "   
+                                            >
+                                                {receivedReqLabel}
+                                            </span>
+                                        )}
+                                    </span>
                                 </button>
                             </div>
                         </div>
@@ -320,7 +341,7 @@ const FriendRequestsModal: React.FC = () => {
                                                         title="acceptRequest"
                                                     >
                                                         <CheckIcon className="h-4 w-4" />
-                                                        <span>acceptRequest</span>
+                                                        <span>Accept</span>
                                                     </button>
 
                                                     <button
