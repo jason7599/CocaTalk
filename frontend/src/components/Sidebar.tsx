@@ -7,7 +7,7 @@ import {
 import ChatroomsTab from "./ChatroomsTab";
 import { useModal } from "../context/ModalContext";
 import { useUser } from "../context/UserContext";
-import { usePendingRequestsStore } from "../store/pendingRequestsStore";
+import { useFriendRequestsStore } from "../store/friendRequestsStore";
 import LogoutModal from "./modals/LogoutModal";
 import FriendsTab from "./FriendsTab";
 
@@ -17,11 +17,11 @@ const Sidebar: React.FC = () => {
 
     const [activeTab, setActiveTab] = useState<"friends" | "rooms">("rooms");
 
-    const pendingCount = usePendingRequestsStore((s) => s.requests.length);
-    const pendingLabel = useMemo(() => {
-        if (pendingCount <= 0) return "";
-        return String(pendingCount);
-    }, [pendingCount]);
+    const receivedReqCount = useFriendRequestsStore(s => s.receivedRequests.length);
+    const receivedReqLabel = useMemo(() => {
+        if (receivedReqCount <= 0) return "";
+        return String(receivedReqCount);
+    }, [receivedReqCount]);
 
     return (
         <aside className="
@@ -105,19 +105,19 @@ const Sidebar: React.FC = () => {
                         >
                             <span className="inline-flex items-center justify-center gap-2">
                                 Friends
-                                {pendingCount > 0 && (
+                                {receivedReqCount > 0 && (
                                     <span
                                         className="
                                             inline-flex items-center justify-center
                                             min-w-[1.25rem] h-5 px-1
                                             text-[0.7rem] font-bold text-white
                                             rounded-full
-                                            bg-gradient-to-br from-pink-500 to-red-500
+                                            bg-gradient-to-br from-pink-500 to-red-700
                                             shadow-sm shadow-rose-200/60
                                         "
-                                        title={`${pendingCount} pending request${pendingCount === 1 ? "" : "s"}`}
+                                        title={`${receivedReqCount} pending request${receivedReqCount === 1 ? "" : "s"}`}
                                     >
-                                        {pendingLabel}
+                                        {receivedReqLabel}
                                     </span>
                                 )}
                             </span>

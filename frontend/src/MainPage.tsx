@@ -4,7 +4,7 @@ import ChatWindow from "./components/ChatWindow";
 import { ModalProvider } from "./context/ModalContext";
 import { UserProvider } from "./context/UserContext";
 import { useEffect } from "react";
-import { usePendingRequestsStore } from "./store/pendingRequestsStore";
+import { useFriendRequestsStore } from "./store/friendRequestsStore";
 import { useFriendsStore } from "./store/friendsStore";
 import { useChatroomsStore } from "./store/chatroomsStore";
 import { StompProvider } from "./ws/StompContext";
@@ -12,7 +12,7 @@ import { StompProvider } from "./ws/StompContext";
 const MainPage: React.FC = () => {
 
     useEffect(() => {
-        usePendingRequestsStore.getState().fetch();
+        useFriendRequestsStore.getState().fetchAll();
         useFriendsStore.getState().fetch();
         useChatroomsStore.getState().fetch();
     }, []);

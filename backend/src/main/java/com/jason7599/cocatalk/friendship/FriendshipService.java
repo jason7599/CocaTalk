@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -18,7 +19,7 @@ public class FriendshipService {
     private final UserRepository userRepository;
 
     @Transactional
-    public FriendRequestSuccessDto addFriendRequest(Long senderId, String receiverName) {
+    public FriendRequestSentResult addFriendRequest(Long senderId, String receiverName) {
         UserEntity friend = userRepository.findByUsername(receiverName)
                 .orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND, "This username does not exist"));
         Long friendId = friend.getId();
@@ -38,11 +39,11 @@ public class FriendshipService {
         // Reverse friend request already exists - auto accept
         if (userRepository.friendRequestExists(friendId, senderId)) {
             acceptFriendRequest(friendId, senderId);
-            return new FriendRequestSuccessDto(new UserInfo(friend), FriendRequestSuccessType.AUTO_ACCEPT);
+            return new FriendRequestSentResult(FriendRequestSentResultType.AUTO_ACCEPT, null, new UserInfo(friend));
         }
 
         userRepository.addFriendRequest(senderId, friendId);
-        return new FriendRequestSuccessDto(new UserInfo(friend), FriendRequestSuccessType.SENT);
+        return new FriendRequestSentResult(FriendRequestSentResultType.SENT, new SentFriendRequestDto(friendId, friend.getUsername(), Instant.now()), new UserInfo(friend));
     }
 
     @Transactional

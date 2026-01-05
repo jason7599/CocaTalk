@@ -11,9 +11,15 @@ export interface ChatroomSummary {
     otherMemberCount: number;
 };
 
-export interface PendingRequest {
+export interface ReceivedFriendRequest {
     senderId: number;
     senderName: string;
+    sentAt: string;
+};
+
+export interface SentFriendRequest {
+    receiverId: number;
+    receiverName: number;
     sentAt: string;
 };
 
@@ -22,11 +28,12 @@ export interface UserInfo {
     username: string;
 };
 
-export type FriendRequestSuccessType = "SENT" | "AUTO_ACCEPT";
+export type FriendRequestSentResultType = "SENT" | "AUTO_ACCEPT";
 
-export interface FriendRequestSuccessDto {
+export interface FriendRequestSentResult {
+    type: FriendRequestSentResultType;
+    request: SentFriendRequest | null;
     friendInfo: UserInfo;
-    type: FriendRequestSuccessType;
 }
 
 export interface MessageRequest {

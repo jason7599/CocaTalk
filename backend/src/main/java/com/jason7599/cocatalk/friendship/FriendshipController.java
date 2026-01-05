@@ -18,7 +18,7 @@ public class FriendshipController {
 
     // add friend request
     @PostMapping("/requests")
-    public ResponseEntity<FriendRequestSuccessDto> sendFriendRequest(
+    public ResponseEntity<FriendRequestSentResult> sendFriendRequest(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody CreateFriendRequestDto request
     ) {
@@ -34,13 +34,22 @@ public class FriendshipController {
         return ResponseEntity.ok(friendshipService.acceptFriendRequest(senderId, userDetails.getId()));
     }
 
-    // delete friend request
-    @DeleteMapping("/requests/{senderId}")
-    public ResponseEntity<Void> removeFriendRequest(
+    // delete incoming friend request
+    @DeleteMapping("/requests/incoming/{senderId}")
+    public ResponseEntity<Void> declineFriendRequest(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long senderId
     ) {
         friendshipService.removeFriendRequst(senderId, userDetails.getId());
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/requests/outgoing/{receiverId}")
+    public ResponseEntity<Void> cancelFriendRequest(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long receiverId
+    ) {
+        friendshipService.removeFriendRequst(userDetails.getId(), receiverId);
         return ResponseEntity.ok().build();
     }
 

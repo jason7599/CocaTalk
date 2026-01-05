@@ -1,16 +1,13 @@
 import type React from "react";
-import { useMemo, useState } from "react";
 import {
     UserPlusIcon,
-    BellIcon,
     ChatBubbleLeftIcon,
     XMarkIcon,
 } from "@heroicons/react/24/solid";
 import { useModal } from "../context/ModalContext";
-import { usePendingRequestsStore } from "../store/pendingRequestsStore";
+import { useFriendRequestsStore } from "../store/friendRequestsStore";
 import { useFriendsStore } from "../store/friendsStore";
-import FriendRequestModal from "./modals/FriendRequestModal";
-import PendingRequestsModal from "./modals/PendingRequestsModal";
+import FriendRequestsModal from "./modals/FriendRequestsModal";
 import RemoveFriendModal from "./modals/RemoveFriendModal";
 import { useChatroomsStore } from "../store/chatroomsStore";
 import { useActiveRoomStore } from "../store/activeRoomStore";
@@ -19,17 +16,10 @@ const FriendsTab: React.FC = () => {
     const friends = useFriendsStore((s) => s.friends);
     const openDirectChatroom = useChatroomsStore((s) => s.openDirectChatroom);
     const { showModal } = useModal();
-    const pendingRequestCount = usePendingRequestsStore((s) => s.requests.length);
+    const receivedReqCount = useFriendRequestsStore((s) => s.receivedRequests.length);
     const setActiveRoom = useActiveRoomStore((s) => s.setActiveRoom);
 
-    const pendingLabel = useMemo(() => {
-        if (pendingRequestCount <= 0) return "Requests";
-        if (pendingRequestCount === 1) return "1 request";
-        return `${pendingRequestCount} requests`;
-    }, [pendingRequestCount]);
-
-    const handleOpenFriendRequest = () => showModal(<FriendRequestModal />);
-    const handleOpenPendingRequests = () => showModal(<PendingRequestsModal />);
+    const handleOpenFriendRequest = () => showModal(<FriendRequestsModal />);
 
     const handleRemove = (friendId: number, friendName: string) => {
         showModal(<RemoveFriendModal friendId={friendId} friendName={friendName} />);
@@ -66,42 +56,24 @@ const FriendsTab: React.FC = () => {
                         "
                     >
                         <UserPlusIcon className="h-5 w-5" />
-                        Add Friend
-                    </button>
+                        Friend Requests
 
-                    {/* Pending Requests */}
-                    <button
-                        onClick={handleOpenPendingRequests}
-                        className="
-                            relative flex items-center justify-center gap-2
-                            rounded-xl px-4 py-3 text-sm font-semibold
-                            text-slate-200 bg-white/5
-                            border border-white/10
-                            hover:bg-white/10 hover:-translate-y-[1px]
-                            transition
-                            focus:outline-none focus:ring-2 focus:ring-rose-300/30
-                        "
-                        aria-label={pendingLabel}
-                        title={pendingLabel}
-                    >
-                        <BellIcon className="h-5 w-5 text-slate-200" />
-                        <span className="hidden sm:inline">Requests</span>
-
-                        {pendingRequestCount > 0 && (
+                        {receivedReqCount > 0 && (
                             <span
                                 className="
                                     ml-1 inline-flex items-center justify-center
                                     min-w-[1.35rem] h-5 px-1
                                     text-[0.7rem] font-bold text-white
                                     rounded-full
-                                    bg-gradient-to-br from-pink-500 to-red-500
+                                    bg-gradient-to-br from-pink-500 to-red-800
                                     shadow-sm shadow-rose-500/25
                                 "
                             >
-                                {pendingRequestCount}
+                                {receivedReqCount}
                             </span>
                         )}
                     </button>
+
                 </div>
             </div>
 
