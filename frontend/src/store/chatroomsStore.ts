@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ChatroomSummary } from "../types";
+import type { ChatroomSummary, MessagePreview } from "../types";
 import { getOrCreateDirectChatroom, loadChatrooms } from "../api/chatrooms";
 
 type ChatroomsState = {
@@ -11,15 +11,14 @@ type ChatroomsState = {
     // "reducers" (pure-ish)
     setAll: (rooms: ChatroomSummary[]) => void;
     upsert: (room: ChatroomSummary) => void;
-    update: (roomId: number, updates: Partial<ChatroomSummary>) => void;
     remove: (roomId: number) => void;
-
+    
     // "commands" (async, call API then reducers)
     fetch: () => Promise<void>;
     openDirectChatroom: (otherUserId: number) => Promise<ChatroomSummary | null>;
 
-    // "WS reducer" (called by websocket notification handler)
-    applyRoomActivity: (room: ChatroomSummary) => void;
+    // WS reducer
+    applyUpdate: (preview: MessagePreview) => void;
 };
 
 function sortByLastMessageAtDesc(rooms: ChatroomSummary[]) {
@@ -41,13 +40,6 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
             const merged = exists ? s.chatrooms : [room, ...s.chatrooms];
             return { chatrooms: sortByLastMessageAtDesc(merged) };
         }),
-
-    update: (roomId, updates) =>
-        set((s) => ({
-            chatrooms: sortByLastMessageAtDesc(
-                s.chatrooms.map((r) => (r.id === roomId ? { ...r, ...updates } : r))
-            ),
-        })),
 
     remove: (roomId) =>
         set((s) => ({
@@ -81,9 +73,25 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
         }
     },
 
-    // WS reducer
-    applyRoomActivity: (room) => {
-        // When a notification says "this room changed", we upsert + sort.
-        get().upsert(room);
-    },
+    applyUpdate: (preview) =>
+        set((s) => {
+            const idx = s.chatrooms.findIndex((r) => r.id === preview.roomId);
+            if (idx === -1) {
+                console.warn(`[chatroomsStore.applyUpdate] room of ${preview.roomId} not found!`); // shouldn't happen...
+                return s; // no-op
+            }
+
+            const room = s.chatrooms[idx];
+
+            const updated: ChatroomSummary = {
+                ...room,
+                lastMessage: preview.contentPreview,
+                lastMessageAt: preview.createdAt,
+            };
+
+            const next = [...s.chatrooms];
+            next[idx] = updated;
+
+            return { chatrooms: sortByLastMessageAtDesc(next) };
+        }),
 }));

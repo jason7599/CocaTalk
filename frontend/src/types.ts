@@ -48,6 +48,13 @@ export interface MessageResponse {
     createdAt: string;
 };
 
+export interface MessagePreview {
+    roomId: number;
+    senderName: string;
+    contentPreview: string;
+    createdAt: string;
+};
+
 export interface DirectChatroomRequest {
     otherUserId: number;
 };

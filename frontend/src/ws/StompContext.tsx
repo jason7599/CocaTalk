@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Client, type IMessage, type StompSubscription } from "@stomp/stompjs";
 import { useActiveRoomStore } from "../store/activeRoomStore";
+import type { MessagePreview } from "../types";
+import { useChatroomsStore } from "../store/chatroomsStore";
 
 const WS_URL = import.meta.env.VITE_WS_URL;
 
@@ -46,8 +48,8 @@ export const StompProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 notificationSubRef.current = c.subscribe(
                     "/user/queue/notifications",
                     (frame: IMessage) => {
-                        // todo
-                        console.log(frame.body);
+                        const messagePreview: MessagePreview = JSON.parse(frame.body);
+                        useChatroomsStore.getState().applyUpdate(messagePreview);
                     }
                 );
             },
