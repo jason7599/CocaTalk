@@ -33,22 +33,28 @@ public class RoomMembershipService {
     }
 
     public Set<Long> loadMemberIds(Long roomId) {
-        Set<String> cache = redis.opsForSet().members(key(roomId));
-        if (cache != null) {
-            maybeRefreshTTL(key(roomId));
+        String k = key(roomId);
+
+        Set<String> cache = redis.opsForSet().members(k);
+
+        // null check kinda redundant - Redis should return an empty set if the key is not present
+        // just to keep compiler happy
+        if (cache != null && !cache.isEmpty()) {
+            maybeRefreshTTL(k);
             return cache.stream()
                     .map(Long::valueOf)
                     .collect(Collectors.toUnmodifiableSet());
         }
 
         Set<Long> res = chatroomService.getMemberIds(roomId);
-        redis.opsForSet().add(key(roomId), res.stream().map(String::valueOf).toArray(String[]::new));
-        redis.expire(key(roomId), TTL);
+
+        redis.opsForSet().add(k, res.stream().map(String::valueOf).toArray(String[]::new));
+        redis.expire(k, TTL);
         return res;
     }
 
     private void maybeRefreshTTL(String key) {
-        if (ThreadLocalRandom.current().nextDouble() < TTL_REFRESH_CHANCE_ON_READ) {
+        if (ThreadLocalRandom.current().nextDouble() <= TTL_REFRESH_CHANCE_ON_READ) {
             redis.expire(key, TTL);
         }
     }

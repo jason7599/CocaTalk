@@ -80,7 +80,13 @@ public class JwtService {
                 .orElseThrow(() -> new ApiError(HttpStatus.FORBIDDEN, "userid not found"));
 
         UserDetails userDetails = new CustomUserDetails(user);
-        return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+        return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()) {
+            @Override
+            public String getName() {
+                return id.toString();
+            }
+        };
     }
 
     public Long extractUserId(String token) {

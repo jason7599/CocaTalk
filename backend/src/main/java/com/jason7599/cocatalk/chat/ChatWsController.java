@@ -40,6 +40,8 @@ public class ChatWsController {
         // This is for the users connected to topic/room.%d = users who have this chat window open
         messagingTemplate.convertAndSend("/topic/rooms.%d".formatted(roomId), messageResponse);
 
+        System.out.println("membershipCache.loadMemberIds(roomId) = " + membershipCache.loadMemberIds(roomId));
+
         // fanout notification, /user/queue/...
         // This is for the sidebar updates.
         for (Long memberId : membershipCache.loadMemberIds(roomId)) {
