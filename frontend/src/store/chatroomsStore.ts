@@ -18,7 +18,7 @@ type ChatroomsState = {
     openDirectChatroom: (otherUserId: number) => Promise<ChatroomSummary | null>;
 
     // WS reducer
-    applyUpdate: (preview: MessagePreview) => void;
+    onNewMessage: (preview: MessagePreview) => void;
 };
 
 function sortByLastMessageAtDesc(rooms: ChatroomSummary[]) {
@@ -73,11 +73,11 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
         }
     },
 
-    applyUpdate: (preview) =>
+    onNewMessage: (preview) =>
         set((s) => {
             const idx = s.chatrooms.findIndex((r) => r.id === preview.roomId);
             if (idx === -1) {
-                console.warn(`[chatroomsStore.applyUpdate] room of ${preview.roomId} not found!`); // shouldn't happen...
+                console.warn(`[chatroomsStore.onNewMessage] room of ${preview.roomId} not found!`); // shouldn't happen...
                 return s; // no-op
             }
 

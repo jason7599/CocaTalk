@@ -49,7 +49,7 @@ export const StompProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     "/user/queue/notifications",
                     (frame: IMessage) => {
                         const messagePreview: MessagePreview = JSON.parse(frame.body);
-                        useChatroomsStore.getState().applyUpdate(messagePreview);
+                        useChatroomsStore.getState().onNewMessage(messagePreview);
                     }
                 );
             },
