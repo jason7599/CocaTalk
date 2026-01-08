@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { Client } from "@stomp/stompjs";
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { Client, type IMessage, type StompSubscription } from "@stomp/stompjs";
 import { useActiveRoomStore } from "../store/activeRoomStore";
 
 const WS_URL = import.meta.env.VITE_WS_URL;
@@ -13,6 +13,13 @@ const StompContext = createContext<StompContextValue>({ client: null, connected:
 
 export const StompProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [connected, setConnected] = useState(false);
+    const notificationSubRef = useRef<StompSubscription | null>(null);
+
+    const closeConnection = () => {
+        notificationSubRef.current?.unsubscribe();
+        notificationSubRef.current = null;
+        setConnected(false);
+    };
 
     const client = useMemo(() => {
         const c = new Client({
@@ -26,14 +33,28 @@ export const StompProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
             // Ensure latest token is used on every connect/reconnect
             beforeConnect: async () => {
-                c.connectHeaders = { Authorization: `Bearer ${localStorage.getItem("token")}` };
+                c.connectHeaders = {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`
+                };
             },
 
-            onConnect: () => setConnected(true),
-            onDisconnect: () => setConnected(false),
-            onWebSocketClose: () => setConnected(false),
-            onWebSocketError: () => setConnected(false),
-            onStompError: () => setConnected(false),
+            onConnect: () => {
+                setConnected(true);
+
+                // defensive
+                notificationSubRef.current?.unsubscribe();
+                notificationSubRef.current = c.subscribe(
+                    "/user/queue/notifications",
+                    (frame: IMessage) => {
+                        // todo
+                        console.log(frame.body);
+                    }
+                );
+            },
+            onDisconnect: closeConnection,
+            onWebSocketClose: closeConnection,
+            onWebSocketError: closeConnection,
+            onStompError: closeConnection,
         });
 
         return c;

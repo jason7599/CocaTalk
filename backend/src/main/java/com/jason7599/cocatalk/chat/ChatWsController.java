@@ -42,20 +42,17 @@ public class ChatWsController {
 
         // fanout notification, /user/queue/...
         // This is for the sidebar updates.
-        // TODO: this might get heavy. Maybe consider delegating to a message broker
         for (Long memberId : membershipCache.loadMemberIds(roomId)) {
-            if (!memberId.equals(userDetails.getId())) {
-                messagingTemplate.convertAndSendToUser(
-                        userDetails.getUsername(),
-                        "/queue/notifications",
-                        new MessagePreview(
-                                roomId,
-                                userDetails.getUsername(),
-                                request.content(),
-                                Instant.now()
-                        )
-                );
-            }
+            messagingTemplate.convertAndSendToUser(
+                    memberId.toString(),
+                    "/queue/notifications",
+                    new MessagePreview(
+                            roomId,
+                            userDetails.getUsername(),
+                            request.content(),
+                            Instant.now()
+                    )
+            );
         }
     }
 }

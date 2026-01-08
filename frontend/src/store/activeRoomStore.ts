@@ -34,54 +34,16 @@ type ActiveRoomState = {
     loadOlderMessages: () => void;
 };
 
-export const useActiveRoomStore = create<ActiveRoomState>((set, get) => ({
-    stompClient: null,
-    stompConnected: false,
+export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
 
-    activeRoomId: null,
-    status: "IDLE",
-    error: null,
+    const cancelInFlight = () => {
+        const { _abort, _sub } = get();
+        _abort?.abort();
+        _sub?.unsubscribe();
+        set({ _abort: null, _sub: null });
+    };
 
-    members: {},
-
-    messages: [],
-    nextCursor: null,
-    hasMoreMessages: false,
-    loadingOlderMessages: false,
-
-    _sub: null,
-    _abort: null,
-    _epoch: 0,
-
-    // bind stomp & active room lifecycle together
-    // re-runs every time stomp client updates, thanks to StompBinder.tsx
-    bindStomp: (client, connected) => {
-        set({ stompClient: client, stompConnected: connected });
-
-        const { activeRoomId } = get();
-        if (connected && client && activeRoomId) {
-            get().setActiveRoom(activeRoomId);
-        }
-
-        if (!connected) {
-            const { _sub } = get();
-            _sub?.unsubscribe();
-            set({ _sub: null });
-        }
-    },
-
-    setActiveRoom: (roomId) => {
-        if (!roomId) {
-            get().clearActiveRoom();
-            return;
-        }
-
-        const { stompClient, stompConnected } = get();
-
-        // cancel previous work
-        get()._abort?.abort();
-        get()._sub?.unsubscribe();
-
+    const beginRoomTransaction = (roomId: number) => {
         const nextEpoch = get()._epoch + 1;
         const abort = new AbortController();
 
@@ -89,87 +51,137 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => ({
             activeRoomId: roomId,
             status: "LOADING",
             error: null,
-            members: [],
+
+            members: {},
+
             messages: [],
             nextCursor: null,
             hasMoreMessages: false,
             loadingOlderMessages: false,
+
             _abort: abort,
             _sub: null,
-            _epoch: nextEpoch
+            _epoch: nextEpoch,
         });
 
-        if (stompClient && stompConnected) {
-            const destination = `/topic/rooms.${roomId}`;
-            const sub = stompClient.subscribe(destination, (frame: IMessage) => {
-                const msg: MessageResponse = JSON.parse(frame.body);
+        return { nextEpoch, abort };
+    };
 
-                console.log(msg);
+    const isStillCurrent = (roomId: number, epoch: number, abort: AbortController) => {
+        if (abort.signal.aborted) return false;
+        const s = get();
+        return s.activeRoomId === roomId && s._epoch === epoch;
+    };
 
-                const { activeRoomId: cur } = get();
-                if (cur !== msg.roomId) {
-                    return;
-                }
+    const subscribeToRoomTopic = (roomId: number) => {
+        const { stompClient, stompConnected } = get();
+        if (!stompClient || !stompConnected) return null;
 
-                set((s) => ({ messages: [...s.messages, msg] }));
+        const destination = `/topic/rooms.${roomId}`;
+        return stompClient.subscribe(destination, (frame: IMessage) => {
+            const msg: MessageResponse = JSON.parse(frame.body);
+
+            if (get().activeRoomId !== msg.roomId) return;
+
+            set((s) => ({ messages: [...s.messages, msg] }));
+        })
+    };
+
+    const loadInitialRoomData = async (roomId: number, epoch: number, abort: AbortController) => {
+        try {
+            const [messagePage, memberInfos] = await Promise.all([
+                loadMessages(roomId, { signal: abort.signal }),
+                getMembersInfo(roomId, { signal: abort.signal })
+            ]);
+
+            if (!isStillCurrent(roomId, epoch, abort)) return;
+
+            const members = Object.fromEntries(memberInfos.map((m) => [m.id, m]));
+
+            set({
+                status: "READY",
+                messages: messagePage.messages,
+                nextCursor: messagePage.nextCursor,
+                hasMoreMessages: messagePage.hasMore,
+                members
             });
-
-            set({ _sub: sub });
+        } catch (err: any) {
+            if (!isStillCurrent(roomId, epoch, abort)) return;
+            set({ status: "ERROR", error: err.message });
         }
+    };
 
-        // Load room data
-        (async () => {
-            try {
-                const [messagePage, memberInfos] = await Promise.all([
-                    loadMessages(roomId, { signal: abort.signal }),
-                    getMembersInfo(roomId, { signal: abort.signal })
-                ]);
-                if (abort.signal.aborted) return;
+    return {
+        stompClient: null,
+        stompConnected: false,
 
-                const { _epoch, activeRoomId } = get();
-                if (_epoch !== nextEpoch) return;
-                if (activeRoomId !== roomId) return;
+        activeRoomId: null,
+        status: "IDLE",
+        error: null,
 
-                const members = Object.fromEntries(
-                    memberInfos.map(m => [m.id, m])
-                );
+        members: {},
 
-                set({
-                    status: "READY",
-                    messages: messagePage.messages,
-                    nextCursor: messagePage.nextCursor,
-                    hasMoreMessages: messagePage.hasMore,
-                    members
-                });
-            } catch (err: any) {
-                if (abort.signal.aborted) return;
-                if (get()._epoch !== nextEpoch) return;
+        messages: [],
+        nextCursor: null,
+        hasMoreMessages: false,
+        loadingOlderMessages: false,
 
-                set({ status: "ERROR", error: err.message });
+        _sub: null,
+        _abort: null,
+        _epoch: 0,
+
+        // bind stomp & active room lifecycle together
+        // re-runs every time stomp client updates, thanks to StompContext.tsx
+        bindStomp: (client, connected) => {
+            set({ stompClient: client, stompConnected: connected });
+
+            const { activeRoomId } = get();
+            if (connected && client && activeRoomId) {
+                get().setActiveRoom(activeRoomId);
             }
-        })();
-    },
 
-    clearActiveRoom: () => {
-        const { _abort, _sub } = get();
-        _abort?.abort();
-        _sub?.unsubscribe();
-        set({
-            activeRoomId: null,
-            status: "IDLE",
-            error: null,
-            members: [],
-            messages: [],
-            nextCursor: null,
-            hasMoreMessages: false,
-            loadingOlderMessages: false,
-            _abort: null,
-            _sub: null,
-            _epoch: get()._epoch + 1
-        });
-    },
+            if (!connected) {
+                get()._sub?.unsubscribe();
+                set({ _sub: null });
+            }
+        },
 
-    loadOlderMessages: () => {
+        setActiveRoom: (roomId) => {
+            if (!roomId) {
+                get().clearActiveRoom();
+                return;
+            }
 
+            cancelInFlight();
+
+            const { nextEpoch, abort } = beginRoomTransaction(roomId);
+
+            const sub = subscribeToRoomTopic(roomId);
+            if (sub) set({ _sub: sub });
+
+            loadInitialRoomData(roomId, nextEpoch, abort);
+        },
+
+        clearActiveRoom: () => {
+            cancelInFlight();
+            set({
+                activeRoomId: null,
+                status: "IDLE",
+                error: null,
+
+                members: {},
+
+                messages: [],
+                nextCursor: null,
+                hasMoreMessages: false,
+                loadingOlderMessages: false,
+                
+                _epoch: get()._epoch + 1
+            });
+        },
+
+        loadOlderMessages: () => {
+
+        }
     }
-}));
+});
