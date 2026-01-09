@@ -26,10 +26,22 @@ type ActiveRoomState = {
     _abort: AbortController | null;
     _epoch: number;
 
+    // ack internals
+    // _isNearBottom: boolean;
+    // _ackTimer: number | null;
+    // _pendingAck: number;
+    // _lastSentAck: number;
+
     // actions
     bindStomp: (client: Client | null, connected: boolean) => void;
+
     setActiveRoom: (roomId: number | null) => void;
     clearActiveRoom: () => void;
+
+    sendMessage: (content: string) => void;
+
+    setNearBottom: (near: boolean) => void;
+    ackUpTo: (seq: number) => void;
 
     loadOlderMessages: () => void;
 };
@@ -40,7 +52,12 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
         const { _abort, _sub } = get();
         _abort?.abort();
         _sub?.unsubscribe();
-        set({ _abort: null, _sub: null });
+        set({ 
+            _abort: null, 
+            _sub: null,
+            // _ackTimer: null,
+            // _pendingAck: 0 
+        });
     };
 
     const beginRoomTransaction = (roomId: number) => {
@@ -177,6 +194,18 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
                 loadingOlderMessages: false,
                 
                 _epoch: get()._epoch + 1
+            });
+        },
+
+        sendMessage: (content) => {
+            const { stompClient, stompConnected, activeRoomId } = get();
+            
+            if (!stompClient || !stompConnected) return;
+            if (activeRoomId == null) return;
+
+            stompClient.publish({
+                destination: `/app/chat.send.${activeRoomId}`,
+                body: JSON.stringify({ content })
             });
         },
 

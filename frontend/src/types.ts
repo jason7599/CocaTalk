@@ -6,9 +6,11 @@ export interface ChatroomSummary {
     alias: string | null;
     lastMessage: string | null;
     lastMessageAt: string;
-    createdAt: string;
+    lastSeq: number;
+    myLastAck: number;
     memberNamesPreview: string[];
     otherMemberCount: number;
+    createdAt: string;
 };
 
 export interface ReceivedFriendRequest {

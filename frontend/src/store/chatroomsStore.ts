@@ -12,7 +12,9 @@ type ChatroomsState = {
     setAll: (rooms: ChatroomSummary[]) => void;
     upsert: (room: ChatroomSummary) => void;
     remove: (roomId: number) => void;
-    
+
+    setMyLastAck: (roomId: number, ackSeq: number) => void;
+
     // "commands" (async, call API then reducers)
     fetch: () => Promise<void>;
     openDirectChatroom: (otherUserId: number) => Promise<ChatroomSummary | null>;
@@ -45,6 +47,15 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
         set((s) => ({
             chatrooms: s.chatrooms.filter((r) => r.id !== roomId),
         })),
+
+    setMyLastAck: (roomId, ackSeq) => {
+        set((s) => ({
+            chatrooms: s.chatrooms.map((r) => r.id === roomId
+                ? { ...r, myLastAck: ackSeq }
+                : r
+            )
+        }));
+    },
 
     fetch: async () => {
         set({ loading: true, error: null });

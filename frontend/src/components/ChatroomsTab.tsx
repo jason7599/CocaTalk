@@ -21,6 +21,10 @@ function formatDate(ts: string | number | Date) {
     return d.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
+function getUnreadCount(room: ChatroomSummary) {
+    return room.lastSeq - room.myLastAck;
+}
+
 const ChatroomsTab: React.FC = () => {
     const chatrooms = useChatroomsStore((s) => s.chatrooms);
     const activeRoomId = useActiveRoomStore((s) => s.activeRoomId);
@@ -105,6 +109,7 @@ const ChatroomsTab: React.FC = () => {
                     const isActive = activeRoomId === chatroom.id;
                     const lastText = chatroom.lastMessage ?? "No messages yet";
                     const lastAt = chatroom.lastMessageAt;
+                    const unreadCount = getUnreadCount(chatroom);
 
                     return (
                         <button
@@ -167,20 +172,30 @@ const ChatroomsTab: React.FC = () => {
                                         </div>
                                     </div>
                                 </div>
-
                                 <div className="flex flex-col items-end gap-1 pt-1 flex-none">
-                                    {lastAt ? (
-                                        <>
-                                            <div className="text-xs font-semibold text-slate-300">
-                                                {formatTime(lastAt)}
-                                            </div>
-                                            <div className="text-[0.7rem] text-slate-500">
-                                                {formatDate(lastAt)}
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <div className="text-[0.7rem] text-slate-500">—</div>
-                                    )}
+                                    <div className="flex items-center gap-2">
+                                        <div className="text-xs font-semibold text-slate-300">
+                                            {formatTime(lastAt)}
+                                        </div>
+                                        {unreadCount && (
+                                            <span
+                                                className={[
+                                                    "inline-flex items-center justify-center",
+                                                    "min-w-[18px] h-[18px] px-1.5",
+                                                    "rounded-full text-[11px] font-extrabold",
+                                                    "text-white",
+                                                    "bg-gradient-to-r from-rose-500 to-pink-500",
+                                                    "shadow-[0_0_18px_rgba(244,63,94,0.35)]",
+                                                    "ring-1 ring-white/20",
+                                                ].join(" ")}
+                                                aria-label={`${unreadCount} unread`}
+                                                title={`${unreadCount} unread`}
+                                            >
+                                                {unreadCount > 99 ? "99+" : unreadCount}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="text-[0.7rem] text-slate-500">{formatDate(lastAt)}</div>
                                 </div>
                             </div>
 

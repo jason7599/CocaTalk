@@ -6,7 +6,6 @@ import {
 } from "@heroicons/react/24/outline";
 import { getChatroomDisplayName } from "../utils/chatroomName";
 import { useStomp } from "../ws/StompContext";
-import { useStompPublisher } from "../ws/useStompPublisher";
 import { useActiveRoomStore } from "../store/activeRoomStore";
 import { useChatroomsStore } from "../store/chatroomsStore";
 import type { MessageResponse } from "../types";
@@ -60,12 +59,13 @@ const MessageBubble = ({ message }: { message: MessageResponse }) => {
 
 const ChatWindow: React.FC = () => {
     const { connected } = useStomp();
-    const { publish } = useStompPublisher();
 
     const activeRoomId = useActiveRoomStore((s) => s.activeRoomId);
     const activeRoom = useChatroomsStore((s) =>
         activeRoomId === null ? null : s.chatrooms.find((r) => r.id === activeRoomId) ?? null
     );
+
+    const sendMessage = useActiveRoomStore((s) => s.sendMessage);
 
     const roomStatus = useActiveRoomStore((s) => s.status);
     const messages = useActiveRoomStore((s) => s.messages);
@@ -82,7 +82,11 @@ const ChatWindow: React.FC = () => {
 
     const handleSend = () => {
         if (!canSend || activeRoomId == null) return;
-        publish(`/app/chat.send.${activeRoomId}`, { content: message });
+        const trimmed = message.trim();
+        if (!trimmed) return;
+
+        sendMessage(trimmed);
+
         setMessage("");
         inputRef.current?.focus();
     };
