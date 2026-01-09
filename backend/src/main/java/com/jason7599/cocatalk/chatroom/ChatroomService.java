@@ -65,9 +65,11 @@ public class ChatroomService {
                 row.getAlias(),
                 row.getLastMessage(),
                 row.getLastMessageAt().toInstant(),
-                row.getCreatedAt().toInstant(),
+                row.getLastSeq(),
+                row.getMyLastAck(),
                 roomMemberNames.getOrDefault(row.getId(), List.of()),
-                roomMemberCount.getOrDefault(row.getId(), 0)
+                roomMemberCount.getOrDefault(row.getId(), 0),
+                row.getCreatedAt().toInstant()
         )).toList();
     }
 
@@ -87,9 +89,11 @@ public class ChatroomService {
                     chatroomRepository.getAlias(chatroom.getId(), myId),
                     chatroomRepository.getLastMessage(chatroom.getId()),
                     chatroom.getLastMessageAt(),
-                    chatroom.getCreatedAt(),
+                    chatroom.getLastSeq(),
+                    chatroomRepository.getMyLastAck(chatroom.getId(), myId),
                     List.of(userRepository.findById(otherId).orElseThrow().getUsername()),
-                    1
+                    1,
+                    chatroom.getCreatedAt()
             );
         }
 
@@ -106,9 +110,11 @@ public class ChatroomService {
                 null,
                 null,
                 null,
-                chatroom.getCreatedAt(),
+                0L,
+                0L,
                 List.of(userRepository.findById(otherId).orElseThrow().getUsername()),
-                1
+                1,
+                chatroom.getCreatedAt()
         );
     }
 

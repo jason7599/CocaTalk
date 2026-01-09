@@ -18,6 +18,8 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
                 rm.alias AS alias,
                 m.content AS lastMessage,
                 r.last_message_at AS lastMessageAt,
+                r.last_seq AS lastSeq,
+                rm.last_ack AS myLastAck,
                 r.created_at AS createdAt
             FROM rooms r
             JOIN room_members rm ON rm.room_id = r.id
