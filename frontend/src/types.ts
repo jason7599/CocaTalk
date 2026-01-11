@@ -52,6 +52,7 @@ export interface MessageResponse {
 
 export interface MessagePreview {
     roomId: number;
+    seqNo: number;
     senderName: string;
     contentPreview: string;
     createdAt: string;

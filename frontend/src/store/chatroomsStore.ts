@@ -96,6 +96,7 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
 
             const updated: ChatroomSummary = {
                 ...room,
+                lastSeq: preview.seqNo,
                 lastMessage: preview.contentPreview,
                 lastMessageAt: preview.createdAt,
             };

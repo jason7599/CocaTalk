@@ -6,7 +6,6 @@ import { getMembersInfo, loadMessages } from "../api/chatrooms";
 type Status = "IDLE" | "LOADING" | "READY" | "ERROR";
 
 type ActiveRoomState = {
-    // stomp binding
     stompClient: Client | null;
     stompConnected: boolean;
 
@@ -21,18 +20,17 @@ type ActiveRoomState = {
     hasMoreMessages: boolean;
     loadingOlderMessages: boolean;
 
-    // internals
     _sub: StompSubscription | null;
     _abort: AbortController | null;
     _epoch: number;
 
-    // ack internals
-    // _isNearBottom: boolean;
-    // _ackTimer: number | null;
-    // _pendingAck: number;
-    // _lastSentAck: number;
+    // ---- ACK STATE ----
+    _isNearBottom: boolean;
+    _ackTimer: number | null; // timer ID
+    _ackDebounceMs: number; // tweak
+    _pendingAck: number; // scheduled ack
+    _lastSentAck: number; // last ack actually sent to servers, deduplication guard
 
-    // actions
     bindStomp: (client: Client | null, connected: boolean) => void;
 
     setActiveRoom: (roomId: number | null) => void;
@@ -43,20 +41,28 @@ type ActiveRoomState = {
     setNearBottom: (near: boolean) => void;
     ackUpTo: (seq: number) => void;
 
+    _flushAck: (force?: boolean) => void;
+    _maybeAckLatestVisible: () => void;
+
     loadOlderMessages: () => void;
 };
 
 export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
 
     const cancelInFlight = () => {
-        const { _abort, _sub } = get();
+        const { _abort, _sub, _ackTimer } = get();
         _abort?.abort();
         _sub?.unsubscribe();
-        set({ 
-            _abort: null, 
+
+        if (_ackTimer != null) window.clearTimeout(_ackTimer);
+
+        set({
+            _abort: null,
             _sub: null,
-            // _ackTimer: null,
-            // _pendingAck: 0 
+            _ackTimer: null,
+            _pendingAck: 0,
+            _lastSentAck: 0,
+            _isNearBottom: true,
         });
     };
 
@@ -79,6 +85,11 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
             _abort: abort,
             _sub: null,
             _epoch: nextEpoch,
+
+            _isNearBottom: true,
+            _ackTimer: null,
+            _pendingAck: 0,
+            _lastSentAck: 0,
         });
 
         return { nextEpoch, abort };
@@ -100,8 +111,15 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
 
             if (get().activeRoomId !== msg.roomId) return;
 
-            set((s) => ({ messages: [...s.messages, msg] }));
-        })
+            set((s) => {
+                const next = [...s.messages, msg];
+                return { messages: next };
+            });
+
+            // If user is at/near bottom, auto-ack newest message.
+            // If not near bottom, leave it pending until they scroll down.
+            get()._maybeAckLatestVisible();
+        });
     };
 
     const loadInitialRoomData = async (roomId: number, epoch: number, abort: AbortController) => {
@@ -122,10 +140,20 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
                 hasMoreMessages: messagePage.hasMore,
                 members
             });
+
+            // After initial load, if we're near bottom (typical), ack latest.
+            get()._maybeAckLatestVisible();
         } catch (err: any) {
             if (!isStillCurrent(roomId, epoch, abort)) return;
             set({ status: "ERROR", error: err.message });
         }
+    };
+
+    // Helper to read seq from last message
+    const getLastSeq = () => {
+        const { messages } = get();
+        const last = messages[messages.length - 1];
+        return last?.seqNo ?? -1;
     };
 
     return {
@@ -147,8 +175,13 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
         _abort: null,
         _epoch: 0,
 
-        // bind stomp & active room lifecycle together
-        // re-runs every time stomp client updates, thanks to StompContext.tsx
+        // ---- ACK DEFAULTS ----
+        _isNearBottom: true,
+        _ackTimer: null,
+        _ackDebounceMs: 400, // tweak: 200-1000ms is typical
+        _pendingAck: 0,
+        _lastSentAck: 0,
+
         bindStomp: (client, connected) => {
             set({ stompClient: client, stompConnected: connected });
 
@@ -158,6 +191,9 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
             }
 
             if (!connected) {
+                // flush ack best-effort before losing connection
+                get()._flushAck(true);
+
                 get()._sub?.unsubscribe();
                 set({ _sub: null });
             }
@@ -168,6 +204,9 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
                 get().clearActiveRoom();
                 return;
             }
+
+            // leaving previous room: flush ack
+            get()._flushAck(true);
 
             cancelInFlight();
 
@@ -180,6 +219,9 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
         },
 
         clearActiveRoom: () => {
+            // flush ack best-effort
+            get()._flushAck(true);
+
             cancelInFlight();
             set({
                 activeRoomId: null,
@@ -192,14 +234,14 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
                 nextCursor: null,
                 hasMoreMessages: false,
                 loadingOlderMessages: false,
-                
+
                 _epoch: get()._epoch + 1
             });
         },
 
         sendMessage: (content) => {
             const { stompClient, stompConnected, activeRoomId } = get();
-            
+
             if (!stompClient || !stompConnected) return;
             if (activeRoomId == null) return;
 
@@ -209,8 +251,90 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
             });
         },
 
-        loadOlderMessages: () => {
+        // ---- ACK PUBLIC API ----
 
+        setNearBottom: (near) => {
+            const prev = get()._isNearBottom;
+            set({ _isNearBottom: near });
+
+            // If user just scrolled back to bottom, ack whatever is now visible/latest.
+            if (!prev && near) {
+                get()._maybeAckLatestVisible();
+            }
+        },
+
+        ackUpTo: (seq) => {
+            // monotonic: never go backwards
+            const s = get();
+            const nextPending = Math.max(s._pendingAck, seq);
+
+            // if no real change, do nothing
+            if (nextPending <= s._pendingAck) return;
+
+            set({ _pendingAck: nextPending });
+
+            // schedule a debounce flush
+            get()._flushAck(false);
+        },
+
+        _maybeAckLatestVisible: () => {
+            const s = get();
+            if (!s._isNearBottom) return;
+
+            const lastSeq = getLastSeq();
+            if (lastSeq >= 0) {
+                get().ackUpTo(lastSeq);
+            }
+        },
+
+        _flushAck: (force = false) => {
+            const s = get();
+
+            // If not connected, we can't send now; keep pending in memory
+            if (!s.stompClient || !s.stompConnected || s.activeRoomId == null) {
+                return;
+            }
+
+            const doSend = () => {
+                const cur = get();
+                const roomId = cur.activeRoomId;
+                if (!roomId) return;
+
+                const pending = cur._pendingAck;
+                const lastSent = cur._lastSentAck;
+
+                // only send if it advances
+                if (pending <= lastSent) return;
+
+                // TODO
+                cur.stompClient!.publish({
+                    destination: `/app/chat.ack.${roomId}`,
+                    body: JSON.stringify({ ack: pending })
+                });
+
+                set({ _lastSentAck: pending, _ackTimer: null });
+            };
+
+            // Force: cancel debounce and send now
+            if (force) {
+                if (s._ackTimer != null) window.clearTimeout(s._ackTimer);
+                set({ _ackTimer: null });
+                doSend();
+                return;
+            }
+
+            // Debounced: if a timer exists, let it fire
+            if (s._ackTimer != null) return;
+
+            const timer = window.setTimeout(() => {
+                doSend();
+            }, s._ackDebounceMs);
+
+            set({ _ackTimer: timer });
+        },
+
+        loadOlderMessages: () => {
+            // unchanged for now
         }
-    }
+    };
 });

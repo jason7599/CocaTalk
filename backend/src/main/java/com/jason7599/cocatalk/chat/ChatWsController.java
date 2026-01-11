@@ -48,6 +48,7 @@ public class ChatWsController {
                     "/queue/notifications",
                     new MessagePreview(
                             roomId,
+                            messageResponse.seqNo(),
                             userDetails.getUsername(),
                             request.content(),
                             Instant.now()

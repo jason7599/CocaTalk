@@ -4,6 +4,7 @@ import java.time.Instant;
 
 public record MessagePreview(
     Long roomId,
+    Long seqNo,
     String senderName,
     String contentPreview,
     Instant createdAt
