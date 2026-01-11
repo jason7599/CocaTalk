@@ -2,6 +2,7 @@ import type { Client, IMessage, StompSubscription } from "@stomp/stompjs";
 import type { ChatMemberInfo, MessageResponse } from "../types";
 import { create } from "zustand";
 import { getMembersInfo, loadMessages } from "../api/chatrooms";
+import { useChatroomsStore } from "./chatroomsStore";
 
 type Status = "IDLE" | "LOADING" | "READY" | "ERROR";
 
@@ -272,6 +273,8 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
             if (nextPending <= s._pendingAck) return;
 
             set({ _pendingAck: nextPending });
+
+            useChatroomsStore.getState().setMyLastAck(s.activeRoomId, nextPending);
 
             // schedule a debounce flush
             get()._flushAck(false);

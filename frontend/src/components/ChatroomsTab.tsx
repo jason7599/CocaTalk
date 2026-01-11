@@ -177,7 +177,7 @@ const ChatroomsTab: React.FC = () => {
                                         <div className="text-xs font-semibold text-slate-300">
                                             {formatTime(lastAt)}
                                         </div>
-                                        {unreadCount && (
+                                        {unreadCount > 0 && (
                                             <span
                                                 className={[
                                                     "inline-flex items-center justify-center",
