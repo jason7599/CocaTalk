@@ -21,11 +21,11 @@ export async function loadMessages(
 ): Promise<MessagePage> {
     const params = new URLSearchParams();
 
-    if (options?.cursor !== undefined) {
+    if (options?.cursor != null) {
         params.set("cursor", String(options.cursor));
     }
 
-    if (options?.limit !== undefined) {
+    if (options?.limit != null) {
         params.set("limit", String(options.limit));
     }
 

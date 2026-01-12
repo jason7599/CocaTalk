@@ -45,7 +45,7 @@ type ActiveRoomState = {
     _flushAck: (force?: boolean) => void;
     _maybeAckLatestVisible: () => void;
 
-    loadOlderMessages: () => void;
+    loadOlderMessages: () => Promise<void>;
 };
 
 export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
@@ -309,7 +309,6 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
                 // only send if it advances
                 if (pending <= lastSent) return;
 
-                // TODO
                 cur.stompClient!.publish({
                     destination: `/app/chat.ack.${roomId}`,
                     body: JSON.stringify({ ack: pending })
@@ -336,8 +335,47 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
             set({ _ackTimer: timer });
         },
 
-        loadOlderMessages: () => {
-            // unchanged for now
+        loadOlderMessages: async () => {
+            const s = get();
+            const roomId = s.activeRoomId;
+
+            if (roomId == null) return;
+            if (s.status !== "READY") return;
+
+            if (s.loadingOlderMessages) return;
+            if (!s.hasMoreMessages) return;
+            if (s.nextCursor == null) return;
+
+            const epoch = s._epoch;
+            const abort = s._abort;
+            if (!abort) return;
+
+            set({ loadingOlderMessages: true });
+
+            try {
+                const page = await loadMessages(roomId, {
+                    cursor: s.nextCursor,
+                    signal: abort?.signal,
+                });
+
+                if (!isStillCurrent(roomId, epoch, abort)) return;
+
+                set((cur) => {
+                    return {
+                        messages: [...page.messages, ...cur.messages],
+                        nextCursor: page.nextCursor,
+                        hasMoreMessages: page.hasMore
+                    };
+                });
+            } catch (err: any) {
+                if (!abort.signal.aborted) {
+                    set({ error: err.message });
+                }
+            } finally {
+                if (isStillCurrent(roomId, epoch, abort)) {
+                    set({ loadingOlderMessages: false });
+                }
+            }
         }
     };
 });

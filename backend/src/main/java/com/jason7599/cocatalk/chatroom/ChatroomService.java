@@ -154,7 +154,7 @@ public class ChatroomService {
 
         return new MessagePage(
                 messages,
-                messages.getFirst().seqNo(),
+                hasMore ? messages.getFirst().senderId() : null,
                 hasMore
         );
     }

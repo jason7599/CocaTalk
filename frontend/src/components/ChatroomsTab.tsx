@@ -30,8 +30,8 @@ const ChatroomsTab: React.FC = () => {
     const activeRoomId = useActiveRoomStore((s) => s.activeRoomId);
     const setActiveRoom = useActiveRoomStore((s) => s.setActiveRoom);
 
-    // TODO: UI-only for now
-    const [query, setQuery] = useState("");
+    // // TODO: UI-only for now
+    // const [query, setQuery] = useState("");
 
     const sorted = useMemo(() => {
         return [...chatrooms].sort((a, b) => {
@@ -68,7 +68,7 @@ const ChatroomsTab: React.FC = () => {
     return (
         <div className="flex-1 overflow-y-auto pb-2">
             {/* Sticky search bar */}
-            <div className="sticky top-0 z-10 pt-5 pb-5 px-2 bg-gradient-to-b from-[#0f0f18]/80 via-[#0f0f18]/60 to-transparent backdrop-blur">
+            {/* <div className="sticky top-0 z-10 pt-5 pb-5 px-2 bg-gradient-to-b from-[#0f0f18]/80 via-[#0f0f18]/60 to-transparent backdrop-blur">
                 <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-3 py-2">
                     <div className="flex items-center gap-2">
                         <MagnifyingGlassIcon className="h-5 w-5 text-slate-400" />
@@ -101,10 +101,10 @@ const ChatroomsTab: React.FC = () => {
                         )}
                     </div>
                 </div>
-            </div>
+            </div> */}
 
             {/* List */}
-            <div className="flex px-2 flex-col gap-2">
+            <div className="flex px-2 py-5 flex-col gap-2">
                 {sorted.map((chatroom) => {
                     const isActive = activeRoomId === chatroom.id;
                     const lastText = chatroom.lastMessage ?? "No messages yet";

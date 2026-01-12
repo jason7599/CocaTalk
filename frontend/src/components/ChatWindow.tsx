@@ -62,13 +62,20 @@ const ChatWindow: React.FC = () => {
 
     const activeRoomId = useActiveRoomStore((s) => s.activeRoomId);
     const activeRoom = useChatroomsStore((s) =>
-        activeRoomId === null ? null : s.chatrooms.find((r) => r.id === activeRoomId) ?? null
+        activeRoomId === null
+            ? null
+            : s.chatrooms.find((r) => r.id === activeRoomId) ?? null
     );
 
     const sendMessage = useActiveRoomStore((s) => s.sendMessage);
 
     const roomStatus = useActiveRoomStore((s) => s.status);
     const messages = useActiveRoomStore((s) => s.messages);
+
+    const hasMoreMessages = useActiveRoomStore((s) => s.hasMoreMessages);
+    const loadingOlderMessages = useActiveRoomStore((s) => s.loadingOlderMessages);
+    const loadOlderMessages = useActiveRoomStore((s) => s.loadOlderMessages);
+    const setNearBottomInStore = useActiveRoomStore((s) => s.setNearBottom);
 
     const [message, setMessage] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
@@ -99,47 +106,127 @@ const ChatWindow: React.FC = () => {
     };
 
     // scroll behavior
+    const didInitialScrollRef = useRef(false);
     const listRef = useRef<HTMLDivElement>(null);
     const userScrolledUpRef = useRef(false);
+    const skipAutoScrollRef = useRef(false);
     const [isNearBottom, setIsNearBottom] = useState(true);
 
-    const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
+    // Sentinel refs
+    const topSentinelRef = useRef<HTMLDivElement>(null);
+    const bottomSentinelRef = useRef<HTMLDivElement>(null);
+
+    const recomputeNearBottom = () => {
         const el = listRef.current;
         if (!el) return;
 
-        const doScroll = () => {
-            const top = el.scrollHeight - el.clientHeight + 2;
-            if (behavior === "smooth") el.scrollTo({ top, behavior });
-            else el.scrollTop = top;
-        };
+        const threshold = 140;
+        const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+        const nearBottom = distanceFromBottom < threshold;
 
-        requestAnimationFrame(() => requestAnimationFrame(doScroll));
+        setIsNearBottom(nearBottom);
+        setNearBottomInStore(nearBottom);
+        userScrolledUpRef.current = !nearBottom;
     };
 
+    const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
+        // Most reliable: scroll a bottom sentinel into view
+        bottomSentinelRef.current?.scrollIntoView({ behavior, block: "end" });
+
+        // Force recompute after the programmatic scroll + layout settle
+        requestAnimationFrame(() => requestAnimationFrame(recomputeNearBottom));
+    };
+
+    // Track user scroll position (near bottom vs not)
     useEffect(() => {
         const el = listRef.current;
         if (!el) return;
 
-        const onScroll = () => {
-            const threshold = 140;
-            const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-            const nearBottom = distanceFromBottom < threshold;
-            setIsNearBottom(nearBottom);
-            userScrolledUpRef.current = !nearBottom;
-        };
+        const onScroll = () => recomputeNearBottom();
 
-        onScroll();
+        recomputeNearBottom();
         el.addEventListener("scroll", onScroll, { passive: true });
         return () => el.removeEventListener("scroll", onScroll);
-    }, []);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [setNearBottomInStore]);
 
+    // Infinite scroll (load older messages when top sentinel appears)
     useEffect(() => {
-        scrollToBottom();
-    }, [activeRoomId]);
+        const el = listRef.current;
+        const sentinel = topSentinelRef.current;
+        if (!el || !sentinel) return;
 
+        if (!hasMoreMessages) return;
+
+        const io = new IntersectionObserver(
+            async ([entry]) => {
+                if (!entry.isIntersecting) return;
+                if (loadingOlderMessages) return;
+                if (roomStatus !== "READY") return;
+
+                // Preserve scroll position when older messages are prepended
+                const prevScrollHeight = el.scrollHeight;
+                const prevScrollTop = el.scrollTop;
+
+                skipAutoScrollRef.current = true;
+
+                await loadOlderMessages();
+
+                requestAnimationFrame(() => {
+                    const newScrollHeight = el.scrollHeight;
+                    el.scrollTop = prevScrollTop + (newScrollHeight - prevScrollHeight);
+
+                    // allow auto-scroll again after this prepend cycle
+                    skipAutoScrollRef.current = false;
+
+                    // and recompute near-bottom since content changed
+                    recomputeNearBottom();
+                });
+            },
+            { root: el, threshold: 0.01 }
+        );
+
+        io.observe(sentinel);
+        return () => io.disconnect();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [
+        activeRoomId,
+        roomStatus,
+        hasMoreMessages,
+        loadingOlderMessages,
+        loadOlderMessages,
+    ]);
+
+    // Reset scroll flags when switching rooms
     useEffect(() => {
-        if (!userScrolledUpRef.current) scrollToBottom("smooth");
-    }, [messages.length]);
+        didInitialScrollRef.current = false;
+        skipAutoScrollRef.current = false;
+        setIsNearBottom(true);
+        setNearBottomInStore(true);
+        userScrolledUpRef.current = false;
+    }, [activeRoomId, setNearBottomInStore]);
+
+    // Initial scroll to bottom once messages render
+    useEffect(() => {
+        if (roomStatus !== "READY") return;
+        if (didInitialScrollRef.current) return;
+        if (messages.length === 0) return;
+
+        scrollToBottom("auto");
+        didInitialScrollRef.current = true;
+
+        requestAnimationFrame(recomputeNearBottom);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [roomStatus, messages.length]);
+
+    // Auto-scroll on new messages ONLY if user is near bottom and we aren't prepending
+    useEffect(() => {
+        if (skipAutoScrollRef.current) return;
+        if (!isNearBottom) return;
+
+        scrollToBottom("smooth");
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [messages.length, isNearBottom]);
 
     if (activeRoomId == null) {
         return (
@@ -164,9 +251,7 @@ const ChatWindow: React.FC = () => {
                         <h2 className="truncate text-lg font-semibold tracking-tight text-slate-100">
                             {getChatroomDisplayName(activeRoom)}
                         </h2>
-                        {!connected && (
-                            <div className="text-xs text-slate-400">Connecting…</div>
-                        )}
+                        {!connected && <div className="text-xs text-slate-400">Connecting…</div>}
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -202,6 +287,15 @@ const ChatWindow: React.FC = () => {
                 {/* list surface gradient */}
                 <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[#0b0b14] via-[#0c0c16] to-[#0a0a12]" />
 
+                {/* TOP sentinel (for infinite scroll up) */}
+                <div ref={topSentinelRef} />
+
+                {roomStatus === "READY" && loadingOlderMessages && (
+                    <div className="mb-3 flex justify-center text-xs text-slate-400">
+                        Loading older messages...
+                    </div>
+                )}
+
                 {roomStatus === "LOADING" ? (
                     <div className="h-full flex items-center justify-center text-slate-400">
                         Loading…
@@ -215,6 +309,9 @@ const ChatWindow: React.FC = () => {
                         {messages.map((m) => (
                             <MessageBubble message={m} key={m.seqNo} />
                         ))}
+
+                        {/* BOTTOM sentinel (for jump-to-latest + auto-scroll) */}
+                        <div ref={bottomSentinelRef} />
                     </div>
                 )}
 
