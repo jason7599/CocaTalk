@@ -1,5 +1,6 @@
 package com.jason7599.cocatalk.chat;
 
+import com.jason7599.cocatalk.chatroom.ChatroomService;
 import com.jason7599.cocatalk.message.MessagePreview;
 import com.jason7599.cocatalk.message.MessageRequest;
 import com.jason7599.cocatalk.message.MessageResponse;
@@ -12,6 +13,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 
@@ -21,6 +23,7 @@ public class ChatWsController {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final MessageService messageService;
+    private final ChatroomService chatroomService;
     private final RoomMembershipService membershipCache; // redis
 
     @MessageMapping("/chat.send.{roomId}")
@@ -55,5 +58,13 @@ public class ChatWsController {
                     )
             );
         }
+    }
+
+    @MessageMapping("/chat.ack.{roomId}")
+    public void ackUpTo(@DestinationVariable Long roomId,
+                        @Payload AckRequest payload,
+                        Authentication authentication) {
+        Long userId = ((CustomUserDetails) authentication.getPrincipal()).getId();
+        chatroomService.setMyLastAck(roomId, userId, payload.ack());
     }
 }

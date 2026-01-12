@@ -106,6 +106,17 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             """, nativeQuery = true)
     Long getMyLastAck(@Param("roomId") Long roomId, @Param("userId") Long userId);
 
+    @Modifying
+    @Query(value = """
+            UPDATE room_members
+            SET last_ack = :ack
+            WHERE room_id = :roomId AND user_id = :userId
+                AND last_ack < :ack
+            """, nativeQuery = true)
+    void setMyLastAck(@Param("roomId") Long roomId,
+                      @Param("userId") Long userId,
+                      @Param("ack") Long ack);
+
     @Query(value = """
             SELECT alias
             FROM room_members

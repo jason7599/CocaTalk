@@ -78,6 +78,11 @@ public class ChatroomService {
     }
 
     @Transactional
+    public void setMyLastAck(Long roomId, Long userId, Long ack) {
+        chatroomRepository.setMyLastAck(roomId, userId, ack);
+    }
+
+    @Transactional
     public ChatroomSummary getOrCreateDirectChatroom(Long myId, Long otherId) {
         Optional<ChatroomEntity> chatroomOpt = chatroomRepository.findDirectChatroom(myId, otherId);
         if (chatroomOpt.isPresent()) {
