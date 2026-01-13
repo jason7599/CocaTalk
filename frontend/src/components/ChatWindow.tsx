@@ -108,7 +108,6 @@ const ChatWindow: React.FC = () => {
     // scroll behavior
     const didInitialScrollRef = useRef(false);
     const listRef = useRef<HTMLDivElement>(null);
-    const userScrolledUpRef = useRef(false);
     const skipAutoScrollRef = useRef(false);
     const [isNearBottom, setIsNearBottom] = useState(true);
 
@@ -116,39 +115,32 @@ const ChatWindow: React.FC = () => {
     const topSentinelRef = useRef<HTMLDivElement>(null);
     const bottomSentinelRef = useRef<HTMLDivElement>(null);
 
-    const recomputeNearBottom = () => {
-        const el = listRef.current;
-        if (!el) return;
-
-        const threshold = 140;
-        const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-        const nearBottom = distanceFromBottom < threshold;
-
-        setIsNearBottom(nearBottom);
-        setNearBottomInStore(nearBottom);
-        userScrolledUpRef.current = !nearBottom;
-    };
-
     const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
-        // Most reliable: scroll a bottom sentinel into view
         bottomSentinelRef.current?.scrollIntoView({ behavior, block: "end" });
-
-        // Force recompute after the programmatic scroll + layout settle
-        requestAnimationFrame(() => requestAnimationFrame(recomputeNearBottom));
     };
 
-    // Track user scroll position (near bottom vs not)
+    // NEW: Near-bottom tracking via bottom sentinel (no scroll math)
     useEffect(() => {
-        const el = listRef.current;
-        if (!el) return;
+        const root = listRef.current;
+        const bottom = bottomSentinelRef.current;
+        if (!root || !bottom) return;
 
-        const onScroll = () => recomputeNearBottom();
+        const io = new IntersectionObserver(
+            ([entry]) => {
+                const near = entry.isIntersecting;
+                setIsNearBottom(near);
+                setNearBottomInStore(near);
+            },
+            {
+                root,
+                threshold: 0.01,
+                rootMargin: "0px 0px 140px 0px",
+            }
+        );
 
-        recomputeNearBottom();
-        el.addEventListener("scroll", onScroll, { passive: true });
-        return () => el.removeEventListener("scroll", onScroll);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [setNearBottomInStore]);
+        io.observe(bottom);
+        return () => io.disconnect();
+    }, [activeRoomId, setNearBottomInStore]);
 
     // Infinite scroll (load older messages when top sentinel appears)
     useEffect(() => {
@@ -178,9 +170,6 @@ const ChatWindow: React.FC = () => {
 
                     // allow auto-scroll again after this prepend cycle
                     skipAutoScrollRef.current = false;
-
-                    // and recompute near-bottom since content changed
-                    recomputeNearBottom();
                 });
             },
             { root: el, threshold: 0.01 }
@@ -188,7 +177,6 @@ const ChatWindow: React.FC = () => {
 
         io.observe(sentinel);
         return () => io.disconnect();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         activeRoomId,
         roomStatus,
@@ -203,7 +191,6 @@ const ChatWindow: React.FC = () => {
         skipAutoScrollRef.current = false;
         setIsNearBottom(true);
         setNearBottomInStore(true);
-        userScrolledUpRef.current = false;
     }, [activeRoomId, setNearBottomInStore]);
 
     // Initial scroll to bottom once messages render
@@ -214,9 +201,6 @@ const ChatWindow: React.FC = () => {
 
         scrollToBottom("auto");
         didInitialScrollRef.current = true;
-
-        requestAnimationFrame(recomputeNearBottom);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [roomStatus, messages.length]);
 
     // Auto-scroll on new messages ONLY if user is near bottom and we aren't prepending
@@ -225,7 +209,6 @@ const ChatWindow: React.FC = () => {
         if (!isNearBottom) return;
 
         scrollToBottom("smooth");
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [messages.length, isNearBottom]);
 
     if (activeRoomId == null) {
@@ -310,29 +293,33 @@ const ChatWindow: React.FC = () => {
                             <MessageBubble message={m} key={m.seqNo} />
                         ))}
 
-                        {/* BOTTOM sentinel (for jump-to-latest + auto-scroll) */}
-                        <div ref={bottomSentinelRef} />
                     </div>
                 )}
+                
+            {/* BOTTOM sentinel (for jump-to-latest + auto-scroll) */}
+            <div ref={bottomSentinelRef} />
 
-                {!isNearBottom && (
-                    <div className="sticky bottom-3 flex justify-center">
-                        <button
-                            onClick={() => scrollToBottom("smooth")}
-                            className="
-                                rounded-full px-4 py-2 text-xs font-semibold
-                                text-slate-100
-                                border border-white/10 bg-white/5 backdrop-blur-xl
-                                hover:bg-white/10 transition
-                                shadow-[0_12px_30px_rgba(0,0,0,0.35)]
-                                focus:outline-none focus:ring-2 focus:ring-rose-300/25
-                            "
-                        >
-                            Jump to latest
-                        </button>
-                    </div>
-                )}
             </div>
+
+            {/* JUMP TO LATEST (overlay, does NOT affect scrollHeight) */}
+            {activeRoomId != null && !isNearBottom && (
+                <div className="pointer-events-none absolute bottom-28 left-0 right-0 z-20 flex justify-center">
+                    <button
+                        onClick={() => scrollToBottom("smooth")}
+                        className="
+                            pointer-events-auto
+                            rounded-full px-4 py-2 text-xs font-semibold
+                            text-slate-100
+                            border border-white/10 bg-white/5 backdrop-blur-xl
+                            hover:bg-white/10 transition
+                            shadow-[0_12px_30px_rgba(0,0,0,0.35)]
+                            focus:outline-none focus:ring-2 focus:ring-rose-300/25
+                        "
+                    >
+                        Jump to latest
+                    </button>
+                </div>
+            )}
 
             {/* INPUT */}
             <div className="relative z-10 border-t border-white/10 bg-[#0f0f18]/70 backdrop-blur-xl">
