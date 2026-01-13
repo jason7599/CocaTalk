@@ -271,7 +271,7 @@ const ChatWindow: React.FC = () => {
                 <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[#0b0b14] via-[#0c0c16] to-[#0a0a12]" />
 
                 {/* TOP sentinel (for infinite scroll up) */}
-                <div ref={topSentinelRef} />
+                <div ref={topSentinelRef} className="h-px" />
 
                 {roomStatus === "READY" && loadingOlderMessages && (
                     <div className="mb-3 flex justify-center text-xs text-slate-400">
@@ -295,9 +295,9 @@ const ChatWindow: React.FC = () => {
 
                     </div>
                 )}
-                
-            {/* BOTTOM sentinel (for jump-to-latest + auto-scroll) */}
-            <div ref={bottomSentinelRef} />
+
+                {/* BOTTOM sentinel (for jump-to-latest + auto-scroll) */}
+                <div ref={bottomSentinelRef} />
 
             </div>
 

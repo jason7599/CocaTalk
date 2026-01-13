@@ -128,6 +128,7 @@ public class ChatroomService {
     }
 
     public MessagePage loadMessages(Long roomId, Long cursor, int limit) {
+
         // Query intentionally modifies the actual limit to :limit + 1
         // So that we know there are more items if this result's size is greater than the limit param
         List<MessageResponse> messages = messageRepository.loadMessages(roomId, cursor == null ? Long.MAX_VALUE : cursor, limit)
@@ -154,7 +155,7 @@ public class ChatroomService {
 
         return new MessagePage(
                 messages,
-                hasMore ? messages.getFirst().senderId() : null,
+                hasMore ? messages.getFirst().seqNo() : null,
                 hasMore
         );
     }

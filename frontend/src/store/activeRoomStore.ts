@@ -358,7 +358,11 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
                     signal: abort?.signal,
                 });
 
-                if (!isStillCurrent(roomId, epoch, abort)) return;
+                if (!isStillCurrent(roomId, epoch, abort)) {
+                    return;
+                }
+
+                console.log(page);
 
                 set((cur) => {
                     return {
@@ -372,9 +376,7 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
                     set({ error: err.message });
                 }
             } finally {
-                if (isStillCurrent(roomId, epoch, abort)) {
-                    set({ loadingOlderMessages: false });
-                }
+                set({ loadingOlderMessages: false });
             }
         }
     };
