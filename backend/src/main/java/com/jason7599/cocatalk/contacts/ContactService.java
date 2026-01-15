@@ -22,6 +22,14 @@ public class ContactService {
         UserEntity contact = userRepository.findByUsername(request.username())
                 .orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND, "username not found"));
 
+        if (userId.equals(contact.getId())) {
+            throw new ApiError(HttpStatus.BAD_REQUEST, "cannot friend self");
+        }
+
+        if (userRepository.contactExists(userId, contact.getId())) {
+            throw new ApiError(HttpStatus.CONFLICT, "already contacts");
+        }
+
         userRepository.addContact(userId, contact.getId());
         return new UserInfo(contact);
     }

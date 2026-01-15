@@ -25,7 +25,6 @@ public class ContactController {
         return ResponseEntity.status(HttpStatus.CREATED).body(contactService.addContact(userDetails.getId(), request));
     }
 
-    // delete incoming friend request
     @DeleteMapping("/{contactId}")
     public ResponseEntity<Void> removeContact(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -35,7 +34,6 @@ public class ContactController {
         return ResponseEntity.noContent().build();
     }
 
-    // list friends
     @GetMapping
     public ResponseEntity<List<UserInfo>> listContacts(@AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.ok(contactService.listContacts(userDetails.getId()));
