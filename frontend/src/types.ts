@@ -13,30 +13,10 @@ export interface ChatroomSummary {
     createdAt: string;
 };
 
-export interface ReceivedFriendRequest {
-    senderId: number;
-    senderName: string;
-    sentAt: string;
-};
-
-export interface SentFriendRequest {
-    receiverId: number;
-    receiverName: number;
-    sentAt: string;
-};
-
 export interface UserInfo {
     id: number;
     username: string;
 };
-
-export type FriendRequestSentResultType = "SENT" | "AUTO_ACCEPT";
-
-export interface FriendRequestSentResult {
-    type: FriendRequestSentResultType;
-    request: SentFriendRequest | null;
-    friendInfo: UserInfo;
-}
 
 export interface MessageRequest {
     content: string;

@@ -1,5 +1,5 @@
 import type React from "react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
     ArrowRightStartOnRectangleIcon,
     UserCircleIcon,
@@ -7,21 +7,14 @@ import {
 import ChatroomsTab from "./ChatroomsTab";
 import { useModal } from "../context/ModalContext";
 import { useUser } from "../context/UserContext";
-import { useFriendRequestsStore } from "../store/friendRequestsStore";
 import LogoutModal from "./modals/LogoutModal";
-import FriendsTab from "./FriendsTab";
+import ContactsTab from "./ContactsTab";
 
 const Sidebar: React.FC = () => {
     const { showModal } = useModal();
     const { user } = useUser();
 
-    const [activeTab, setActiveTab] = useState<"friends" | "rooms">("rooms");
-
-    const receivedReqCount = useFriendRequestsStore(s => s.receivedRequests.length);
-    const receivedReqLabel = useMemo(() => {
-        if (receivedReqCount <= 0) return "";
-        return String(receivedReqCount);
-    }, [receivedReqCount]);
+    const [activeTab, setActiveTab] = useState<"contacts" | "chats">("chats");
 
     return (
         <aside className="
@@ -87,7 +80,7 @@ const Sidebar: React.FC = () => {
                                 "w-[calc(50%-0.25rem)] transition-transform duration-300 ease-out " +
                                 "bg-gradient-to-br from-pink-500 via-rose-500 to-red-500 " +
                                 "shadow-lg shadow-rose-500/30 " +
-                                (activeTab === "friends"
+                                (activeTab === "contacts"
                                     ? "translate-x-0"
                                     : "translate-x-[calc(100%)]")
                             }
@@ -95,45 +88,28 @@ const Sidebar: React.FC = () => {
                         />
                         <button
                             type="button"
-                            onClick={() => setActiveTab("friends")}
+                            onClick={() => setActiveTab("contacts")}
                             className={
                                 "relative z-10 flex-1 px-3 py-2 rounded-full text-center transition " +
-                                (activeTab === "friends"
+                                (activeTab === "contacts"
                                     ? "text-gray-900"
                                     : "text-slate-400 hover:text-slate-200")
                             }
                         >
-                            <span className="inline-flex items-center justify-center gap-2">
-                                Friends
-                                {receivedReqCount > 0 && (
-                                    <span
-                                        className="
-                                            inline-flex items-center justify-center
-                                            min-w-[1.25rem] h-5 px-1
-                                            text-[0.7rem] font-bold text-white
-                                            rounded-full
-                                            bg-gradient-to-br from-pink-500 to-red-700
-                                            shadow-sm shadow-rose-200/60
-                                        "
-                                        title={`${receivedReqCount} pending request${receivedReqCount === 1 ? "" : "s"}`}
-                                    >
-                                        {receivedReqLabel}
-                                    </span>
-                                )}
-                            </span>
+                            Contacts
                         </button>
 
                         <button
                             type="button"
-                            onClick={() => setActiveTab("rooms")}
+                            onClick={() => setActiveTab("chats")}
                             className={
                                 "relative z-10 flex-1 px-3 py-2 rounded-full text-center transition " +
-                                (activeTab === "rooms"
+                                (activeTab === "chats"
                                     ? "text-gray-900"
                                     : "text-gray-500 hover:text-gray-700")
                             }
                         >
-                            Chatrooms
+                            Chats
                         </button>
                     </div>
                 </div>
@@ -141,7 +117,7 @@ const Sidebar: React.FC = () => {
 
             {/* CONTENT */}
             <div className="flex-1 overflow-y-auto bg-black/10">
-                {activeTab === "friends" ? <FriendsTab /> : <ChatroomsTab />}
+                {activeTab === "contacts" ? <ContactsTab /> : <ChatroomsTab />}
             </div>
 
             <div
