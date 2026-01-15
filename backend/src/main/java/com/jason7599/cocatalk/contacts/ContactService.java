@@ -1,0 +1,38 @@
+package com.jason7599.cocatalk.contacts;
+
+import com.jason7599.cocatalk.exception.ApiError;
+import com.jason7599.cocatalk.user.UserEntity;
+import com.jason7599.cocatalk.user.UserInfo;
+import com.jason7599.cocatalk.user.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class ContactService {
+
+    private final UserRepository userRepository;
+
+    @Transactional
+    public UserInfo addContact(Long userId, AddContactRequest request) {
+        UserEntity contact = userRepository.findByUsername(request.username())
+                .orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND, "username not found"));
+
+        userRepository.addContact(userId, contact.getId());
+        return new UserInfo(contact);
+    }
+
+    @Transactional
+    public void removeContact(Long userId, Long contactId) {
+        userRepository.removeContact(userId, contactId);
+    }
+
+    public List<UserInfo> listContacts(Long userId) {
+        return userRepository.listContacts(userId)
+                .stream().map(UserInfo::new).toList();
+    }
+}
