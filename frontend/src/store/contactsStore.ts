@@ -14,7 +14,7 @@ type ContactsState = {
     error: string | null;
 
     fetch: () => Promise<void>;
-    addContact: (username: string) => Promise<void>;
+    addContact: (username: string, tag: string) => Promise<void>;
     removeContact: (contactId: number) => Promise<void>;
     clearError: () => void;
 };
@@ -36,10 +36,10 @@ export const useContactsStore = create<ContactsState>((set, get) => ({
         }
     },
 
-    addContact: async (username: string) => {
+    addContact: async (username: string, tag: string) => {
         set({ error: null });
         try {
-            const created = await apiAddContact(username);
+            const created = await apiAddContact(username, tag);
 
             set((s) => {
                 if (s.contacts.some((c) => c.id === created.id)) return s;

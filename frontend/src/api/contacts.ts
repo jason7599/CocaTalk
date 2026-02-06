@@ -1,8 +1,8 @@
 import type { UserInfo } from "../types";
 import api from "./api";
 
-export async function addContact(username: string): Promise<UserInfo> {
-    return (await api.post('/contacts', { username })).data;
+export async function addContact(username: string, tag: string): Promise<UserInfo> {
+    return (await api.post('/contacts', { username, tag })).data;
 }
 
 export async function listContacts(): Promise<UserInfo[]> {

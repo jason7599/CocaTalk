@@ -4,12 +4,38 @@ import { useModal } from "../../context/ModalContext";
 import { useContactsStore } from "../../store/contactsStore";
 import { UserPlusIcon, XMarkIcon } from "@heroicons/react/24/solid";
 
+type ParseResult =
+    | { ok: true; name: string; tag: string }
+    | { ok: false; error: string };
+
+const CROCKFORD_TAG_RE = /^[A-HJ-NP-Z2-9]+$/i;
+
+function parseUsername(input: string): ParseResult {
+    const s = input.trim();
+
+    // Require exactly one '#'
+    const hashCount = (s.match(/#/g) ?? []).length;
+    if (hashCount !== 1) return { ok: false, error: `Username must be in the form "name#tag".` };
+
+    const [name, tag] = s.split("#");
+
+    if (!name || !tag) return { ok: false, error: `Username must be in the form "name#tag".` };
+
+    if (!CROCKFORD_TAG_RE.test(tag)) {
+        return { ok: false, error: `Tag must be composed of 2-9, A-Z without I, L, O.` };
+    }
+
+    return { ok: true, name, tag };
+}
+
 const AddContactModal: React.FC = () => {
     const { closeModal } = useModal();
 
     const addContact = useContactsStore((s) => s.addContact);
     const error = useContactsStore((s) => s.error);
     const clearError = useContactsStore((s) => s.clearError);
+
+    const [localError, setLocalError] = useState<string | null>(null);
 
     const [username, setUsername] = useState("");
     const [submitting, setSubmitting] = useState(false);
@@ -25,15 +51,23 @@ const AddContactModal: React.FC = () => {
 
     const onSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
         if (!canSubmit) return;
-        
+
+        const parsed = parseUsername(trimmed);
+        if (!parsed.ok) {
+            setLocalError(parsed.error);
+            return;
+        }
+
+        setLocalError(null);
         clearError();
         setLocalSuccess(null);
 
         setSubmitting(true);
 
         try {
-            await addContact(trimmed);
+            await addContact(parsed.name, parsed.tag);
 
             clearError();
             setLocalSuccess(`Added "${trimmed}" to contacts.`);
@@ -102,7 +136,7 @@ const AddContactModal: React.FC = () => {
                             <input
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
-                                placeholder="username"
+                                placeholder="username#tag"
                                 autoFocus
                                 className="
                                     w-full rounded-2xl px-4 py-3
@@ -113,8 +147,15 @@ const AddContactModal: React.FC = () => {
                                 "
                             />
 
-                            {/* Error from store */}
-                            {error && (
+                            {/* Local validation error */}
+                            {localError && (
+                                <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                                    {localError}
+                                </div>
+                            )}
+
+                            {/* Error from store (API/server) */}
+                            {!localError && error && (
                                 <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
                                     {error}
                                 </div>
