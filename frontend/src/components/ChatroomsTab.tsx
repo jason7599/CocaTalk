@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { useChatroomsStore } from "../store/chatroomsStore";
-import { getChatroomDisplayName } from "../utils/chatroomName";
+import { getChatroomDisplayName } from "../utils/names";
 import { useActiveRoomStore } from "../store/activeRoomStore";
 import type { ChatroomSummary } from "../types";
 import { ChatBubbleLeftRightIcon, PlusCircleIcon } from "@heroicons/react/24/solid";

@@ -1,13 +1,9 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { getCurrentUser } from "../api/auth";
-
-type User = {
-    id: number;
-    username: string;
-};
+import type { UserInfo } from "../types";
 
 type UserContextType = {
-    user: User | null;
+    user: UserInfo | null;
     refreshUser: () => Promise<void>;
     logout: () => void;
 };
@@ -15,7 +11,7 @@ type UserContextType = {
 const UserContext = createContext<UserContextType | null>(null);
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<UserInfo | null>(null);
 
     const refreshUser = async () => {
         try {

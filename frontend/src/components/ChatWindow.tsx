@@ -4,7 +4,7 @@ import {
     PaperAirplaneIcon,
     UserPlusIcon,
 } from "@heroicons/react/24/outline";
-import { getChatroomDisplayName } from "../utils/chatroomName";
+import { getChatroomDisplayName } from "../utils/names";
 import { useStomp } from "../ws/StompContext";
 import { useActiveRoomStore } from "../store/activeRoomStore";
 import { useChatroomsStore } from "../store/chatroomsStore";

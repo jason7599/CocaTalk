@@ -31,8 +31,4 @@ public class UserEntity {
         this.tag = tag;
         this.passwordHash = passwordHash;
     }
-
-    public String getDisplayName() {
-        return username + '#' + tag;
-    }
 }

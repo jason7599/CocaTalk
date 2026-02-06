@@ -9,6 +9,7 @@ import { useModal } from "../context/ModalContext";
 import { useUser } from "../context/UserContext";
 import LogoutModal from "./modals/LogoutModal";
 import ContactsTab from "./ContactsTab";
+import { getUserDisplayName } from "../utils/names";
 
 const Sidebar: React.FC = () => {
     const { showModal } = useModal();
@@ -47,7 +48,7 @@ const Sidebar: React.FC = () => {
 
                         <div className="min-w-0">
                             <p className="truncate font-semibold text-slate-100 leading-tight">
-                                {user?.username}
+                                {user ? getUserDisplayName(user) : "Loading..."}
                             </p>
                         </div>
                     </div>

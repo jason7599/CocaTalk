@@ -16,6 +16,7 @@ export interface ChatroomSummary {
 export interface UserInfo {
     id: number;
     username: string;
+    tag: string;
 };
 
 export interface MessageRequest {
