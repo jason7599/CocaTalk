@@ -6,9 +6,11 @@ import {
     LockClosedIcon,
     EyeIcon,
     EyeSlashIcon,
+    AtSymbolIcon
 } from "@heroicons/react/24/outline";
 
 const AuthPage: React.FC = () => {
+    const [email, setEmail] = useState("");
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [isLogin, setIsLogin] = useState(true);
@@ -29,20 +31,22 @@ const AuthPage: React.FC = () => {
     );
 
     const resetFields = () => {
+        setEmail("");
         setUsername("");
         setPassword("");
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = async (ev: React.FormEvent) => {
+        ev.preventDefault();
         setMessage("");
         setIsError(false);
 
+        const e = email.trim();
         const u = username.trim();
         const p = password.trim();
 
-        if (!u || !p) {
-            setMessage("Username and password cannot be blank.");
+        if (!e || !p || (!isLogin && !u)) {
+            setMessage("Fields cannot be blank");
             setIsError(true);
             return;
         }
@@ -51,14 +55,14 @@ const AuthPage: React.FC = () => {
             setLoading(true);
 
             if (isLogin) {
-                await login(u, p);
+                await login(e, p);
                 setMessage("Login success!");
                 setIsError(false);
 
                 navigate("/app", { replace: true });
                 window.location.reload();
             } else {
-                await register(u, p);
+                await register(e, u, p);
                 setMessage("Registration successful!");
                 setIsError(false);
 
@@ -165,23 +169,22 @@ const AuthPage: React.FC = () => {
 
                         {/* Form */}
                         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                            {/* Username */}
+                            {/* Email */}
                             <div className="space-y-1.5">
                                 <label
-                                    htmlFor="username"
+                                    htmlFor="email"
                                     className="block text-xs font-medium tracking-wide text-slate-400"
                                 >
-                                    Username
+                                    Email
                                 </label>
                                 <div className="relative">
-                                    <UserIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                                    <AtSymbolIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                                     <input
-                                        id="username"
-                                        type="text"
-                                        placeholder="yourname"
-                                        value={username}
-                                        maxLength={25}
-                                        onChange={(e) => setUsername(e.target.value)}
+                                        id="email"
+                                        type="email"
+                                        placeholder="example@domain.com"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
                                         disabled={loading}
                                         className="
                                             w-full rounded-2xl pl-11 pr-3 py-3
@@ -194,6 +197,37 @@ const AuthPage: React.FC = () => {
                                     />
                                 </div>
                             </div>
+
+                            {!isLogin &&
+                                <div className="space-y-1.5">
+                                    <label
+                                        htmlFor="username"
+                                        className="block text-xs font-medium tracking-wide text-slate-400"
+                                    >
+                                        Username (Can be changed later)
+                                    </label>
+                                    <div className="relative">
+                                        <UserIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                                        <input
+                                            id="username"
+                                            type="username"
+                                            placeholder="poopyjackson"
+                                            value={username}
+                                            maxLength={25}
+                                            onChange={(e) => setUsername(e.target.value)}
+                                            disabled={loading}
+                                            className="
+                                            w-full rounded-2xl pl-11 pr-3 py-3
+                                            border border-white/10 bg-slate-900/50
+                                            text-slate-100 placeholder:text-slate-500
+                                            outline-none transition
+                                            focus:border-rose-400/70 focus:ring-2 focus:ring-rose-300/30
+                                            disabled:opacity-60
+                                        "
+                                        />
+                                    </div>
+                                </div>
+                            }
 
                             {/* Password */}
                             <div className="space-y-1.5">

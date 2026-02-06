@@ -1,9 +1,9 @@
 import type { UserInfo } from "../types";
 import api from "./api";
 
-export async function login(username: string, password: string): Promise<string> {
+export async function login(email: string, password: string): Promise<string> {
     const response = await api.post('/auth/login', {
-        username,
+        email,
         password
     });
 
@@ -13,8 +13,9 @@ export async function login(username: string, password: string): Promise<string>
     return token;
 }
 
-export async function register(username: string, password: string): Promise<void> {
+export async function register(email: string, username: string, password: string): Promise<void> {
     await api.post('/auth/register', {
+        email,
         username,
         password
     });
