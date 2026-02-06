@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class UserInfoService {
+public class UserService {
 
     private final UserRepository userRepository;
 

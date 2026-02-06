@@ -2,7 +2,6 @@ package com.jason7599.cocatalk.security;
 
 import com.jason7599.cocatalk.exception.ApiError;
 import com.jason7599.cocatalk.user.UserEntity;
-import com.jason7599.cocatalk.user.UserInfoService;
 import com.jason7599.cocatalk.user.UserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtParser;
@@ -17,7 +16,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -49,11 +47,10 @@ public class JwtService {
                 .build();
     }
 
-    public String generateToken(Long userId, String username) {
+    public String generateToken(Long userId) {
         Instant now = Instant.now();
         return Jwts.builder()
                 .subject(String.valueOf(userId))
-                .claim("username", username)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plus(ACCESS_TOKEN_TTL)))
                 .signWith(signingKey, Jwts.SIG.HS256)
@@ -91,10 +88,6 @@ public class JwtService {
 
     public Long extractUserId(String token) {
         return Long.valueOf(parseClaims(token).getSubject());
-    }
-
-    public String extractUsername(String token) {
-        return parseClaims(token).get("username", String.class);
     }
 
     public String extractTokenFromRequest(HttpServletRequest request) {

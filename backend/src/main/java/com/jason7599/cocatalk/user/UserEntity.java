@@ -16,14 +16,23 @@ public class UserEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String email;
     private String username;
+    private String tag;
+
     private String passwordHash;
 
     @Column(insertable = false)
     private Instant createdAt;
 
-    public UserEntity(String username, String passwordHash) {
+    public UserEntity(String email, String username, String tag, String passwordHash) {
+        this.email = email;
         this.username = username;
+        this.tag = tag;
         this.passwordHash = passwordHash;
+    }
+
+    public String getDisplayName() {
+        return username + '#' + tag;
     }
 }

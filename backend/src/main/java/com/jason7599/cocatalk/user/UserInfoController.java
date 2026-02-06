@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class UserInfoController {
 
-    private final UserInfoService userInfoService;
+    private final UserService userInfoService;
 
     @GetMapping("/me")
     public ResponseEntity<UserInfo> getUserInfo(@AuthenticationPrincipal CustomUserDetails userDetails) {
