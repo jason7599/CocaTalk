@@ -4,6 +4,8 @@ import { getChatroomDisplayName } from "../utils/names";
 import { useActiveRoomStore } from "../store/activeRoomStore";
 import type { ChatroomSummary } from "../types";
 import { ChatBubbleLeftRightIcon, PlusCircleIcon } from "@heroicons/react/24/solid";
+import { useModal } from "../context/ModalContext";
+import AddGroupChatModal from "./modals/AddGroupChatModal";
 
 function formatTime(ts: string | number | Date) {
     const d = new Date(ts);
@@ -22,6 +24,8 @@ function getUnreadCount(room: ChatroomSummary) {
 }
 
 const ChatroomsTab: React.FC = () => {
+    const { showModal } = useModal();
+
     const chatrooms = useChatroomsStore((s) => s.chatrooms);
     const activeRoomId = useActiveRoomStore((s) => s.activeRoomId);
     const setActiveRoom = useActiveRoomStore((s) => s.setActiveRoom);
@@ -52,14 +56,15 @@ const ChatroomsTab: React.FC = () => {
                         <div className="flex items-center gap-3">
                             <button
                                 className="
-                                flex-1 inline-flex items-center justify-center gap-2
-                                rounded-xl px-4 py-3 text-sm font-semibold text-white
-                                bg-gradient-to-br from-pink-500 via-rose-500 to-red-500
-                                shadow-md shadow-rose-500/20
-                                hover:brightness-110 hover:-translate-y-[1px]
-                                active:translate-y-0 transition
-                                focus:outline-none focus:ring-2 focus:ring-rose-300/35
-                            "
+                                    flex-1 inline-flex items-center justify-center gap-2
+                                    rounded-xl px-4 py-3 text-sm font-semibold text-white
+                                    bg-gradient-to-br from-pink-500 via-rose-500 to-red-500
+                                    shadow-md shadow-rose-500/20
+                                    hover:brightness-110 hover:-translate-y-[1px]
+                                    active:translate-y-0 transition
+                                    focus:outline-none focus:ring-2 focus:ring-rose-300/35
+                                "
+                                onClick={() => showModal(<AddGroupChatModal />)}
                             >
                                 <PlusCircleIcon className="h-5 w-5"/>
                                 Add Groupchat

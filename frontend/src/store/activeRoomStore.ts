@@ -361,9 +361,7 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
                 if (!isStillCurrent(roomId, epoch, abort)) {
                     return;
                 }
-
-                console.log(page);
-
+                
                 set((cur) => {
                     return {
                         messages: [...page.messages, ...cur.messages],

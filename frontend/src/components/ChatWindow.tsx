@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
     EllipsisVerticalIcon,
     PaperAirplaneIcon,
-    UserPlusIcon,
+    XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { getChatroomDisplayName } from "../utils/names";
 import { useStomp } from "../ws/StompContext";
@@ -61,6 +61,8 @@ const ChatWindow: React.FC = () => {
     const { connected } = useStomp();
 
     const activeRoomId = useActiveRoomStore((s) => s.activeRoomId);
+    const clearActiveRoom = useActiveRoomStore((s) => s.clearActiveRoom);
+
     const activeRoom = useChatroomsStore((s) =>
         activeRoomId === null
             ? null
@@ -239,18 +241,6 @@ const ChatWindow: React.FC = () => {
 
                     <div className="flex items-center gap-2">
                         <button
-                            title="Invite"
-                            className="
-                                p-2 rounded-xl
-                                text-slate-300 hover:text-slate-100
-                                hover:bg-white/5 transition
-                                focus:outline-none focus:ring-2 focus:ring-rose-300/25
-                            "
-                        >
-                            <UserPlusIcon className="w-6 h-6" />
-                        </button>
-
-                        <button
                             title="Room Options"
                             className="
                                 p-2 rounded-xl
@@ -261,7 +251,19 @@ const ChatWindow: React.FC = () => {
                         >
                             <EllipsisVerticalIcon className="w-6 h-6" />
                         </button>
+                        <button
+                            className="
+                                p-2 rounded-xl
+                                text-slate-300 hover:text-slate-100
+                                hover:bg-white/5 transition
+                                focus:outline-none focus:ring-2 focus:ring-rose-300/25
+                            "
+                            onClick={clearActiveRoom}
+                        >
+                            <XMarkIcon className="w-6 h-6" />
+                        </button>
                     </div>
+
                 </div>
             </div>
 
