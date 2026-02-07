@@ -10,9 +10,23 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
-    Optional<UserEntity> findByUsername(String username);
     Optional<UserEntity> findByUsernameAndTag(String username, String tag);
     Optional<UserEntity> findByEmail(String email);
+
+    @Query(value = """
+            SELECT *
+            FROM users
+            WHERE
+                LOWER(CONCAT(username, '#', tag)) LIKE lower(CONCAT(:discriminator, '%'))
+            ORDER BY
+                CASE
+                    WHEN lower(concat(username, '#', u.tag)) = lower(:discriminator) THEN 0
+                    ELSE 1
+                END,
+                username
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<UserEntity> searchByDiscriminator(String discriminator, int limit);
 
     @Query(value = """
             SELECT COUNT(*) > 0

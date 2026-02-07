@@ -54,6 +54,8 @@ const AddContactModal: React.FC = () => {
 
         if (!canSubmit) return;
 
+        setLocalSuccess(null);
+        
         const parsed = parseUsername(trimmed);
         if (!parsed.ok) {
             setLocalError(parsed.error);
@@ -62,7 +64,6 @@ const AddContactModal: React.FC = () => {
 
         setLocalError(null);
         clearError();
-        setLocalSuccess(null);
 
         setSubmitting(true);
 
@@ -70,7 +71,7 @@ const AddContactModal: React.FC = () => {
             await addContact(parsed.name, parsed.tag);
 
             clearError();
-            setLocalSuccess(`Added "${trimmed}" to contacts.`);
+            setLocalSuccess(`Added "${parsed.name}" to contacts.`);
             setUsername("");
         } catch {
             setLocalSuccess(null);
