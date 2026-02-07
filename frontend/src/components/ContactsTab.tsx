@@ -93,7 +93,10 @@ const ContactsTab: React.FC = () => {
                                         />
                                         <div className="min-w-0">
                                             <div className="truncate font-semibold text-slate-100">
-                                                {contact.username}
+                                                <span>{contact.username}</span>
+                                                <span className="ml-0.5 text-xs font-medium text-slate-400">
+                                                    #{contact.tag}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
@@ -118,7 +121,7 @@ const ContactsTab: React.FC = () => {
                                     </button>
 
                                     <button
-                                        onClick={() => 
+                                        onClick={() =>
                                             showModal(
                                                 <RemoveContactModal
                                                     contactId={contact.id}

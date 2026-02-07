@@ -1,8 +1,4 @@
-import type { ChatroomSummary, UserInfo } from "../types";
-
-export function getUserDisplayName(user: UserInfo): string {
-    return user.username + '#' + user.tag;
-}
+import type { ChatroomSummary } from "../types";
 
 export function deriveChatroomName(
     memberNamesPreview: string[],
