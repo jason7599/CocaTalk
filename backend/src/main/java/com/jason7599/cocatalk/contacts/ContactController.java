@@ -17,12 +17,12 @@ public class ContactController {
 
     private final ContactService contactService;
 
-    @PostMapping
+    @PostMapping("/{contactId}")
     public ResponseEntity<UserInfo> addContact(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody AddContactRequest request
     ) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(contactService.addContact(userDetails.getId(), request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(contactService.addContact(userDetails.getId(), request.contactId()));
     }
 
     @DeleteMapping("/{contactId}")

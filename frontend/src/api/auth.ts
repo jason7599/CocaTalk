@@ -1,4 +1,3 @@
-import type { UserInfo } from "../types";
 import api from "./api";
 
 export async function login(email: string, password: string): Promise<string> {
@@ -19,10 +18,6 @@ export async function register(email: string, username: string, password: string
         username,
         password
     });
-}
-
-export async function getCurrentUser(): Promise<UserInfo> {
-    return (await api.get('/users/me')).data;
 }
 
 export function isLoggedIn(): boolean {

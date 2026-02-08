@@ -18,8 +18,8 @@ public class ContactService {
     private final UserRepository userRepository;
 
     @Transactional
-    public UserInfo addContact(Long userId, AddContactRequest request) {
-        UserEntity contact = userRepository.findByUsernameAndTag(request.username(), request.tag())
+    public UserInfo addContact(Long userId, Long contactId) {
+        UserEntity contact = userRepository.findById(contactId)
                 .orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND, "username not found"));
 
         if (userId.equals(contact.getId())) {

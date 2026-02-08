@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { getCurrentUser } from "../api/auth";
+import { getCurrentUser } from "../api/users";
 import type { UserInfo } from "../types";
 
 type UserContextType = {
