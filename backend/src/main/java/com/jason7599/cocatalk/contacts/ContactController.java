@@ -17,7 +17,7 @@ public class ContactController {
 
     private final ContactService contactService;
 
-    @PostMapping("/{contactId}")
+    @PostMapping
     public ResponseEntity<UserInfo> addContact(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody AddContactRequest request

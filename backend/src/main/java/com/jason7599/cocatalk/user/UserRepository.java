@@ -19,7 +19,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
                 LOWER(CONCAT(username, '#', tag)) LIKE lower(CONCAT(:discriminator, '%'))
             ORDER BY
                 CASE
-                    WHEN lower(concat(username, '#', u.tag)) = lower(:discriminator) THEN 0
+                    WHEN lower(concat(username, '#', tag)) = lower(:discriminator) THEN 0
                     ELSE 1
                 END,
                 username

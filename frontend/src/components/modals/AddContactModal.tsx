@@ -3,92 +3,75 @@ import { useEffect, useMemo, useState } from "react";
 import { useModal } from "../../context/ModalContext";
 import { useContactsStore } from "../../store/contactsStore";
 import { UserPlusIcon, XMarkIcon } from "@heroicons/react/24/solid";
+import type { UserInfo } from "../../types";
+import { searchUsers } from "../../api/users";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { useUser } from "../../context/UserContext";
 
-type ParseResult =
-    | { ok: true; name: string; tag: string }
-    | { ok: false; error: string };
-
-const CROCKFORD_TAG_RE = /^[A-HJ-NP-Z2-9]+$/i;
-
-function parseUsername(input: string): ParseResult {
-    const s = input.trim();
-
-    // Require exactly one '#'
-    const hashCount = (s.match(/#/g) ?? []).length;
-    if (hashCount !== 1) return { ok: false, error: `Username must be in the form "name#tag".` };
-
-    const [name, tag] = s.split("#");
-
-    if (!name || !tag) return { ok: false, error: `Username must be in the form "name#tag".` };
-
-    if (!CROCKFORD_TAG_RE.test(tag)) {
-        return { ok: false, error: `Tag must be composed of 2-9, A-Z without I, L, O.` };
-    }
-
-    return { ok: true, name, tag };
-}
+const MIN_QUERY_LENGTH = 3;
+const DEBOUNCE_MS = 400;
 
 const AddContactModal: React.FC = () => {
     const { closeModal } = useModal();
+    const { user } = useUser();
 
+    const contacts = useContactsStore((s) => s.contacts);
     const addContact = useContactsStore((s) => s.addContact);
-    const error = useContactsStore((s) => s.error);
-    const clearError = useContactsStore((s) => s.clearError);
 
-    const [localError, setLocalError] = useState<string | null>(null);
+    const [query, setQuery] = useState("");
+    const [results, setResults] = useState<UserInfo[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const [username, setUsername] = useState("");
-    const [submitting, setSubmitting] = useState(false);
-    const [localSuccess, setLocalSuccess] = useState<string | null>(null);
+    const trimmed = query.trim();
+    const canSearch = trimmed.length >= MIN_QUERY_LENGTH;
 
-    const trimmed = username.trim();
-    const canSubmit = !submitting && trimmed.length > 0;
+    const contactIds = useMemo(
+        () => new Set(contacts.map((c) => c.id))
+        , [contacts]);
 
     const helperText = useMemo(() => {
-        if (localSuccess) return localSuccess;
-        return "Add someone to your contacts.";
-    }, [localSuccess]);
+        if (!trimmed) return "Search by username or username#tag.";
+        if (!canSearch) return `Type at least ${MIN_QUERY_LENGTH} characters.`;
+        if (loading) return "Searching...";
+        if (results.length === 0) return "No results found";
+        return "Click a user to add them.";
+    }, [trimmed, canSearch, loading, results.length]);
 
-    const onSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (!canSubmit) return;
-
-        setLocalSuccess(null);
-        
-        const parsed = parseUsername(trimmed);
-        if (!parsed.ok) {
-            setLocalError(parsed.error);
+    // Debounced Search
+    useEffect(() => {
+        if (!canSearch) {
+            setResults([]);
             return;
         }
 
-        setLocalError(null);
-        clearError();
+        setLoading(true);
 
-        setSubmitting(true);
+        const handle = setTimeout(async () => {
+            setError(null);
 
-        try {
-            await addContact(parsed.name, parsed.tag);
+            try {
+                const users = await searchUsers(trimmed);
+                setResults(users);
+            } catch {
+                setError("Failed to search users");
+            } finally {
+                setLoading(false);
+            }
+        }, DEBOUNCE_MS);
 
-            clearError();
-            setLocalSuccess(`Added "${parsed.name}" to contacts.`);
-            setUsername("");
-        } catch {
-            setLocalSuccess(null);
-        } finally {
-            setSubmitting(false);
-        }
-    };
+        return () => clearTimeout(handle);
+    }, [trimmed, canSearch]);
 
-    useEffect(() => {
-        clearError();
-        return () => clearError();
-    }, [clearError]);
+    const onAdd = async (userId: number) => {
+        await addContact(userId);
+    }
 
     return (
         <div className="w-[520px] max-w-[92vw]">
             <div className="rounded-3xl p-[1px] bg-gradient-to-br from-pink-500/60 via-rose-500/40 to-red-500/60 shadow-2xl shadow-rose-500/10">
                 <div className="rounded-3xl border border-white/10 bg-[#0f0f18]/85 backdrop-blur-2xl text-slate-100 overflow-hidden">
+
                     {/* Header */}
                     <div className="p-6 border-b border-white/10 relative">
                         <div className="pointer-events-none absolute inset-0 opacity-70">
@@ -106,12 +89,13 @@ const AddContactModal: React.FC = () => {
                                     <h2 className="text-lg font-semibold tracking-tight">
                                         Add contact
                                     </h2>
-                                    <p className="mt-1 text-sm text-slate-400">{helperText}</p>
+                                    <p className="mt-1 text-sm text-slate-400">
+                                        {helperText}
+                                    </p>
                                 </div>
                             </div>
 
                             <button
-                                type="button"
                                 onClick={closeModal}
                                 className="
                                     rounded-xl p-2
@@ -119,8 +103,6 @@ const AddContactModal: React.FC = () => {
                                     hover:bg-white/5 transition
                                     focus:outline-none focus:ring-2 focus:ring-rose-300/25
                                 "
-                                aria-label="Close"
-                                title="Close"
                             >
                                 <XMarkIcon className="h-5 w-5" />
                             </button>
@@ -128,81 +110,83 @@ const AddContactModal: React.FC = () => {
                     </div>
 
                     {/* Body */}
-                    <form onSubmit={onSubmit} className="p-6 space-y-4">
-                        <div className="space-y-2">
-                            <label className="block text-xs font-medium tracking-wide text-slate-400">
-                                Username
-                            </label>
-
+                    <div className="p-4 space-y-3">
+                        {/* Search input */}
+                        <div className="relative">
+                            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                             <input
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                placeholder="username#tag"
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                placeholder="Search username or username#tag"
                                 autoFocus
                                 className="
-                                    w-full rounded-2xl px-4 py-3
+                                    w-full rounded-2xl pl-12 pr-4 py-3
                                     border border-white/10 bg-white/5
                                     text-slate-100 placeholder:text-slate-500
                                     outline-none transition
                                     focus:border-rose-400/70 focus:ring-2 focus:ring-rose-300/25
                                 "
                             />
-
-                            {/* Local validation error */}
-                            {localError && (
-                                <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-                                    {localError}
-                                </div>
-                            )}
-
-                            {/* Error from store (API/server) */}
-                            {!localError && error && (
-                                <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-                                    {error}
-                                </div>
-                            )}
-
-                            {/* Success (local) */}
-                            {localSuccess && (
-                                <div className="rounded-2xl border border-fuchsia-400/25 bg-fuchsia-500/10 px-4 py-3 text-sm text-fuchsia-100 shadow-[0_0_30px_rgba(217,70,239,0.10)]">
-                                    {localSuccess}
-                                </div>
-                            )}
                         </div>
 
-                        <div className="flex justify-end gap-2 pt-2">
-                            <button
-                                type="button"
-                                onClick={closeModal}
-                                disabled={submitting}
-                                className="
-                                    rounded-xl px-4 py-2 text-sm font-semibold
-                                    text-slate-200 bg-white/5 border border-white/10
-                                    hover:bg-white/10 transition
-                                    disabled:opacity-60 disabled:cursor-not-allowed
-                                    focus:outline-none focus:ring-2 focus:ring-rose-300/20
-                                "
-                            >
-                                Cancel
-                            </button>
+                        {error && (
+                            <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                                {error}
+                            </div>
+                        )}
 
-                            <button
-                                type="submit"
-                                disabled={!canSubmit}
-                                className="
-                                    rounded-xl px-4 py-2 text-sm font-semibold text-white
-                                    bg-gradient-to-br from-pink-500 via-rose-500 to-red-500
-                                    shadow-lg shadow-rose-500/20
-                                    hover:brightness-110 hover:-translate-y-[1px]
-                                    active:translate-y-0 transition
-                                    disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0
-                                    focus:outline-none focus:ring-2 focus:ring-rose-300/35
-                                "
-                            >
-                                {submitting ? "Adding…" : "Add"}
-                            </button>
+                        {/* Results */}
+                        <div className="max-h-[320px] overflow-y-auto divide-y divide-white/10">
+                            {results.map((u) => {
+                                const isSelf = user && u.id === user.id;
+                                const inContacts = contactIds.has(u.id);
+
+                                return (
+                                    <div
+                                        key={u.id}
+                                        className={`
+                                            flex items-center justify-between gap-3 px-4 py-3 transition
+                                            ${!isSelf && !inContacts ? "hover:bg-white/5" : "opacity-60"}    
+                                        `}
+                                    >
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-pink-500/20 to-red-500/20 ring-1 ring-white/10" />
+                                            <div className="truncate font-semibold">
+                                                <span>{u.username}</span>
+                                                <span className="ml-0.5 text-xs font-medium text-slate-400">
+                                                    #{u.tag}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Right-side state */}
+                                        {isSelf ? (
+                                            <span className="text-xs font-semibold text-slate-400">
+                                                You
+                                            </span>
+                                        ) : inContacts ? (
+                                            <span className="text-xs font-semibold text-slate-400">
+                                                Added
+                                            </span>
+                                        ) : (
+                                            <button
+                                                onClick={() => onAdd(u.id)}
+                                                className="
+                                                    rounded-xl px-3 py-1.5 text-xs font-semibold
+                                                    text-white
+                                                    bg-gradient-to-br from-pink-500 via-rose-500 to-red-500
+                                                    shadow-sm shadow-rose-500/25
+                                                    hover:brightness-110 transition
+                                                "
+                                            >
+                                                Add
+                                            </button>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>

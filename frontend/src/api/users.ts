@@ -6,5 +6,5 @@ export async function getCurrentUser(): Promise<UserInfo> {
 }
 
 export async function searchUsers(query: string): Promise<UserInfo[]> {
-    return (await api.get(`/users/search/q=${query}`)).data;
+    return (await api.get(`/users/search?q=${query}`)).data;
 }
