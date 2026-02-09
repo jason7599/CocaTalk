@@ -3,6 +3,7 @@ import type { ChatMemberInfo, MessageResponse } from "../types";
 import { create } from "zustand";
 import { getMembersInfo, loadMessages } from "../api/chatrooms";
 import { useChatroomsStore } from "./chatroomsStore";
+import { useUserStore } from "./userStore";
 
 type Status = "IDLE" | "LOADING" | "READY" | "ERROR";
 
@@ -117,11 +118,16 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
                 return { messages: next };
             });
 
-            // if (msg.senderId === )
+            const me = useUserStore.getState().user;
+            if (me && msg.senderId === me.id) {
+                get().ackUpTo(msg.seqNo);
+                get()._flushAck(true);
+            } else {
+                // If user is at/near bottom, auto-ack newest message.
+                // If not near bottom, leave it pending until they scroll down.
+                get()._maybeAckLatestVisible();
+            }
 
-            // If user is at/near bottom, auto-ack newest message.
-            // If not near bottom, leave it pending until they scroll down.
-            get()._maybeAckLatestVisible();
         });
     };
 
