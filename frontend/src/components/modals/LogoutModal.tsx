@@ -1,11 +1,11 @@
 import React from "react";
 import { ArrowRightStartOnRectangleIcon } from "@heroicons/react/24/outline";
 import { useModal } from "../../context/ModalContext";
-import { useUser } from "../../context/UserContext";
+import { useUserStore } from "../../store/userStore";
 
 const LogoutModal: React.FC = () => {
     const { closeModal } = useModal();
-    const { logout } = useUser();
+    const logout = useUserStore((s) => s.logout);
 
     return (
         <div className="w-[420px] max-w-[92vw]">

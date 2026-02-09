@@ -117,6 +117,8 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
                 return { messages: next };
             });
 
+            // if (msg.senderId === )
+
             // If user is at/near bottom, auto-ack newest message.
             // If not near bottom, leave it pending until they scroll down.
             get()._maybeAckLatestVisible();

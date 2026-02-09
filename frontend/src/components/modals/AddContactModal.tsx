@@ -6,14 +6,14 @@ import { UserPlusIcon, XMarkIcon } from "@heroicons/react/24/solid";
 import type { UserInfo } from "../../types";
 import { searchUsers } from "../../api/users";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import { useUser } from "../../context/UserContext";
+import { useUserStore } from "../../store/userStore";
 
 const MIN_QUERY_LENGTH = 3;
 const DEBOUNCE_MS = 400;
 
 const AddContactModal: React.FC = () => {
     const { closeModal } = useModal();
-    const { user } = useUser();
+    const user = useUserStore((s) => s.user);
 
     const contacts = useContactsStore((s) => s.contacts);
     const addContact = useContactsStore((s) => s.addContact);

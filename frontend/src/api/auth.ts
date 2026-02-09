@@ -6,10 +6,7 @@ export async function login(email: string, password: string): Promise<string> {
         password
     });
 
-    const token = response.data
-    localStorage.setItem('token', token)
-
-    return token;
+    return response.data;
 }
 
 export async function register(email: string, username: string, password: string): Promise<void> {
@@ -18,9 +15,4 @@ export async function register(email: string, username: string, password: string
         username,
         password
     });
-}
-
-export function isLoggedIn(): boolean {
-    const token = localStorage.getItem('token');
-    return !!token;
 }

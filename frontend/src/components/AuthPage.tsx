@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { login, register } from "../api/auth";
+import { register } from "../api/auth";
 import { useNavigate } from "react-router-dom";
 import {
     UserIcon,
@@ -8,6 +8,7 @@ import {
     EyeSlashIcon,
     AtSymbolIcon
 } from "@heroicons/react/24/outline";
+import { useUserStore } from "../store/userStore";
 
 const AuthPage: React.FC = () => {
     const [email, setEmail] = useState("");
@@ -18,6 +19,8 @@ const AuthPage: React.FC = () => {
     const [isError, setIsError] = useState(false);
     const [loading, setLoading] = useState(false);
     const [showPw, setShowPw] = useState(false);
+
+    const login = useUserStore((s) => s.login);
 
     const navigate = useNavigate();
 

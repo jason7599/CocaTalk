@@ -2,7 +2,6 @@ import type React from "react";
 import Sidebar from "./components/Sidebar";
 import ChatWindow from "./components/ChatWindow";
 import { ModalProvider } from "./context/ModalContext";
-import { UserProvider } from "./context/UserContext";
 import { useEffect } from "react";
 import { useChatroomsStore } from "./store/chatroomsStore";
 import { StompProvider } from "./ws/StompContext";
@@ -16,7 +15,6 @@ const MainPage: React.FC = () => {
     }, []);
 
     return (
-        <UserProvider>
         <StompProvider>
         <ModalProvider>
 
@@ -27,7 +25,6 @@ const MainPage: React.FC = () => {
 
         </ModalProvider>
         </StompProvider>
-        </UserProvider>
     );
 }
 

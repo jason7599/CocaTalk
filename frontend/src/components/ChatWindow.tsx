@@ -9,10 +9,10 @@ import { useStomp } from "../ws/StompContext";
 import { useActiveRoomStore } from "../store/activeRoomStore";
 import { useChatroomsStore } from "../store/chatroomsStore";
 import type { MessageResponse } from "../types";
-import { useUser } from "../context/UserContext";
+import { useUserStore } from "../store/userStore";
 
 const MessageBubble = ({ message }: { message: MessageResponse }) => {
-    const { user } = useUser();
+    const user = useUserStore((s) => s.user);
     const isMe = message.senderId === user?.id;
 
     const senderUsername = useActiveRoomStore(
@@ -87,12 +87,11 @@ const ChatWindow: React.FC = () => {
         inputRef.current?.focus();
     }, [activeRoomId]);
 
-    const canSend = connected && activeRoomId != null && message.trim().length > 0;
+    const trimmed = message.trimStart();
+    const canSend = connected && activeRoomId != null && trimmed.length > 0;
 
     const handleSend = () => {
         if (!canSend || activeRoomId == null) return;
-        const trimmed = message.trim();
-        if (!trimmed) return;
 
         sendMessage(trimmed);
 
@@ -234,7 +233,7 @@ const ChatWindow: React.FC = () => {
                 <div className="flex h-24 items-center justify-between px-5">
                     <div className="min-w-0">
                         <h2 className="truncate text-lg font-semibold tracking-tight text-slate-100">
-                            {getChatroomDisplayName(activeRoom)}
+                            {activeRoom && getChatroomDisplayName(activeRoom)}
                         </h2>
                         {!connected && <div className="text-xs text-slate-400">Connecting…</div>}
                     </div>

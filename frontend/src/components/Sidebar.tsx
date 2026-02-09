@@ -6,13 +6,13 @@ import {
 } from "@heroicons/react/24/outline";
 import ChatroomsTab from "./ChatroomsTab";
 import { useModal } from "../context/ModalContext";
-import { useUser } from "../context/UserContext";
 import LogoutModal from "./modals/LogoutModal";
 import ContactsTab from "./ContactsTab";
+import { useUserStore } from "../store/userStore";
 
 const Sidebar: React.FC = () => {
     const { showModal } = useModal();
-    const { user } = useUser();
+    const user = useUserStore((s) => s.user);
 
     const [activeTab, setActiveTab] = useState<"contacts" | "chats">("chats");
 

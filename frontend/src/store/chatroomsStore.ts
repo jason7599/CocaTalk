@@ -2,6 +2,21 @@ import { create } from "zustand";
 import type { ChatroomSummary, MessagePreview } from "../types";
 import { getOrCreateDirectChatroom, loadChatrooms } from "../api/chatrooms";
 
+/*
+Lazy initializing DM rooms.
+
+1. User A clicks on the DM button. This does NOT create a chatroom entity just yet, 
+    but just shows A an empty chatroom UI. activeRoomId = null.
+
+2. User B actually sends a message. Now the DB creates a chatroom entity.
+
+3. This emits an event to A's client; type=DM_CREATED, body={senderId=B, chatroomId=id, message=msg}
+
+4. A's client sets the activeRoomId, populates the message list with B's message. 
+    This is only done if A is currently looking at an empty DM chatroom with B. 
+    So this will require us to store info about with whom the user is looking at an empty DM with, if they are.
+*/
+
 type ChatroomsState = {
     chatrooms: ChatroomSummary[];
 
@@ -11,8 +26,8 @@ type ChatroomsState = {
     // bootstrap + pending queue
     // Whether this store has completed the state load from the DB,
     // And is ready to safely reconcile incremental updates
-    bootstrapped: boolean;
-    pendingPreviews: Record<number, MessagePreview>;
+    _bootStrapped: boolean;
+    _pendingPreviews: Record<number, MessagePreview>;
 
     // "reducers" (pure-ish)
     putChatroom: (room: ChatroomSummary) => void;
@@ -40,8 +55,8 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
     chatrooms: [],
     loading: false,
     error: null,
-    bootstrapped: false,
-    pendingPreviews: {},
+    _bootStrapped: false,
+    _pendingPreviews: {},
 
     putChatroom: (room) => {
         set((s) => {
@@ -74,7 +89,7 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
 
             set({
                 chatrooms: sortByLastMessageAtDesc(data),
-                bootstrapped: true
+                _bootStrapped: true
             });
 
             get()._flushPendingPreviews();
@@ -95,12 +110,12 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
     onNewMessage: (preview) => {
         set((s) => {
             // buffer preview if we haven't loaded rooms yet
-            if (!s.bootstrapped) {
-                const existing = s.pendingPreviews[preview.roomId];
+            if (!s._bootStrapped) {
+                const existing = s._pendingPreviews[preview.roomId];
                 if (!existing || existing.seqNo < preview.seqNo) {
                     return {
-                        pendingPreviews: {
-                            ...s.pendingPreviews,
+                        _pendingPreviews: {
+                            ...s._pendingPreviews,
                             [preview.roomId]: preview
                         }
                     };
@@ -137,15 +152,15 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
     },
 
     _flushPendingPreviews: () => {
-        if (!get().bootstrapped) throw new Error("flushPendingPreviews called before bootstrapped");
+        if (!get()._bootStrapped) throw new Error("flushPendingPreviews called before _bootStrapped");
 
         set((s) => {
             // dumb fuckery because stupidass Record types don't support a size API
             // so this loop is basically semantically irrelevant
-            for (const _ in s.pendingPreviews) {
+            for (const _ in s._pendingPreviews) {
                 // found one key -> not empty
                 const nextRooms = s.chatrooms.map((room) => {
-                    const p = s.pendingPreviews[room.id];
+                    const p = s._pendingPreviews[room.id];
                     if (!p) return room;
                     if (room.lastSeq >= p.seqNo) return room;
 
@@ -159,7 +174,7 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
 
                 return {
                     chatrooms: sortByLastMessageAtDesc(nextRooms),
-                    pendingPreviews: {},
+                    _pendingPreviews: {},
                 };
             }
 
