@@ -5,6 +5,8 @@ import { getMembersInfo, loadMessages } from "../api/chatrooms";
 import { useChatroomsStore } from "./chatroomsStore";
 import { useUserStore } from "./userStore";
 
+const ACK_DEBOUNCE_MS = 400;
+
 type Status = "IDLE" | "LOADING" | "READY" | "ERROR";
 
 type ActiveRoomState = {
@@ -187,7 +189,7 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
         // ---- ACK DEFAULTS ----
         _isNearBottom: true,
         _ackTimer: null,
-        _ackDebounceMs: 400, // tweak: 200-1000ms is typical
+        _ackDebounceMs: ACK_DEBOUNCE_MS,
         _pendingAck: 0,
         _lastSentAck: 0,
 

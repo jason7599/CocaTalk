@@ -8,54 +8,8 @@ import { getChatroomDisplayName } from "../utils/names";
 import { useStomp } from "../ws/StompContext";
 import { useActiveRoomStore } from "../store/activeRoomStore";
 import { useChatroomsStore } from "../store/chatroomsStore";
-import type { MessageResponse } from "../types";
-import { useUserStore } from "../store/userStore";
-
-const MessageBubble = ({ message }: { message: MessageResponse }) => {
-    const user = useUserStore((s) => s.user);
-    const isMe = message.senderId === user?.id;
-
-    const senderUsername = useActiveRoomStore(
-        (s) => s.members[message.senderId]?.username ?? ""
-    );
-
-    return (
-        <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-            <div className="max-w-[76%]">
-                {!isMe && senderUsername && (
-                    <div className="mb-1 px-1 text-xs font-semibold text-slate-400">
-                        {senderUsername}
-                    </div>
-                )}
-
-                <div
-                    className={[
-                        "px-4 py-2.5 rounded-2xl text-sm leading-relaxed",
-                        "border backdrop-blur-xl",
-                        "transition",
-                        isMe
-                            ? [
-                                "text-white",
-                                "bg-gradient-to-br from-pink-500 via-rose-500 to-red-500",
-                                "border-rose-400/20",
-                                "shadow-[0_8px_30px_rgba(244,63,94,0.18)]",
-                                "rounded-br-md",
-                            ].join(" ")
-                            : [
-                                "text-slate-100",
-                                "bg-white/5",
-                                "border-white/10",
-                                "shadow-[0_8px_26px_rgba(0,0,0,0.25)]",
-                                "rounded-bl-md",
-                            ].join(" "),
-                    ].join(" ")}
-                >
-                    {message.content}
-                </div>
-            </div>
-        </div>
-    );
-};
+import MessageBubble from "./MessageBubble";
+import ChatHeader from "./ChatHeader";
 
 const ChatWindow: React.FC = () => {
     const { connected } = useStomp();
@@ -228,43 +182,7 @@ const ChatWindow: React.FC = () => {
                 <div className="absolute -bottom-28 -right-28 h-96 w-96 rounded-full bg-red-500/10 blur-3xl" />
             </div>
 
-            {/* HEADER */}
-            <div className="relative z-10 border-b border-white/10 bg-[#0f0f18]/70 backdrop-blur-xl">
-                <div className="flex h-24 items-center justify-between px-5">
-                    <div className="min-w-0">
-                        <h2 className="truncate text-lg font-semibold tracking-tight text-slate-100">
-                            {activeRoom && getChatroomDisplayName(activeRoom)}
-                        </h2>
-                        {!connected && <div className="text-xs text-slate-400">Connecting…</div>}
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <button
-                            title="Room Options"
-                            className="
-                                p-2 rounded-xl
-                                text-slate-300 hover:text-slate-100
-                                hover:bg-white/5 transition
-                                focus:outline-none focus:ring-2 focus:ring-rose-300/25
-                            "
-                        >
-                            <EllipsisVerticalIcon className="w-6 h-6" />
-                        </button>
-                        <button
-                            className="
-                                p-2 rounded-xl
-                                text-slate-300 hover:text-slate-100
-                                hover:bg-white/5 transition
-                                focus:outline-none focus:ring-2 focus:ring-rose-300/25
-                            "
-                            onClick={clearActiveRoom}
-                        >
-                            <XMarkIcon className="w-6 h-6" />
-                        </button>
-                    </div>
-
-                </div>
-            </div>
+            {activeRoom && <ChatHeader/>}
 
             {/* LIST */}
             <div ref={listRef} className="relative z-0 flex-1 overflow-y-auto px-4 py-4">
