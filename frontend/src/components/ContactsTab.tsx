@@ -1,6 +1,7 @@
 import type React from "react";
 import {
     ChatBubbleLeftIcon,
+    MagnifyingGlassIcon,
     UserPlusIcon,
     XMarkIcon,
 } from "@heroicons/react/24/solid";
@@ -33,7 +34,7 @@ const ContactsTab: React.FC = () => {
         const q = search.trim().toLowerCase();
         if (!q) return contacts;
 
-        return contacts.filter(c => 
+        return contacts.filter(c =>
             `${c.username}#${c.tag}`.toLowerCase().includes(q)
         );
     }, [contacts, search]);
@@ -70,24 +71,20 @@ const ContactsTab: React.FC = () => {
                 </div>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-sm">
-                <div className="p-3">
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search contacts"
-                        className="
-                            w-full rounded-xl px-4 py-3
-                            bg-white/5 border border-white/10
-                            text-sm text-slate-100
-                            placeholder:text-slate-500
-                            outline-none transition
-                            focus:bg-white/7 focus:border-rose-400/50
-                            focus:ring-2 focus:ring-rose-300/25
-                        "
-                    />
-                </div>
+            <div className="relative">
+                <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search contacts"
+                    className="
+                        w-full rounded-2xl pl-12 pr-4 py-3
+                        border border-white/10 bg-white/5
+                        text-slate-100 placeholder:text-slate-500
+                        outline-none transition
+                        focus:border-rose-400/70 focus:ring-2 focus:ring-rose-300/25
+                    "
+                />
             </div>
 
             {/* Contacts List */}
