@@ -49,11 +49,8 @@ export interface MessagePage {
     hasMore: boolean;
 };
 
-export type ChatMemberRole = "MEMBER" | "OWNER" | "ADMIN";
-
 export interface ChatMemberInfo {
     id: number;
     username: string | null;
-    role: ChatMemberRole;
     joinedAt: string;
 };

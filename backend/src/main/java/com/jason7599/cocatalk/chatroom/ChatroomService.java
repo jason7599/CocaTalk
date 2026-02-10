@@ -24,8 +24,8 @@ public class ChatroomService {
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
 
-    public void addUserToRoom(Long userId, Long roomId, ChatMemberRole role) {
-        chatroomRepository.addUserToRoom(roomId, userId, role);
+    public void addUserToRoom(Long userId, Long roomId) {
+        chatroomRepository.addUserToRoom(roomId, userId);
     }
 
     public List<ChatroomSummary> loadChatroomSummaries(Long userId) {
@@ -106,8 +106,8 @@ public class ChatroomService {
 
         chatroomRepository.setDirectChatroom(chatroom.getId(), myId, otherId);
 
-        chatroomRepository.addUserToRoom(chatroom.getId(), myId, ChatMemberRole.MEMBER);
-        chatroomRepository.addUserToRoom(chatroom.getId(), otherId, ChatMemberRole.MEMBER);
+        chatroomRepository.addUserToRoom(chatroom.getId(), myId);
+        chatroomRepository.addUserToRoom(chatroom.getId(), otherId);
 
         return new ChatroomSummary(
                 chatroom.getId(),
@@ -165,7 +165,6 @@ public class ChatroomService {
                 .stream().map(v -> new ChatMemberInfo(
                         v.getId(),
                         v.getUsername(),
-                        v.getRole(),
                         v.getJoinedAt().toInstant()
                 )).toList();
     }

@@ -5,7 +5,6 @@ import java.time.Instant;
 public record ChatMemberInfo(
         Long id,
         String username,
-        ChatMemberRole role,
         Instant joinedAt
 ) {
 }

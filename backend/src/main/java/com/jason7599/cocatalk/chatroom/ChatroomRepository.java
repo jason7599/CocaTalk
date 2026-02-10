@@ -58,8 +58,7 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             """, nativeQuery = true)
     void addUserToRoom(
             @Param("roomId") Long roomId,
-            @Param("userId") Long userId,
-            @Param("role") ChatMemberRole role);
+            @Param("userId") Long userId);
 
     @Query(value = """
             SELECT COUNT(*) > 0
@@ -128,7 +127,6 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             SELECT
                 rm.user_id AS id,
                 u.username AS username,
-                rm.role AS role,
                 rm.joined_at AS joinedAt
             FROM room_members rm JOIN users u ON rm.user_id = u.id
             WHERE rm.room_id = :roomId

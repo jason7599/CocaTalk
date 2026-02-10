@@ -24,6 +24,8 @@ public class ChatroomEntity {
 
     @Column(insertable = false)
     private Long lastSeq;
+    
+    private Long groupCreatorId;
 
     @Column(insertable = false)
     private Instant lastMessageAt;

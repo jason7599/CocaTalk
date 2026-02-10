@@ -5,6 +5,5 @@ import java.sql.Timestamp;
 public interface ChatMemberInfoView {
     Long getId();
     String getUsername();
-    ChatMemberRole getRole();
     Timestamp getJoinedAt();
 }
