@@ -7,6 +7,7 @@ import java.sql.Timestamp;
 public interface ChatroomSummaryRow {
     Long getId();
     ChatroomType getType();
+    Long getGroupCreatorId();
     String getAlias();
     String getLastMessage();
     Timestamp getLastMessageAt();

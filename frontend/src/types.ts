@@ -3,6 +3,7 @@ export type ChatroomType = "DIRECT" | "GROUP";
 export interface ChatroomSummary {
     id: number;
     type: ChatroomType;
+    groupCreatorId: number | null;
     alias: string | null;
     lastMessage: string | null;
     lastMessageAt: string;
@@ -52,5 +53,6 @@ export interface MessagePage {
 export interface ChatMemberInfo {
     id: number;
     username: string | null;
+    tag: string | null;
     joinedAt: string;
 };

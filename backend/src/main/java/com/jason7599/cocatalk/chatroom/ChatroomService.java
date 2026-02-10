@@ -62,6 +62,7 @@ public class ChatroomService {
         return rows.stream().map(row -> new ChatroomSummary(
                 row.getId(),
                 row.getType(),
+                row.getGroupCreatorId(),
                 row.getAlias(),
                 row.getLastMessage(),
                 row.getLastMessageAt().toInstant(),
@@ -91,6 +92,7 @@ public class ChatroomService {
             return new ChatroomSummary(
                     chatroom.getId(),
                     chatroom.getType(),
+                    chatroom.getGroupCreatorId(),
                     chatroomRepository.getAlias(chatroom.getId(), myId),
                     chatroomRepository.getLastMessage(chatroom.getId()),
                     chatroom.getLastMessageAt(),
@@ -112,6 +114,7 @@ public class ChatroomService {
         return new ChatroomSummary(
                 chatroom.getId(),
                 ChatroomType.DIRECT,
+                null,
                 null,
                 null,
                 null,
@@ -165,6 +168,7 @@ public class ChatroomService {
                 .stream().map(v -> new ChatMemberInfo(
                         v.getId(),
                         v.getUsername(),
+                        v.getTag(),
                         v.getJoinedAt().toInstant()
                 )).toList();
     }
