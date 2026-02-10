@@ -10,6 +10,7 @@ import { useActiveRoomStore } from "../store/activeRoomStore";
 import { useContactsStore } from "../store/contactsStore";
 import AddContactModal from "./modals/AddContactModal";
 import RemoveContactModal from "./modals/RemoveContactModal";
+import { useMemo, useState } from "react";
 
 const ContactsTab: React.FC = () => {
 
@@ -25,6 +26,17 @@ const ContactsTab: React.FC = () => {
         const room = await openDirectChatroom(contactId);
         setActiveRoom(room ? room.id : null);
     };
+
+    const [search, setSearch] = useState("");
+
+    const filtered = useMemo(() => {
+        const q = search.trim().toLowerCase();
+        if (!q) return contacts;
+
+        return contacts.filter(c => 
+            `${c.username}#${c.tag}`.toLowerCase().includes(q)
+        );
+    }, [contacts, search]);
 
     return (
         <div className="flex flex-col gap-4 p-4 text-slate-100">
@@ -58,6 +70,26 @@ const ContactsTab: React.FC = () => {
                 </div>
             </div>
 
+            <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-sm">
+                <div className="p-3">
+                    <input
+                        type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="Search contacts"
+                        className="
+                            w-full rounded-xl px-4 py-3
+                            bg-white/5 border border-white/10
+                            text-sm text-slate-100
+                            placeholder:text-slate-500
+                            outline-none transition
+                            focus:bg-white/7 focus:border-rose-400/50
+                            focus:ring-2 focus:ring-rose-300/25
+                        "
+                    />
+                </div>
+            </div>
+
             {/* Contacts List */}
             <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-sm overflow-hidden">
                 {loading && contacts.length === 0 ? (
@@ -68,9 +100,15 @@ const ContactsTab: React.FC = () => {
                             Haha friendless bastard 🥀🥀🥀🥀
                         </p>
                     </div>
+                ) : filtered.length === 0 ? (
+                    <div className="px-5 py-6">
+                        <p className="text-sm text-slate-300">
+                            No contacts to match your search
+                        </p>
+                    </div>
                 ) : (
                     <div className="divide-y divide-white/10">
-                        {contacts.map((contact) => (
+                        {filtered.map((contact) => (
                             <div
                                 key={contact.id}
                                 className="

@@ -1,10 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import {
-    EllipsisVerticalIcon,
-    PaperAirplaneIcon,
-    XMarkIcon,
-} from "@heroicons/react/24/outline";
-import { getChatroomDisplayName } from "../utils/names";
+import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
 import { useStomp } from "../ws/StompContext";
 import { useActiveRoomStore } from "../store/activeRoomStore";
 import { useChatroomsStore } from "../store/chatroomsStore";
@@ -15,7 +10,6 @@ const ChatWindow: React.FC = () => {
     const { connected } = useStomp();
 
     const activeRoomId = useActiveRoomStore((s) => s.activeRoomId);
-    const clearActiveRoom = useActiveRoomStore((s) => s.clearActiveRoom);
 
     const activeRoom = useChatroomsStore((s) =>
         activeRoomId === null
@@ -182,7 +176,7 @@ const ChatWindow: React.FC = () => {
                 <div className="absolute -bottom-28 -right-28 h-96 w-96 rounded-full bg-red-500/10 blur-3xl" />
             </div>
 
-            {activeRoom && <ChatHeader/>}
+            {activeRoom && <ChatHeader />}
 
             {/* LIST */}
             <div ref={listRef} className="relative z-0 flex-1 overflow-y-auto px-4 py-4">
@@ -216,7 +210,7 @@ const ChatWindow: React.FC = () => {
                 )}
 
                 {/* BOTTOM sentinel (for jump-to-latest + auto-scroll) */}
-                <div ref={bottomSentinelRef} className="h-6 shrink-0"/>
+                <div ref={bottomSentinelRef} className="h-6 shrink-0" />
 
             </div>
 
