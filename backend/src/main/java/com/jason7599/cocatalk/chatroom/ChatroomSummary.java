@@ -6,6 +6,7 @@ import java.util.List;
 public record ChatroomSummary(
         Long id,
         ChatroomType type,
+        Long otherUserId,
         Long groupCreatorId,
         String alias,
         String lastMessage,

@@ -62,6 +62,7 @@ public class ChatroomService {
         return rows.stream().map(row -> new ChatroomSummary(
                 row.getId(),
                 row.getType(),
+                row.getOtherUserId(),
                 row.getGroupCreatorId(),
                 row.getAlias(),
                 row.getLastMessage(),
@@ -80,50 +81,7 @@ public class ChatroomService {
 
     @Transactional
     public void setMyLastAck(Long roomId, Long userId, Long ack) {
-        chatroomRepository.setMyLastAck(roomId, userId, ack);
-    }
 
-    @Transactional
-    public ChatroomSummary getOrCreateDirectChatroom(Long myId, Long otherId) {
-        Optional<ChatroomEntity> chatroomOpt = chatroomRepository.findDirectChatroom(myId, otherId);
-        if (chatroomOpt.isPresent()) {
-            ChatroomEntity chatroom = chatroomOpt.get();
-
-            return new ChatroomSummary(
-                    chatroom.getId(),
-                    chatroom.getType(),
-                    chatroom.getGroupCreatorId(),
-                    chatroomRepository.getAlias(chatroom.getId(), myId),
-                    chatroomRepository.getLastMessage(chatroom.getId()),
-                    chatroom.getLastMessageAt(),
-                    chatroom.getLastSeq(),
-                    chatroomRepository.getMyLastAck(chatroom.getId(), myId),
-                    List.of(userRepository.findById(otherId).orElseThrow().getUsername()),
-                    1,
-                    chatroom.getCreatedAt()
-            );
-        }
-
-        ChatroomEntity chatroom = chatroomRepository.save(new ChatroomEntity(ChatroomType.DIRECT));
-
-        chatroomRepository.setDirectChatroom(chatroom.getId(), myId, otherId);
-
-        chatroomRepository.addUserToRoom(chatroom.getId(), myId);
-        chatroomRepository.addUserToRoom(chatroom.getId(), otherId);
-
-        return new ChatroomSummary(
-                chatroom.getId(),
-                ChatroomType.DIRECT,
-                null,
-                null,
-                null,
-                null,
-                0L,
-                0L,
-                List.of(userRepository.findById(otherId).orElseThrow().getUsername()),
-                1,
-                chatroom.getCreatedAt()
-        );
     }
 
     public Set<Long> getMemberIds(Long roomId) {

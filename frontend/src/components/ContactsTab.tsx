@@ -6,12 +6,11 @@ import {
     XMarkIcon,
 } from "@heroicons/react/24/solid";
 import { useModal } from "../context/ModalContext";
-import { useChatroomsStore } from "../store/chatroomsStore";
-import { useActiveRoomStore } from "../store/activeRoomStore";
 import { useContactsStore } from "../store/contactsStore";
 import AddContactModal from "./modals/AddContactModal";
 import RemoveContactModal from "./modals/RemoveContactModal";
 import { useMemo, useState } from "react";
+import { useActiveRoomStore } from "../store/activeRoomStore";
 
 const ContactsTab: React.FC = () => {
 
@@ -19,13 +18,11 @@ const ContactsTab: React.FC = () => {
 
     const contacts = useContactsStore((s) => s.contacts);
     const loading = useContactsStore((s) => s.loading);
+    
+    const openDirectChatroom = useActiveRoomStore((s) => s.openDirectChatroom);
 
-    const openDirectChatroom = useChatroomsStore((s) => s.openDirectChatroom);
-    const setActiveRoom = useActiveRoomStore((s) => s.setActiveRoom);
-
-    const handleDM = async (contactId: number) => {
-        const room = await openDirectChatroom(contactId);
-        setActiveRoom(room ? room.id : null);
+    const handleDm = async (contactId: number) => {
+        await openDirectChatroom(contactId);
     };
 
     const [search, setSearch] = useState("");
@@ -139,7 +136,7 @@ const ContactsTab: React.FC = () => {
 
                                 <div className="flex items-center gap-2">
                                     <button
-                                        onClick={() => handleDM(contact.id)}
+                                        onClick={() => handleDm(contact.id)}
                                         className="
                                             inline-flex items-center gap-1.5
                                             rounded-xl px-3 py-2 text-xs font-semibold

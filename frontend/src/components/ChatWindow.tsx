@@ -10,7 +10,7 @@ const ChatWindow: React.FC = () => {
     const { connected } = useStomp();
 
     const chatEndpoint = useActiveRoomStore((s) => s.chatEndpoint);
-    const activeRoomId = chatEndpoint?.dmProxy ? -1 : chatEndpoint?.roomId;
+    const activeRoomId = (chatEndpoint == null || chatEndpoint.dmProxy) ? null : chatEndpoint.roomId;
     const activeRoom = useChatroomsStore((s) =>
         activeRoomId === null
             ? null
@@ -33,10 +33,10 @@ const ChatWindow: React.FC = () => {
     useEffect(() => {
         setMessage("");
         inputRef.current?.focus();
-    }, [activeRoomId]);
+    }, [chatEndpoint]);
 
     const trimmed = message.trimStart();
-    const canSend = connected && activeRoomId != null && trimmed.length > 0;
+    const canSend = connected && chatEndpoint != null && trimmed.length > 0;
 
     const handleSend = () => {
         if (!canSend) return;
@@ -89,7 +89,7 @@ const ChatWindow: React.FC = () => {
 
         io.observe(bottom);
         return () => io.disconnect();
-    }, [activeRoomId, setNearBottomInStore]);
+    }, [chatEndpoint, setNearBottomInStore]);
 
     // Infinite scroll (load older messages when top sentinel appears)
     useEffect(() => {
@@ -127,7 +127,7 @@ const ChatWindow: React.FC = () => {
         io.observe(sentinel);
         return () => io.disconnect();
     }, [
-        activeRoomId,
+        chatEndpoint,
         roomStatus,
         hasMoreMessages,
         loadingOlderMessages,
@@ -140,7 +140,7 @@ const ChatWindow: React.FC = () => {
         skipAutoScrollRef.current = false;
         setIsNearBottom(true);
         setNearBottomInStore(true);
-    }, [activeRoomId, setNearBottomInStore]);
+    }, [chatEndpoint, setNearBottomInStore]);
 
     // Initial scroll to bottom once messages render
     useEffect(() => {
@@ -160,7 +160,7 @@ const ChatWindow: React.FC = () => {
         scrollToBottom("smooth");
     }, [messages.length, isNearBottom]);
 
-    if (activeRoomId == null) {
+    if (chatEndpoint == null) {
         return (
             <div className="flex-1 flex items-center justify-center text-slate-400 text-lg bg-[#0b0b14]">
                 Select a chatroom to start chatting
@@ -176,7 +176,7 @@ const ChatWindow: React.FC = () => {
                 <div className="absolute -bottom-28 -right-28 h-96 w-96 rounded-full bg-red-500/10 blur-3xl" />
             </div>
 
-            {activeRoom && <ChatHeader />}
+            <ChatHeader />
 
             {/* LIST */}
             <div ref={listRef} className="relative z-0 flex-1 overflow-y-auto px-4 py-4">
@@ -215,7 +215,7 @@ const ChatWindow: React.FC = () => {
             </div>
 
             {/* JUMP TO LATEST (overlay, does NOT affect scrollHeight) */}
-            {activeRoomId != null && !isNearBottom && (
+            {chatEndpoint != null && !isNearBottom && (
                 <div className="pointer-events-none absolute bottom-28 left-0 right-0 z-20 flex justify-center">
                     <button
                         onClick={() => scrollToBottom("smooth")}

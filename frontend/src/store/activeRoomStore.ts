@@ -44,6 +44,8 @@ type ActiveRoomState = {
     setActiveRoom: (roomId: number | null) => void;
     clearActiveRoom: () => void;
 
+    openDirectChatroom: (otherUserId: number) => void;
+
     sendMessage: (content: string) => void;
 
     setNearBottom: (near: boolean) => void;
@@ -224,7 +226,7 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
 
             // leaving previous room: flush ack
             get()._flushAck(true);
-            
+
             cancelInFlight();
 
             const { nextEpoch, abort } = beginRoomTransaction(roomId);
@@ -256,6 +258,42 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
             });
         },
 
+        openDirectChatroom: (otherUserId: number) => {
+            const chatroomsStore = useChatroomsStore.getState();
+
+            const room = chatroomsStore.chatrooms.find(
+                (r) => r.type === "DIRECT" && r.otherUserId === otherUserId
+            );
+
+            // Known room → open it directly
+            if (room) {
+                get().setActiveRoom(room.id);
+                return;
+            }
+
+            // Unknown → open proxy DM (this resets state properly)
+            get()._flushAck(true);
+            cancelInFlight();
+
+            set({
+                chatEndpoint: { dmProxy: true, otherUserId },
+
+                status: "READY",
+                error: null,
+
+                messages: [],
+                members: {},
+                nextCursor: null,
+                hasMoreMessages: false,
+                loadingOlderMessages: false,
+
+                _epoch: get()._epoch + 1,
+                _isNearBottom: true,
+                _pendingAck: 0,
+                _lastSentAck: 0,
+            });
+        },
+
         sendMessage: (content) => {
             const { stompClient, stompConnected, chatEndpoint } = get();
 
@@ -274,7 +312,6 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
         },
 
         // ---- ACK PUBLIC API ----
-
         setNearBottom: (near) => {
             const prev = get()._isNearBottom;
             set({ _isNearBottom: near });
@@ -326,8 +363,6 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
                 if (cur.chatEndpoint == null || cur.chatEndpoint.dmProxy) return;
 
                 const roomId = cur.chatEndpoint.roomId;
-                if (!roomId) return;
-
                 const pending = cur._pendingAck;
                 const lastSent = cur._lastSentAck;
 

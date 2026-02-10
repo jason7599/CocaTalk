@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { ChatroomSummary, MessagePreview } from "../types";
-import { getOrCreateDirectChatroom, loadChatrooms } from "../api/chatrooms";
+import { loadChatrooms } from "../api/chatrooms";
 
 /*
 Lazy initializing DM rooms.
@@ -37,8 +37,6 @@ type ChatroomsState = {
 
     // "commands" (async, call API then reducers)
     fetch: () => Promise<void>;
-    openDirectChatroom: (otherUserId: number) => Promise<ChatroomSummary | null>;
-
     // WS reducer
     onNewMessage: (preview: MessagePreview) => void;
 
@@ -99,12 +97,6 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
         } finally {
             set({ loading: false });
         }
-    },
-
-    openDirectChatroom: async (otherUserId: number) => {
-        const room = await getOrCreateDirectChatroom({ otherUserId });
-        get().putChatroom(room);
-        return room; // let UI decide what to do (select it, navigate, etc.)
     },
 
     onNewMessage: (preview) => {

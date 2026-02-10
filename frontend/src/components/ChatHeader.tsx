@@ -4,36 +4,46 @@ import { useActiveRoomStore } from "../store/activeRoomStore";
 import { getChatroomDisplayName } from "../utils/names";
 import { EllipsisVerticalIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useChatroomsStore } from "../store/chatroomsStore";
-import { useUserStore } from "../store/userStore";
 import { useContactsStore } from "../store/contactsStore";
 
 const ChatHeader: React.FC = () => {
-    const { connected } = useStomp();
+    const chatEndpoint = useActiveRoomStore(s => s.chatEndpoint);
+    const clearActiveRoom = useActiveRoomStore(s => s.clearActiveRoom);
 
-    const activeRoomId = useActiveRoomStore((s) => s.activeRoomId);
-    const room = useChatroomsStore((s) => s.chatrooms.find(r => r.id === activeRoomId));
-    
-    const clearActiveRoom = useActiveRoomStore((s) => s.clearActiveRoom);
+    const chatrooms = useChatroomsStore(s => s.chatrooms);
+    const contacts = useContactsStore(s => s.contacts);
+    const addContact = useContactsStore(s => s.addContact);
+    const connected = useStomp().connected;
 
-    const members = useActiveRoomStore((s) => s.members);
+    if (!chatEndpoint) return null;
 
-    const contacts = useContactsStore((s) => s.contacts);
-    const addContact = useContactsStore((s) => s.addContact);
+    let displayName: string | null = null;
+    let subjectUserId: number | null = null;
 
-    const me = useUserStore((s) => s.user);
+    if (chatEndpoint.dmProxy) {
+        subjectUserId = chatEndpoint.otherUserId;
+        const contact = contacts.find(c => c.id === subjectUserId);
+        if (!contact) return null;
+        displayName = contact.username;
+    } else {
+        const room = chatrooms.find(r => r.id === chatEndpoint.roomId);
+        if (!room) return null;
+        displayName = getChatroomDisplayName(room);
+        if (room.type === "DIRECT") {
+            subjectUserId = room.otherUserId;
+        } else {
+            subjectUserId = room.groupCreatorId;
+        }
+    }
 
-    const subjectUserId = room?.type === "DIRECT" 
-        ? Object.values(members).find(m => m.id !== me?.id)?.id ?? null
-        : room?.groupCreatorId;
-
-    const subjectInContacts = subjectUserId != null && contacts.some(c => c.id === subjectUserId);
+    const subjectInContacts = contacts.some(c => c.id === subjectUserId);
 
     return (
         <div className="relative z-10 border-b border-white/10 bg-[#0f0f18]/70 backdrop-blur-xl">
             <div className="flex h-24 items-center justify-between px-5">
                 <div className="min-w-0 flex-1">
                     <h2 className="truncate text-lg font-semibold tracking-tight text-slate-100">
-                        {room && getChatroomDisplayName(room)}
+                        {displayName}
 
                         {subjectUserId != null && !subjectInContacts && (
                             <div className="mt-1 flex items-center gap-2 text-xs text-amber-400/90">

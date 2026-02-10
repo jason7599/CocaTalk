@@ -15,6 +15,7 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             SELECT
                 r.id AS id,
                 r.type AS type,
+                other_rm.user_id AS otherUserId,
                 r.group_creator_id AS groupCreatorId,
                 rm.alias AS alias,
                 m.content AS lastMessage,
@@ -24,6 +25,10 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
                 r.created_at AS createdAt
             FROM rooms r
             JOIN room_members rm ON rm.room_id = r.id
+            LEFT JOIN room_members other_rm
+                ON other_rm.room_id = r.id
+                AND other_rm.user_id <> :userId
+                AND r.type = 'DIRECT'
             LEFT JOIN messages m
                 ON m.room_id = r.id
                 AND m.seq_no = r.last_seq

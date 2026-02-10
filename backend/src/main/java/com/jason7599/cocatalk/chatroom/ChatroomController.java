@@ -25,11 +25,11 @@ public class ChatroomController {
         return ResponseEntity.ok(chatroomService.loadChatroomSummaries(userDetails.getId()));
     }
 
-    @PostMapping("/direct")
-    public ResponseEntity<ChatroomSummary> getOrCreateDirectChatroom(@AuthenticationPrincipal CustomUserDetails userDetails,
-                                                                     @RequestBody DirectChatroomRequest request) {
-        return ResponseEntity.ok(chatroomService.getOrCreateDirectChatroom(userDetails.getId(), request.otherUserId()));
-    }
+//    @PostMapping("/direct")
+//    public ResponseEntity<ChatroomSummary> getOrCreateDirectChatroom(@AuthenticationPrincipal CustomUserDetails userDetails,
+//                                                                     @RequestBody DirectChatroomRequest request) {
+//        return ResponseEntity.ok(chatroomService.getOrCreateDirectChatroom(userDetails.getId(), request.otherUserId()));
+//    }
 
     @GetMapping("/{roomId}/messages")
     public ResponseEntity<MessagePage> loadMessages(
