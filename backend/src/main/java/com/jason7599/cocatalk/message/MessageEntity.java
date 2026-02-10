@@ -1,9 +1,6 @@
 package com.jason7599.cocatalk.message;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,6 +17,9 @@ public class MessageEntity {
 
     @EmbeddedId
     private MessageId id;
+
+    @Enumerated(EnumType.STRING)
+    private MessageType type;
 
     private Long userId;
     private String content;
