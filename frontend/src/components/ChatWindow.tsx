@@ -9,8 +9,8 @@ import ChatHeader from "./ChatHeader";
 const ChatWindow: React.FC = () => {
     const { connected } = useStomp();
 
-    const activeRoomId = useActiveRoomStore((s) => s.activeRoomId);
-
+    const chatEndpoint = useActiveRoomStore((s) => s.chatEndpoint);
+    const activeRoomId = chatEndpoint?.dmProxy ? -1 : chatEndpoint?.roomId;
     const activeRoom = useChatroomsStore((s) =>
         activeRoomId === null
             ? null
@@ -39,7 +39,7 @@ const ChatWindow: React.FC = () => {
     const canSend = connected && activeRoomId != null && trimmed.length > 0;
 
     const handleSend = () => {
-        if (!canSend || activeRoomId == null) return;
+        if (!canSend) return;
 
         sendMessage(trimmed);
 

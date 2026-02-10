@@ -9,11 +9,15 @@ const ACK_DEBOUNCE_MS = 400;
 
 type Status = "IDLE" | "LOADING" | "READY" | "ERROR";
 
+type Endpoint =
+    | { dmProxy: false, roomId: number }
+    | { dmProxy: true, otherUserId: number };
+
 type ActiveRoomState = {
     stompClient: Client | null;
     stompConnected: boolean;
 
-    activeRoomId: number | null;
+    chatEndpoint: Endpoint | null;
     status: Status;
     error: string | null;
 
@@ -75,7 +79,7 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
         const abort = new AbortController();
 
         set({
-            activeRoomId: roomId,
+            chatEndpoint: { dmProxy: false, roomId },
             status: "LOADING",
             error: null,
 
@@ -102,7 +106,7 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
     const isStillCurrent = (roomId: number, epoch: number, abort: AbortController) => {
         if (abort.signal.aborted) return false;
         const s = get();
-        return s.activeRoomId === roomId && s._epoch === epoch;
+        return s.chatEndpoint && !s.chatEndpoint.dmProxy && s.chatEndpoint.roomId === roomId && s._epoch === epoch;
     };
 
     const subscribeToRoomTopic = (roomId: number) => {
@@ -112,8 +116,10 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
         const destination = `/topic/rooms.${roomId}`;
         return stompClient.subscribe(destination, (frame: IMessage) => {
             const msg: MessageResponse = JSON.parse(frame.body);
+            const { chatEndpoint } = get();
 
-            if (get().activeRoomId !== msg.roomId) return;
+            // closed or to switched to other chatroom 
+            if (!chatEndpoint || (!chatEndpoint.dmProxy && chatEndpoint.roomId !== msg.roomId)) return;
 
             set((s) => {
                 const next = [...s.messages, msg];
@@ -171,7 +177,7 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
         stompClient: null,
         stompConnected: false,
 
-        activeRoomId: null,
+        chatEndpoint: null,
         status: "IDLE",
         error: null,
 
@@ -196,9 +202,9 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
         bindStomp: (client, connected) => {
             set({ stompClient: client, stompConnected: connected });
 
-            const { activeRoomId } = get();
-            if (connected && client && activeRoomId) {
-                get().setActiveRoom(activeRoomId);
+            const { chatEndpoint } = get();
+            if (connected && client && chatEndpoint && !chatEndpoint.dmProxy) {
+                get().setActiveRoom(chatEndpoint.roomId);
             }
 
             if (!connected) {
@@ -218,7 +224,7 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
 
             // leaving previous room: flush ack
             get()._flushAck(true);
-
+            
             cancelInFlight();
 
             const { nextEpoch, abort } = beginRoomTransaction(roomId);
@@ -235,7 +241,7 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
 
             cancelInFlight();
             set({
-                activeRoomId: null,
+                chatEndpoint: null,
                 status: "IDLE",
                 error: null,
 
@@ -251,15 +257,20 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
         },
 
         sendMessage: (content) => {
-            const { stompClient, stompConnected, activeRoomId } = get();
+            const { stompClient, stompConnected, chatEndpoint } = get();
 
             if (!stompClient || !stompConnected) return;
-            if (activeRoomId == null) return;
+            if (chatEndpoint == null) return;
 
-            stompClient.publish({
-                destination: `/app/chat.send.${activeRoomId}`,
-                body: JSON.stringify({ content })
-            });
+            if (chatEndpoint.dmProxy) {
+                // todo: REST API for sending the first message & publishing new event
+            } else {
+                stompClient.publish({
+                    destination: `/app/chat.send.${chatEndpoint.roomId}`,
+                    body: JSON.stringify({ content })
+                });
+            }
+
         },
 
         // ---- ACK PUBLIC API ----
@@ -279,12 +290,14 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
             const s = get();
             const nextPending = Math.max(s._pendingAck, seq);
 
+            if (!s.chatEndpoint || s.chatEndpoint.dmProxy) return;
+
             // if no real change, do nothing
             if (nextPending <= s._pendingAck) return;
 
             set({ _pendingAck: nextPending });
 
-            useChatroomsStore.getState().setMyLastAck(s.activeRoomId, nextPending);
+            useChatroomsStore.getState().setMyLastAck(s.chatEndpoint.roomId, nextPending);
 
             // schedule a debounce flush
             get()._flushAck(false);
@@ -304,13 +317,15 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
             const s = get();
 
             // If not connected, we can't send now; keep pending in memory
-            if (!s.stompClient || !s.stompConnected || s.activeRoomId == null) {
+            if (!s.stompClient || !s.stompConnected || s.chatEndpoint == null || s.chatEndpoint.dmProxy) {
                 return;
             }
 
             const doSend = () => {
                 const cur = get();
-                const roomId = cur.activeRoomId;
+                if (cur.chatEndpoint == null || cur.chatEndpoint.dmProxy) return;
+
+                const roomId = cur.chatEndpoint.roomId;
                 if (!roomId) return;
 
                 const pending = cur._pendingAck;
@@ -347,7 +362,9 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
 
         loadOlderMessages: async () => {
             const s = get();
-            const roomId = s.activeRoomId;
+            if (!s.chatEndpoint || s.chatEndpoint.dmProxy) return;
+
+            const roomId = s.chatEndpoint.roomId;
 
             if (roomId == null) return;
             if (s.status !== "READY") return;
@@ -371,7 +388,7 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
                 if (!isStillCurrent(roomId, epoch, abort)) {
                     return;
                 }
-                
+
                 set((cur) => {
                     return {
                         messages: [...page.messages, ...cur.messages],

@@ -48,12 +48,12 @@ const Sidebar: React.FC = () => {
                         <div className="min-w-0">
                             <p className="truncate font-semibold text-slate-100 leading-tight">
                                 {user ? (
-                                    <div className="truncate font-semibold text-slate-100">
+                                    <>
                                         <span>{user.username}</span>
                                         <span className="ml-0.5 text-xs font-medium text-slate-400">
                                             #{user.tag}
                                         </span>
-                                    </div>
+                                    </>
                                 ) : <>Loading</>}
                             </p>
                         </div>
