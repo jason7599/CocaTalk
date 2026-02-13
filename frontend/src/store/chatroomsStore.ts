@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ChatroomSummary, MessagePreview } from "../types";
+import type { ChatroomSummary, MessagePreviewPayload } from "../types";
 import { loadChatrooms } from "../api/chatrooms";
 
 /*
@@ -27,7 +27,7 @@ type ChatroomsState = {
     // Whether this store has completed the state load from the DB,
     // And is ready to safely reconcile incremental updates
     _bootStrapped: boolean;
-    _pendingPreviews: Record<number, MessagePreview>;
+    _pendingPreviews: Record<number, MessagePreviewPayload>;
 
     // "reducers" (pure-ish)
     putChatroom: (room: ChatroomSummary) => void;
@@ -38,7 +38,7 @@ type ChatroomsState = {
     // "commands" (async, call API then reducers)
     fetch: () => Promise<void>;
     // WS reducer
-    onNewMessage: (preview: MessagePreview) => void;
+    onNewMessagePreview: (preview: MessagePreviewPayload) => void;
 
     _flushPendingPreviews: () => void;
 };
@@ -99,7 +99,7 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
         }
     },
 
-    onNewMessage: (preview) => {
+    onNewMessagePreview: (preview) => {
         set((s) => {
             // buffer preview if we haven't loaded rooms yet
             if (!s._bootStrapped) {
@@ -115,10 +115,10 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
                 return s;
             }
 
-
             const idx = s.chatrooms.findIndex((r) => r.id === preview.roomId);
             if (idx === -1) {
-                console.warn(`[chatroomsStore.onNewMessage] room of ${preview.roomId} not found!`); // shouldn't happen...
+                console.warn(`[chatroomsStore.onNewMessage] room of ${preview.roomId} not found!`); 
+                // todo: Maybe this can happen if this notif arrives earlier than dm_created
                 return s; // no-op
             }
 
@@ -132,7 +132,7 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
             const updated: ChatroomSummary = {
                 ...room,
                 lastSeq: preview.seqNo,
-                lastMessage: preview.contentPreview,
+                lastMessage: preview.content,
                 lastMessageAt: preview.createdAt,
             };
 
@@ -159,7 +159,7 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
                     return {
                         ...room,
                         lastSeq: p.seqNo,
-                        lastMessage: p.contentPreview,
+                        lastMessage: p.content,
                         lastMessageAt: p.createdAt,
                     };
                 });

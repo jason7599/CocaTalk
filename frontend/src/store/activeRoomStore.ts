@@ -4,6 +4,8 @@ import { create } from "zustand";
 import { getMembersInfo, loadMessages } from "../api/chatrooms";
 import { useChatroomsStore } from "./chatroomsStore";
 import { useUserStore } from "./userStore";
+import type { DirectChatCreatedPayload } from "../types";
+import { useContactsStore } from "./contactsStore";
 
 const ACK_DEBOUNCE_MS = 400;
 
@@ -55,6 +57,8 @@ type ActiveRoomState = {
     _maybeAckLatestVisible: () => void;
 
     loadOlderMessages: () => Promise<void>;
+
+    onDirectChatCreated: (created: DirectChatCreatedPayload) => void;
 };
 
 export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
@@ -121,7 +125,7 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
             const { chatEndpoint } = get();
 
             // closed or to switched to other chatroom 
-            if (!chatEndpoint || (!chatEndpoint.dmProxy && chatEndpoint.roomId !== msg.roomId)) return;
+            if (!chatEndpoint || (!chatEndpoint.dmProxy && chatEndpoint.roomId !== roomId)) return;
 
             set((s) => {
                 const next = [...s.messages, msg];
@@ -219,7 +223,7 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
         },
 
         setActiveRoom: (roomId) => {
-            if (!roomId) {
+            if (roomId == null) {
                 get().clearActiveRoom();
                 return;
             }
@@ -300,15 +304,18 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
             if (!stompClient || !stompConnected) return;
             if (chatEndpoint == null) return;
 
-            if (chatEndpoint.dmProxy) {
-                // todo: REST API for sending the first message & publishing new event
-            } else {
-                stompClient.publish({
-                    destination: `/app/chat.send.${chatEndpoint.roomId}`,
-                    body: JSON.stringify({ content })
-                });
-            }
+            const body = {
+                content,
+                ...(chatEndpoint.dmProxy
+                    ? { recipientId: chatEndpoint.otherUserId }
+                    : { roomId: chatEndpoint.roomId }
+                )
+            };
 
+            stompClient.publish({
+                destination: "/app/chat.send",
+                body: JSON.stringify(body)
+            });
         },
 
         // ---- ACK PUBLIC API ----
@@ -437,6 +444,67 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
                 }
             } finally {
                 set({ loadingOlderMessages: false });
+            }
+        },
+
+        onDirectChatCreated: (created) => {
+            /*
+            export interface DirectChatCreatedPayload {
+                senderId: number;
+                otherUserId: number;
+                createdRoomId: number;
+                content: string;
+                senderName: string;
+                createdAt: string;
+            };
+
+            case 1; user is the sender:
+                add new chatroom entry in the chatrooms list
+                swap out dmProxy with newly created roomId
+            case 2: user is the recipient, was looking at this chatroom(dmProxy):
+                add new chatroom entry in the chatrooms list
+                swap out dmProxy with newly created roomId
+            case 3: user is the recipient, but wasn't actively looking at this chatroom:
+                add new chatroom entry in the chatrooms list
+            */
+
+            const s = get();
+            const me = useUserStore.getState().user;
+            if (!me) return;
+
+            const otherUserId =
+                created.senderId === me.id
+                    ? created.otherUserId
+                    : created.senderId;
+
+            const otherUserName =
+                created.senderId === me.id
+                    ? created.otherUserName
+                    : created.senderName;
+
+            useChatroomsStore.getState().putChatroom({
+                id: created.createdRoomId,
+                type: "DIRECT",
+                otherUserId,
+                groupCreatorId: null,
+                alias: null,
+                lastMessage: created.content,
+                lastMessageAt: created.createdAt,
+                lastSeq: 1,
+                myLastAck: 0,
+                memberNamesPreview: [otherUserName],
+                otherMemberCount: 1,
+                createdAt: created.createdAt
+            });
+
+            if (
+                s.chatEndpoint &&
+                s.chatEndpoint.dmProxy &&
+                (me.id === created.senderId ||
+                    s.chatEndpoint.otherUserId === otherUserId)
+            ) {
+                console.log("Swap");
+                get().setActiveRoom(created.createdRoomId);
             }
         }
     };

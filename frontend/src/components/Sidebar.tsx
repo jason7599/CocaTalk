@@ -5,7 +5,7 @@ import {
     UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import ChatroomsTab from "./ChatroomsTab";
-import { useModal } from "../context/ModalContext";
+import { useModal } from "./modals/ModalContext";
 import LogoutModal from "./modals/LogoutModal";
 import ContactsTab from "./ContactsTab";
 import { useUserStore } from "../store/userStore";

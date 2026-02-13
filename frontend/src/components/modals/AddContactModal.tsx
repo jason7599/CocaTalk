@@ -1,6 +1,6 @@
 import type React from "react";
 import { useEffect, useMemo, useState } from "react";
-import { useModal } from "../../context/ModalContext";
+import { useModal } from "./ModalContext";
 import { useContactsStore } from "../../store/contactsStore";
 import { UserPlusIcon, XMarkIcon } from "@heroicons/react/24/solid";
 import type { UserInfo } from "../../types";

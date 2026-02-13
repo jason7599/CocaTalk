@@ -5,7 +5,7 @@ import {
     UserPlusIcon,
     XMarkIcon,
 } from "@heroicons/react/24/solid";
-import { useModal } from "../context/ModalContext";
+import { useModal } from "./modals/ModalContext";
 import { useContactsStore } from "../store/contactsStore";
 import AddContactModal from "./modals/AddContactModal";
 import RemoveContactModal from "./modals/RemoveContactModal";

@@ -47,9 +47,11 @@ public class RoomMembershipService {
         }
 
         Set<Long> res = chatroomService.getMemberIds(roomId);
+        if (!res.isEmpty()) {
+            redis.opsForSet().add(k, res.stream().map(String::valueOf).toArray(String[]::new));
+            redis.expire(k, TTL);
+        }
 
-        redis.opsForSet().add(k, res.stream().map(String::valueOf).toArray(String[]::new));
-        redis.expire(k, TTL);
         return res;
     }
 

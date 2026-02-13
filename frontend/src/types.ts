@@ -26,18 +26,9 @@ export interface MessageRequest {
 };
 
 export interface MessageResponse {
-    roomId: number;
     senderId: number;
     seqNo: number;
     content: string;
-    createdAt: string;
-};
-
-export interface MessagePreview {
-    roomId: number;
-    seqNo: number;
-    senderName: string;
-    contentPreview: string;
     createdAt: string;
 };
 
@@ -57,3 +48,41 @@ export interface ChatMemberInfo {
     tag: string | null;
     joinedAt: string;
 };
+
+export const USER_NOTIFICATION_TYPES = {
+    DIRECT_CHAT_CREATED: "DIRECT_CHAT_CREATED",
+    MESSAGE_PREVIEW: "MESSAGE_PREVIEW", 
+} as const;
+
+export type UserNotificationType = 
+    typeof USER_NOTIFICATION_TYPES[keyof typeof USER_NOTIFICATION_TYPES];
+
+export interface DirectChatCreatedPayload {
+    senderId: number;
+    otherUserId: number;
+    createdRoomId: number;
+    content: string;
+    senderName: string;
+    otherUserName: string;
+    createdAt: string;
+};
+
+export interface MessagePreviewPayload {
+    roomId: number;
+    seqNo: number;
+    senderName: string;
+    content: string;
+    createdAt: string;
+};
+
+interface UserNotificationPayloadMap {
+    DIRECT_CHAT_CREATED: DirectChatCreatedPayload;
+    MESSAGE_PREVIEW: MessagePreviewPayload;
+};
+
+export type UserNotification = {
+    [K in keyof UserNotificationPayloadMap]: {
+        type: K;
+        payload: UserNotificationPayloadMap[K];
+    };
+}[keyof UserNotificationPayloadMap];

@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
-import { useStomp } from "../ws/StompContext";
+import { useStomp } from "../ws/stompContext";
 import { useActiveRoomStore } from "../store/activeRoomStore";
-import { useChatroomsStore } from "../store/chatroomsStore";
 import MessageBubble from "./MessageBubble";
 import ChatHeader from "./ChatHeader";
 
@@ -10,13 +9,6 @@ const ChatWindow: React.FC = () => {
     const { connected } = useStomp();
 
     const chatEndpoint = useActiveRoomStore((s) => s.chatEndpoint);
-    const activeRoomId = (chatEndpoint == null || chatEndpoint.dmProxy) ? null : chatEndpoint.roomId;
-    const activeRoom = useChatroomsStore((s) =>
-        activeRoomId === null
-            ? null
-            : s.chatrooms.find((r) => r.id === activeRoomId) ?? null
-    );
-
     const sendMessage = useActiveRoomStore((s) => s.sendMessage);
 
     const roomStatus = useActiveRoomStore((s) => s.status);

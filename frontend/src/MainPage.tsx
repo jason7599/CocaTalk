@@ -1,10 +1,10 @@
 import type React from "react";
 import Sidebar from "./components/Sidebar";
 import ChatWindow from "./components/ChatWindow";
-import { ModalProvider } from "./context/ModalContext";
+import { ModalProvider } from "./components/modals/ModalContext";
 import { useEffect } from "react";
 import { useChatroomsStore } from "./store/chatroomsStore";
-import { StompProvider } from "./ws/StompContext";
+import { StompProvider } from "./ws/stompContext";
 import { useContactsStore } from "./store/contactsStore";
 
 const MainPage: React.FC = () => {

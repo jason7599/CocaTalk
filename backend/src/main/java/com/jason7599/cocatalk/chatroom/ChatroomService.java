@@ -3,7 +3,6 @@ package com.jason7599.cocatalk.chatroom;
 import com.jason7599.cocatalk.message.MessagePage;
 import com.jason7599.cocatalk.message.MessageRepository;
 import com.jason7599.cocatalk.message.MessageResponse;
-import com.jason7599.cocatalk.user.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,10 +21,26 @@ public class ChatroomService {
 
     private final ChatroomRepository chatroomRepository;
     private final MessageRepository messageRepository;
-    private final UserRepository userRepository;
 
-    public void addUserToRoom(Long userId, Long roomId) {
-        chatroomRepository.addUserToRoom(roomId, userId);
+    public boolean isChatroomMember(Long roomId, Long userId) {
+        return chatroomRepository.isChatroomMember(roomId, userId);
+    }
+
+    @Transactional
+    public ChatroomEntity addDirectChatroom(Long userId, Long otherId) {
+        Optional<ChatroomEntity> opt = chatroomRepository.findDirectChatroom(userId, otherId);
+        if (opt.isPresent()) {
+            return opt.get();
+        }
+
+        // TODO: SEE chatroomStore.ts:120
+
+        ChatroomEntity chatroom = chatroomRepository.save(new ChatroomEntity(ChatroomType.DIRECT));
+        chatroomRepository.setDirectChatroom(chatroom.getId(), userId, otherId);
+        chatroomRepository.addUserToRoom(chatroom.getId(), userId);
+        chatroomRepository.addUserToRoom(chatroom.getId(), otherId);
+
+        return chatroom;
     }
 
     public List<ChatroomSummary> loadChatroomSummaries(Long userId) {
@@ -81,7 +96,7 @@ public class ChatroomService {
 
     @Transactional
     public void setMyLastAck(Long roomId, Long userId, Long ack) {
-
+        chatroomRepository.setMyLastAck(roomId, userId, ack);
     }
 
     public Set<Long> getMemberIds(Long roomId) {
@@ -94,7 +109,6 @@ public class ChatroomService {
         // So that we know there are more items if this result's size is greater than the limit param
         List<MessageResponse> messages = messageRepository.loadMessages(roomId, cursor == null ? Long.MAX_VALUE : cursor, limit)
                 .stream().map((v) -> new MessageResponse(
-                        v.getRoomId(),
                         v.getUserId(),
                         v.getSeqNo(),
                         v.getContent(),

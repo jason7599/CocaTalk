@@ -1,5 +1,5 @@
 import type React from "react";
-import { useStomp } from "../ws/StompContext";
+import { useStomp } from "../ws/stompContext";
 import { useActiveRoomStore } from "../store/activeRoomStore";
 import { getChatroomDisplayName } from "../utils/names";
 import { EllipsisVerticalIcon, XMarkIcon } from "@heroicons/react/24/outline";

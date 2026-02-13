@@ -4,7 +4,7 @@ import { getChatroomDisplayName } from "../utils/names";
 import { useActiveRoomStore } from "../store/activeRoomStore";
 import type { ChatroomSummary } from "../types";
 import { ChatBubbleLeftRightIcon, PlusCircleIcon } from "@heroicons/react/24/solid";
-import { useModal } from "../context/ModalContext";
+import { useModal } from "./modals/ModalContext";
 import AddGroupChatModal from "./modals/AddGroupChatModal";
 
 function formatTime(ts: string | number | Date) {

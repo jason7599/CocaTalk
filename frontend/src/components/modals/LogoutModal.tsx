@@ -1,6 +1,6 @@
 import React from "react";
 import { ArrowRightStartOnRectangleIcon } from "@heroicons/react/24/outline";
-import { useModal } from "../../context/ModalContext";
+import { useModal } from "./ModalContext";
 import { useUserStore } from "../../store/userStore";
 
 const LogoutModal: React.FC = () => {
