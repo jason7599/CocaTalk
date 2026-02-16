@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -33,7 +34,7 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
                 ON m.room_id = r.id
                 AND m.seq_no = r.last_seq
             WHERE rm.user_id = :userId
-            ORDER BY r.last_message_at DESC
+            ORDER BY rm.joined_at
             """, nativeQuery = true)
     List<ChatroomSummaryRow> fetchChatroomSummaries(@Param("userId") Long userId);
 
@@ -45,15 +46,27 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
     Set<Long> getMembersId(@Param("roomId") Long roomId);
 
     @Query(value = """
+        SELECT *
+        FROM (
             SELECT
                 rm.room_id AS roomId,
-                u.username AS username
-            FROM room_members rm JOIN users u ON rm.user_id = u.id
-            WHERE rm.room_id = ANY(:roomIds) AND u.id <> :userId
-            ORDER BY rm.joined_at
-            """, nativeQuery = true)
-    List<ChatMemberNameRow> fetchChatMemberNamesExcept(@Param("roomIds") Long[] roomIds,
-                                                       @Param("userId") Long userId);
+                u.id AS userId,
+                u.username AS username,
+                u.tag AS tag,
+                rm.joined_at AS joinedAt,
+                ROW_NUMBER() OVER (
+                    PARTITION BY rm.room_id
+                    ORDER BY u.username
+                ) as rn
+            FROM room_members rm
+            JOIN users u ON rm.user_id = u.id
+            WHERE rm.room_id = ANY(:roomIds)
+        ) t
+        WHERE t.rn <= :limit
+        """, nativeQuery = true)
+    List<RoomMemberInfoView> batchFetchChatMemberInfos(
+            @Param("roomIds") Long[] roomIds,
+            @Param("limit") int limit);
 
     @Modifying
     @Query(value = """
@@ -65,6 +78,17 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
     void addUserToRoom(
             @Param("roomId") Long roomId,
             @Param("userId") Long userId);
+
+    @Modifying
+    @Query(value = """
+            INSERT INTO room_members(room_id, user_id, last_ack)
+            SELECT r.id, u.user_id, r.last_seq
+            FROM rooms r CROSS JOIN UNNEST(:userIds) AS u(user_id)
+            WHERE r.id = :roomId
+            """, nativeQuery = true)
+    void addUsersToRoom(
+            @Param("roomId") Long roomId,
+            @Param("userIds") Long[] userIds);
 
     @Query(value = """
             SELECT COUNT(*) > 0
@@ -94,23 +118,6 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
                               @Param("userId1") Long userId1,
                               @Param("userId2") Long userId2);
 
-    @Query(value = """
-            SELECT m.content
-            FROM rooms r
-            LEFT JOIN messages m
-                ON r.id = m.room_id
-                AND r.last_seq = m.seq_no
-            WHERE r.id = :roomId
-            """, nativeQuery = true)
-    String getLastMessage(@Param("roomId") Long roomId);
-
-    @Query(value = """
-            SELECT last_ack
-            FROM room_members
-            WHERE room_id = :roomId AND user_id = :userId
-            """, nativeQuery = true)
-    Long getMyLastAck(@Param("roomId") Long roomId, @Param("userId") Long userId);
-
     @Modifying
     @Query(value = """
             UPDATE room_members
@@ -123,13 +130,6 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
                       @Param("ack") Long ack);
 
     @Query(value = """
-            SELECT alias
-            FROM room_members
-            WHERE room_id = :roomId AND user_id = :userId
-            """, nativeQuery = true)
-    String getAlias(@Param("roomId") Long roomId, @Param("userId") Long userId);
-
-    @Query(value = """
             SELECT
                 rm.user_id AS id,
                 u.username AS username,
@@ -138,5 +138,23 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             FROM room_members rm JOIN users u ON rm.user_id = u.id
             WHERE rm.room_id = :roomId
             """, nativeQuery = true)
-    List<ChatMemberInfoView> loadMemberInfos(@Param("roomId") Long roomId);
+    List<RoomMemberInfoView> loadMemberInfos(@Param("roomId") Long roomId);
+
+    @Query(value = """
+        SELECT
+            rm.room_id AS roomId,
+            u.id AS userId,
+            u.username AS username,
+            u.tag AS tag,
+            rm.joined_at AS joinedAt
+        FROM room_members rm
+        JOIN users u ON rm.user_id = u.id
+        WHERE rm.user_id IN (:memberIds)
+        ORDER BY u.username
+        LIMIT :limit
+        """, nativeQuery = true)
+    List<RoomMemberInfoView> fetchMemberInfosPreview(
+            @Param("memberIds") List<Long> memberIds,
+            @Param("limit") int limit
+    );
 }

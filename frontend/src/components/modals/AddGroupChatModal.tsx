@@ -3,12 +3,14 @@ import { useModal } from "./ModalContext";
 import { useContactsStore } from "../../store/contactsStore";
 import { useMemo, useState } from "react";
 import { CheckIcon, UserGroupIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { createGroupChat } from "../../api/chatrooms";
 
 const AddGroupChatModal: React.FC = () => {
     const { closeModal } = useModal();
     const contacts = useContactsStore((s) => s.contacts);
 
     const [selected, setSelected] = useState<Set<number>>(new Set());
+    const [loading, setLoading] = useState(false);
 
     const toggle = (id: number) => {
         setSelected((prev) => {
@@ -26,6 +28,16 @@ const AddGroupChatModal: React.FC = () => {
         if (selected.size === 0) return "Pick at least one person.";
         return `${selected.size} participant${selected.size > 1 ? "s" : ""} selected.`;
     }, [contacts.length, selected.size]);
+
+    const handleCreate = async () => {
+        if (!canCreate || loading) return;
+
+        setLoading(true);
+        await createGroupChat(Array.from(selected));
+        closeModal();
+        setLoading(false);
+    };
+
     return (
         <div className="w-[560px] max-w-[92vw]">
             <div className="rounded-3xl p-[1px] bg-gradient-to-br from-pink-500/60 via-rose-500/40 to-red-500/60 shadow-2xl shadow-rose-500/10">
@@ -190,7 +202,8 @@ const AddGroupChatModal: React.FC = () => {
                         </button>
 
                         <button
-                            disabled={!canCreate}
+                            onClick={handleCreate}
+                            disabled={!canCreate || loading}
                             className="
                                 rounded-xl px-4 py-2 text-sm font-semibold text-white
                                 bg-gradient-to-br from-pink-500 via-rose-500 to-red-500
@@ -201,7 +214,7 @@ const AddGroupChatModal: React.FC = () => {
                                 focus:outline-none focus:ring-2 focus:ring-rose-300/35
                             "
                         >
-                            Create
+                            {loading ? "Creating..." : "Create"}
                         </button>
                     </div>
                 </div>

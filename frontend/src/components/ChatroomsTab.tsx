@@ -6,6 +6,7 @@ import type { ChatroomSummary } from "../types";
 import { ChatBubbleLeftRightIcon, PlusCircleIcon } from "@heroicons/react/24/solid";
 import { useModal } from "./modals/ModalContext";
 import AddGroupChatModal from "./modals/AddGroupChatModal";
+import { useUserStore } from "../store/userStore";
 
 function formatTime(ts: string | number | Date) {
     const d = new Date(ts);
@@ -27,9 +28,14 @@ const ChatroomsTab: React.FC = () => {
     const { showModal } = useModal();
 
     const chatrooms = useChatroomsStore((s) => s.chatrooms);
-    const activeRoomId = useActiveRoomStore((s) => s.activeRoomId);
     const setActiveRoom = useActiveRoomStore((s) => s.setActiveRoom);
+    const chatEndpoint = useActiveRoomStore((s) => s.chatEndpoint);
 
+    const activeRoomId = chatEndpoint?.dmProxy? null : chatEndpoint?.roomId;
+
+    const user = useUserStore((s) => s.user);
+    if (!user) return null;
+    
     const sorted = useMemo(() => {
         return [...chatrooms].sort((a, b) => {
             const ta = new Date(a.lastMessageAt ?? 0).getTime();
@@ -146,7 +152,7 @@ const ChatroomsTab: React.FC = () => {
                                                                 isActive ? "text-slate-100" : "text-slate-100/90",
                                                             ].join(" ")}
                                                         >
-                                                            {getChatroomDisplayName(chatroom)}
+                                                            {getChatroomDisplayName(user.id, chatroom)}
                                                         </div>
 
                                                         <div

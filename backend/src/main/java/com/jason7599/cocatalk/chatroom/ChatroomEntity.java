@@ -33,7 +33,16 @@ public class ChatroomEntity {
     @Column(insertable = false)
     private Instant createdAt;
 
-    public ChatroomEntity(ChatroomType type) {
-        this.type = type;
+    public static ChatroomEntity directChatroom() {
+        ChatroomEntity chatroom = new ChatroomEntity();
+        chatroom.setType(ChatroomType.DIRECT);
+        return chatroom;
+    }
+
+    public static ChatroomEntity groupChatroom(Long creatorId) {
+        ChatroomEntity chatroom = new ChatroomEntity();
+        chatroom.setType(ChatroomType.GROUP);
+        chatroom.setGroupCreatorId(creatorId);
+        return chatroom;
     }
 }

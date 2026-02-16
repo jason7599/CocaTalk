@@ -18,4 +18,8 @@ public class UserNotification {
     public static UserNotification messagePreview(MessagePreviewPayload payload) {
         return new UserNotification(UserNotificationType.MESSAGE_PREVIEW, payload);
     }
+
+    public static UserNotification groupChatCreated(GroupChatCreatedPayload payload) {
+        return new UserNotification(UserNotificationType.GROUP_CHAT_CREATED, payload);
+    }
 }

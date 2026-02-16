@@ -13,8 +13,8 @@ public record ChatroomSummary(
         Instant lastMessageAt,
         Long lastSeq,
         Long myLastAck,
-        List<String> memberNamesPreview,
-        int otherMemberCount,
+        List<RoomMemberInfo> memberInfosPreview,
+        int totalMemberCount,
         Instant createdAt
 ) {
 }

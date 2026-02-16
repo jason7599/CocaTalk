@@ -11,5 +11,9 @@ export function handleUserNotification(notification: UserNotification) {
         case "MESSAGE_PREVIEW":
             useChatroomsStore.getState().onNewMessagePreview(notification.payload);
             break;
+
+        case "GROUP_CHAT_CREATED":
+            useChatroomsStore.getState().onGroupChatCreated(notification.payload);
+            break;
     }
 }

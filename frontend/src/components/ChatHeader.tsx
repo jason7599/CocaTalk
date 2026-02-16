@@ -5,6 +5,7 @@ import { getChatroomDisplayName } from "../utils/names";
 import { EllipsisVerticalIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useChatroomsStore } from "../store/chatroomsStore";
 import { useContactsStore } from "../store/contactsStore";
+import { useUserStore } from "../store/userStore";
 
 const ChatHeader: React.FC = () => {
     const chatEndpoint = useActiveRoomStore(s => s.chatEndpoint);
@@ -14,6 +15,9 @@ const ChatHeader: React.FC = () => {
     const contacts = useContactsStore(s => s.contacts);
     const addContact = useContactsStore(s => s.addContact);
     const connected = useStomp().connected;
+
+    const user = useUserStore((s) => s.user);
+    if (!user) return null;
 
     if (!chatEndpoint) return null;
 
@@ -28,7 +32,7 @@ const ChatHeader: React.FC = () => {
     } else {
         const room = chatrooms.find(r => r.id === chatEndpoint.roomId);
         if (!room) return null;
-        displayName = getChatroomDisplayName(room);
+        displayName = getChatroomDisplayName(user.id, room);
         if (room.type === "DIRECT") {
             subjectUserId = room.otherUserId;
         } else {
@@ -36,7 +40,7 @@ const ChatHeader: React.FC = () => {
         }
     }
 
-    const subjectInContacts = contacts.some(c => c.id === subjectUserId);
+    const subjectInContacts = !chatEndpoint.dmProxy && contacts.some(c => c.id === subjectUserId);
 
     return (
         <div className="relative z-10 border-b border-white/10 bg-[#0f0f18]/70 backdrop-blur-xl">

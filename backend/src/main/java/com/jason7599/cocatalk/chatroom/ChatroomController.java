@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -35,7 +36,15 @@ public class ChatroomController {
     }
 
     @GetMapping("/{roomId}/members")
-    public ResponseEntity<List<ChatMemberInfo>> getMembersInfo(@PathVariable Long roomId) {
-        return ResponseEntity.ok(chatroomService.getMembersInfo(roomId));
+    public ResponseEntity<List<RoomMemberInfo>> getMembersInfo(@PathVariable Long roomId) {
+        return ResponseEntity.ok(chatroomService.getMemberInfos(roomId));
+    }
+
+    @PostMapping("/groupchat")
+    public ResponseEntity<ChatroomSummary> createGroupChat(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody CreateGroupChatRequest request
+    ) {
+        return ResponseEntity.ok(chatroomService.createGroupChat(userDetails.getId(), request.memberIds()));
     }
 }

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ChatroomSummary, MessagePreviewPayload } from "../types";
+import type { ChatroomSummary, GroupChatCreatedPayload, MessagePreviewPayload } from "../types";
 import { loadChatrooms } from "../api/chatrooms";
 
 /*
@@ -39,6 +39,7 @@ type ChatroomsState = {
     fetch: () => Promise<void>;
     // WS reducer
     onNewMessagePreview: (preview: MessagePreviewPayload) => void;
+    onGroupChatCreated: (created: GroupChatCreatedPayload) => void;
 
     _flushPendingPreviews: () => void;
 };
@@ -118,7 +119,6 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
             const idx = s.chatrooms.findIndex((r) => r.id === preview.roomId);
             if (idx === -1) {
                 console.warn(`[chatroomsStore.onNewMessage] room of ${preview.roomId} not found!`); 
-                // todo: Maybe this can happen if this notif arrives earlier than dm_created
                 return s; // no-op
             }
 
@@ -141,6 +141,23 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
 
             return { chatrooms: sortByLastMessageAtDesc(next) };
         })
+    },
+
+    onGroupChatCreated: (created) => {
+        get().putChatroom({
+            id: created.roomId,
+            type: "GROUP",
+            otherUserId: null,
+            groupCreatorId: created.groupCreatorId,
+            alias: null,
+            lastMessage: null,
+            lastMessageAt: created.createdAt,
+            lastSeq: 0,
+            myLastAck: 0,
+            memberInfosPreview: created.memberInfosPreview,
+            totalMemberCount: created.totalMemberCount,
+            createdAt: created.createdAt
+        });
     },
 
     _flushPendingPreviews: () => {

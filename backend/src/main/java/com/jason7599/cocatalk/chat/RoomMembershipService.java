@@ -1,5 +1,6 @@
 package com.jason7599.cocatalk.chat;
 
+import com.jason7599.cocatalk.chatroom.ChatroomRepository;
 import com.jason7599.cocatalk.chatroom.ChatroomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -18,7 +19,7 @@ public class RoomMembershipService {
     private static final double TTL_REFRESH_CHANCE_ON_READ = 0.01;
 
     private final StringRedisTemplate redis;
-    private final ChatroomService chatroomService;
+    private final ChatroomRepository chatroomRepository;
 
     private String key(Long roomId) {
         return "chat:room:%d:members".formatted(roomId);
@@ -46,7 +47,7 @@ public class RoomMembershipService {
                     .collect(Collectors.toUnmodifiableSet());
         }
 
-        Set<Long> res = chatroomService.getMemberIds(roomId);
+        Set<Long> res = chatroomRepository.getMembersId(roomId);
         if (!res.isEmpty()) {
             redis.opsForSet().add(k, res.stream().map(String::valueOf).toArray(String[]::new));
             redis.expire(k, TTL);

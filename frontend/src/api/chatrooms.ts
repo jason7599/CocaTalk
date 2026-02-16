@@ -1,4 +1,4 @@
-import type { ChatMemberInfo, ChatroomSummary, DirectChatroomRequest, MessagePage } from "../types";
+import type { ChatroomSummary, DirectChatroomRequest, MessagePage, RoomMemberInfo } from "../types";
 import api from "./api";
 
 export async function loadChatrooms(): Promise<ChatroomSummary[]> {
@@ -35,6 +35,10 @@ export async function loadMessages(
     return (await api.get(url, { signal: options?.signal })).data;
 }
 
-export async function getMembersInfo(roomId: number, options?: { signal?: AbortSignal }): Promise<ChatMemberInfo[]> {
+export async function getMembersInfo(roomId: number, options?: { signal?: AbortSignal }): Promise<RoomMemberInfo[]> {
     return (await api.get(`/chatrooms/${roomId}/members`, { signal: options?.signal })).data;
+}
+
+export async function createGroupChat(memberIds: number[]): Promise<ChatroomSummary> {
+    return (await api.post('/chatrooms/groupchat', { memberIds })).data;
 }

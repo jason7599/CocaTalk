@@ -1,11 +1,10 @@
 import type { Client, IMessage, StompSubscription } from "@stomp/stompjs";
-import type { ChatMemberInfo, MessageResponse } from "../types";
+import type {  MessageResponse, RoomMemberInfo } from "../types";
 import { create } from "zustand";
 import { getMembersInfo, loadMessages } from "../api/chatrooms";
 import { useChatroomsStore } from "./chatroomsStore";
 import { useUserStore } from "./userStore";
 import type { DirectChatCreatedPayload } from "../types";
-import { useContactsStore } from "./contactsStore";
 
 const ACK_DEBOUNCE_MS = 400;
 
@@ -23,7 +22,7 @@ type ActiveRoomState = {
     status: Status;
     error: string | null;
 
-    members: Record<number, ChatMemberInfo>;
+    members: Record<number, RoomMemberInfo>;
 
     messages: MessageResponse[];
     nextCursor: number | null;
@@ -492,8 +491,8 @@ export const useActiveRoomStore = create<ActiveRoomState>((set, get) => {
                 lastMessageAt: created.createdAt,
                 lastSeq: 1,
                 myLastAck: 0,
-                memberNamesPreview: [otherUserName],
-                otherMemberCount: 1,
+                memberInfosPreview: [], // TODO: THIS IS FUCKED
+                totalMemberCount: 1,
                 createdAt: created.createdAt
             });
 

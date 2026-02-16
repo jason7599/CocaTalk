@@ -2,12 +2,19 @@ package com.jason7599.cocatalk.notification;
 
 import com.jason7599.cocatalk.chat.RoomMembershipService;
 import com.jason7599.cocatalk.chat.SendMessageResult;
+import com.jason7599.cocatalk.chatroom.ChatroomRepository;
+import com.jason7599.cocatalk.chatroom.ChatroomService;
+import com.jason7599.cocatalk.chatroom.ChatroomSummaryRow;
+import com.jason7599.cocatalk.chatroom.RoomMemberInfo;
 import com.jason7599.cocatalk.message.MessageRequest;
 import com.jason7599.cocatalk.security.CustomUserDetails;
 import com.jason7599.cocatalk.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +33,20 @@ public class UserNotificationService {
             dispatchDirectChatCreated(result, sender, request);
         } else {
             dispatchMessagePreview(result, sender);
+        }
+    }
+
+    public void dispatchGroupChatCreated(Long roomId, Long creatorId, List<RoomMemberInfo> memberInfosPreview, int totalMemberCount) {
+        UserNotification notification = UserNotification.groupChatCreated(new GroupChatCreatedPayload(
+                roomId,
+                creatorId,
+                memberInfosPreview,
+                totalMemberCount,
+                Instant.now()
+        ));
+
+        for (Long memberId : roomMembershipService.loadMemberIds(roomId)) {
+            sendToUser(memberId, notification);
         }
     }
 

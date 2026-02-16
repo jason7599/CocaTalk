@@ -3,11 +3,13 @@ package com.jason7599.cocatalk.chatroom;
 import com.jason7599.cocatalk.message.MessagePage;
 import com.jason7599.cocatalk.message.MessageRepository;
 import com.jason7599.cocatalk.message.MessageResponse;
+import com.jason7599.cocatalk.notification.UserNotificationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -17,10 +19,11 @@ import java.util.stream.Collectors;
 public class ChatroomService {
 
     // TODO? Maybe later move this to a dedicated const file
-    public static final int MEMBER_NAME_PREVIEW_LIMIT = 3;
+    public static final int MEMBER_INFO_PREVIEW_LIMIT = 5;
 
     private final ChatroomRepository chatroomRepository;
     private final MessageRepository messageRepository;
+    private final UserNotificationService userNotificationService;
 
     public boolean isChatroomMember(Long roomId, Long userId) {
         return chatroomRepository.isChatroomMember(roomId, userId);
@@ -33,14 +36,51 @@ public class ChatroomService {
             return opt.get();
         }
 
-        // TODO: SEE chatroomStore.ts:120
-
-        ChatroomEntity chatroom = chatroomRepository.save(new ChatroomEntity(ChatroomType.DIRECT));
+        ChatroomEntity chatroom = chatroomRepository.save(ChatroomEntity.directChatroom());
         chatroomRepository.setDirectChatroom(chatroom.getId(), userId, otherId);
         chatroomRepository.addUserToRoom(chatroom.getId(), userId);
         chatroomRepository.addUserToRoom(chatroom.getId(), otherId);
 
         return chatroom;
+    }
+
+    @Transactional
+    public ChatroomSummary createGroupChat(Long creatorId, List<Long> memberIds) {
+        ChatroomEntity chatroom = chatroomRepository.save(ChatroomEntity.groupChatroom(creatorId));
+        memberIds.add(creatorId);
+
+        chatroomRepository.addUsersToRoom(chatroom.getId(), memberIds.toArray(Long[]::new));
+
+        List<RoomMemberInfo> roomMemberInfosPreview = chatroomRepository.fetchMemberInfosPreview(memberIds, MEMBER_INFO_PREVIEW_LIMIT)
+                .stream().map(v -> new RoomMemberInfo(
+                        v.getRoomId(),
+                        v.getUserId(),
+                        v.getUsername(),
+                        v.getTag(),
+                        v.getJoinedAt().toInstant()
+                )).toList();
+
+        userNotificationService.dispatchGroupChatCreated(
+                chatroom.getId(),
+                creatorId,
+                roomMemberInfosPreview,
+                memberIds.size()
+        );
+
+        return new ChatroomSummary(
+                chatroom.getId(),
+                ChatroomType.GROUP,
+                null,
+                creatorId,
+                null,
+                null,
+                Instant.now(),
+                0L,
+                0L,
+                roomMemberInfosPreview,
+                memberIds.size(),
+                Instant.now()
+        );
     }
 
     public List<ChatroomSummary> loadChatroomSummaries(Long userId) {
@@ -53,24 +93,28 @@ public class ChatroomService {
                 .map(ChatroomSummaryRow::getId)
                 .toArray(Long[]::new);
 
-        // 3. Batch fetch member names per room
-        List<ChatMemberNameRow> memberNameRows = chatroomRepository.fetchChatMemberNamesExcept(roomIds, userId);
+        // 3. Batch fetch member infos per room
+        List<RoomMemberInfoView> memberInfoViews = chatroomRepository.batchFetchChatMemberInfos(roomIds, MEMBER_INFO_PREVIEW_LIMIT);
 
         // 4. Collect member names & member count for each room
-        Map<Long, List<String>> roomMemberNames = new HashMap<>(); // don't include me
-        Map<Long, Integer> roomMemberCount = new HashMap<>();      // also don't include me
+        Map<Long, List<RoomMemberInfo>> roomMemberInfos = new HashMap<>();
+        Map<Long, Integer> roomMemberCount = new HashMap<>();
 
-        for (ChatMemberNameRow row : memberNameRows) {
-            Long roomId = row.getRoomId();
+        for (RoomMemberInfoView view : memberInfoViews) {
+            Long roomId = view.getRoomId();
 
             roomMemberCount.merge(roomId, 1, Integer::sum);
 
-            List<String> names = roomMemberNames.computeIfAbsent(
-                    roomId, k -> new ArrayList<>(MEMBER_NAME_PREVIEW_LIMIT));
+            List<RoomMemberInfo> memberInfos = roomMemberInfos.computeIfAbsent(
+                    roomId, k -> new ArrayList<>(MEMBER_INFO_PREVIEW_LIMIT));
 
-            if (names.size() < MEMBER_NAME_PREVIEW_LIMIT) {
-                names.add(row.getUsername());
-            }
+            memberInfos.add(new RoomMemberInfo(
+                    roomId,
+                    view.getUserId(),
+                    view.getUsername(),
+                    view.getTag(),
+                    view.getJoinedAt().toInstant()
+            ));
         }
 
         // 5. Map and return final DTO.
@@ -84,23 +128,15 @@ public class ChatroomService {
                 row.getLastMessageAt().toInstant(),
                 row.getLastSeq(),
                 row.getMyLastAck(),
-                roomMemberNames.getOrDefault(row.getId(), List.of()),
+                roomMemberInfos.getOrDefault(row.getId(), List.of()),
                 roomMemberCount.getOrDefault(row.getId(), 0),
                 row.getCreatedAt().toInstant()
         )).toList();
     }
 
-    public Long getMyLastAck(Long roomId, Long userId) {
-        return chatroomRepository.getMyLastAck(roomId, userId);
-    }
-
     @Transactional
     public void setMyLastAck(Long roomId, Long userId, Long ack) {
         chatroomRepository.setMyLastAck(roomId, userId, ack);
-    }
-
-    public Set<Long> getMemberIds(Long roomId) {
-        return chatroomRepository.getMembersId(roomId);
     }
 
     public MessagePage loadMessages(Long roomId, Long cursor, int limit) {
@@ -135,10 +171,11 @@ public class ChatroomService {
         );
     }
 
-    public List<ChatMemberInfo> getMembersInfo(Long roomId) {
+    public List<RoomMemberInfo> getMemberInfos(Long roomId) {
         return chatroomRepository.loadMemberInfos(roomId)
-                .stream().map(v -> new ChatMemberInfo(
-                        v.getId(),
+                .stream().map(v -> new RoomMemberInfo(
+                        v.getRoomId(),
+                        v.getUserId(),
                         v.getUsername(),
                         v.getTag(),
                         v.getJoinedAt().toInstant()
