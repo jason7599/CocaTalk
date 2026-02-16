@@ -1,1 +1,4 @@
 prevent input clearing upon DM creation
+send ROOM_CREATED message on group creation
+member name preview is all messed up
+send MemberInfo upon room creation
