@@ -1,2 +1,0 @@
-ALTER TABLE rooms DROP COLUMN name;
-ALTER TABLE room_members ADD COLUMN alias VARCHAR(30);
