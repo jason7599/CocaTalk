@@ -17,6 +17,8 @@ dist/
 dist-ssr/
 *.local
 
+.vite/
+
 # ----------------------------
 # Backend (Spring Boot + Gradle)
 # ----------------------------
