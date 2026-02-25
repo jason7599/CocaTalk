@@ -1,0 +1,3 @@
+ALTER TABLE room_members DROP COLUMN role;
+
+ALTER TABLE rooms ADD COLUMN group_creator_id BIGINT REFERENCES users(id) ON DELETE SET NULL;
