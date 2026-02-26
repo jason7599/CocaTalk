@@ -15,6 +15,11 @@ public class UserController {
 
     private final UserService userService;
 
+    @GetMapping
+    public ResponseEntity<UserInfo> getCurrentUser(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(userService.getUserInfo(userDetails.getId()));
+    }
+
     @GetMapping("/bootstrap")
     public ResponseEntity<UserBootstrapDto> bootstrap(@AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.ok(userService.bootstrap(userDetails.getId()));

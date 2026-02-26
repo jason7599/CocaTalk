@@ -4,15 +4,13 @@ import {
     ArrowRightStartOnRectangleIcon,
     UserCircleIcon,
 } from "@heroicons/react/24/outline";
-import ChatroomsTab from "./ChatroomsTab";
-import { useModal } from "./modals/ModalContext";
-import LogoutModal from "./modals/LogoutModal";
-import ContactsTab from "./ContactsTab";
-import { useUserStore } from "../store/userStore";
+import { useModal } from "../shared/ModalContext";
+import LogoutModal from "../features/auth/LogoutModal";
+import ContactsTab from "../features/contacts/ContactsTab";
+import ChatroomsTab from "../features/chat/ChatroomsTab";
 
 const Sidebar: React.FC = () => {
     const { showModal } = useModal();
-    const user = useUserStore((s) => s.user);
 
     const [activeTab, setActiveTab] = useState<"contacts" | "chats">("chats");
 
@@ -47,14 +45,14 @@ const Sidebar: React.FC = () => {
 
                         <div className="min-w-0">
                             <p className="truncate font-semibold text-slate-100 leading-tight">
-                                {user ? (
+                                {/* {user ? (
                                     <>
                                         <span>{user.username}</span>
                                         <span className="ml-0.5 text-xs font-medium text-slate-400">
                                             #{user.tag}
                                         </span>
                                     </>
-                                ) : <>Loading</>}
+                                ) : <>Loading</>} */}
                             </p>
                         </div>
                     </div>
@@ -124,7 +122,7 @@ const Sidebar: React.FC = () => {
 
             {/* CONTENT */}
             <div className="flex-1 overflow-y-auto bg-black/10">
-                {activeTab === "contacts" ? <ContactsTab /> : <ChatroomsTab />}
+                {/* {activeTab === "contacts" ? <ContactsTab /> : <ChatroomsTab />} */}
             </div>
 
             <div

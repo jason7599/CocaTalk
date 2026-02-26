@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { UserInfo } from "../types";
+import type { UserInfo } from "../../shared/types";
 import {
     addContact as apiAddContact,
     listContacts as apiListContacts,

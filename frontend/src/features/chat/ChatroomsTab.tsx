@@ -1,12 +1,5 @@
 import React, { useMemo } from "react";
-import { useChatroomsStore } from "../store/chatroomsStore";
-import { getChatroomDisplayName } from "../utils/names";
-import { useActiveRoomStore } from "../store/activeRoomStore";
-import type { ChatroomSummary } from "../types";
 import { ChatBubbleLeftRightIcon, PlusCircleIcon } from "@heroicons/react/24/solid";
-import { useModal } from "./modals/ModalContext";
-import AddGroupChatModal from "./modals/AddGroupChatModal";
-import { useUserStore } from "../store/userStore";
 
 function formatTime(ts: string | number | Date) {
     const d = new Date(ts);

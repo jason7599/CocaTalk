@@ -1,4 +1,4 @@
-import type { ChatroomSummary, RoomMemberInfo } from "../types";
+import type { ChatroomSummary, RoomMemberInfo } from "../shared/types";
 
 export function deriveChatroomName(
     myId: number,

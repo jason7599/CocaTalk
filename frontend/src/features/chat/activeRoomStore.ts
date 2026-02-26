@@ -1,10 +1,6 @@
 import type { Client, IMessage, StompSubscription } from "@stomp/stompjs";
-import type {  MessageResponse, RoomMemberInfo } from "../types";
 import { create } from "zustand";
-import { getMembersInfo, loadMessages } from "../api/chatroomApi";
 import { useChatroomsStore } from "./chatroomsStore";
-import { useUserStore } from "./userStore";
-import type { DirectChatCreatedPayload } from "../types";
 
 const ACK_DEBOUNCE_MS = 400;
 

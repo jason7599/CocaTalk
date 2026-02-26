@@ -1,4 +1,4 @@
-import type { UserNotification } from "../types";
+import type { UserNotification } from "../../shared/types";
 import { useChatroomsStore } from "../store/chatroomsStore";
 import { useActiveRoomStore } from "../store/activeRoomStore";
 

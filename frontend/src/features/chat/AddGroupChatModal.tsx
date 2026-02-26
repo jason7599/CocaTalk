@@ -1,6 +1,6 @@
 import type React from "react";
 import { useModal } from "./ModalContext";
-import { useContactsStore } from "../../store/contactsStore";
+import { useContactsStore } from "../../features/contacts/contactsStore";
 import { useMemo, useState } from "react";
 import { CheckIcon, UserGroupIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { createGroupChat } from "../../api/chatroomApi";
