@@ -21,6 +21,8 @@ public class MessageEntity {
     @EmbeddedId
     private MessageId id;
 
+    private Long actorId;
+
     @Enumerated(EnumType.STRING)
     private MessageKind kind;
 

@@ -83,6 +83,8 @@ CREATE TABLE messages (
     room_id BIGINT NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
     seq BIGINT NOT NULL,
 
+    actor_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+
     kind VARCHAR(10) NOT NULL,
     event_type VARCHAR(30),
 
