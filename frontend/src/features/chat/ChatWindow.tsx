@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
-import MessageBubble from "./MessageBubble";
 import ChatHeader from "./ChatHeader";
 import { useStomp } from "../../services/ws/stompContext";
 import { useActiveRoomStore } from "./activeRoomStore";
+import MessageBubble from "./MessageBubble";
 
 const ChatWindow: React.FC = () => {
     const { connected } = useStomp();

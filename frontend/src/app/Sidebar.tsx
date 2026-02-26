@@ -5,9 +5,6 @@ import {
     UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useModal } from "../shared/ModalContext";
-import LogoutModal from "../features/auth/LogoutModal";
-import ContactsTab from "../features/contacts/ContactsTab";
-import ChatroomsTab from "../features/chat/ChatroomsTab";
 
 const Sidebar: React.FC = () => {
     const { showModal } = useModal();

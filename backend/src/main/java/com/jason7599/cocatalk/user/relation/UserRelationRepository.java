@@ -18,7 +18,7 @@ public class UserRelationRepository {
         @SuppressWarnings("unchecked")
         List<Object[]> rows = em.createNativeQuery("""
             SELECT
-                u.user_id,
+                u.id,
                 u.username
             FROM contacts c
             JOIN users u ON c.contact_id = u.id
@@ -38,7 +38,7 @@ public class UserRelationRepository {
         @SuppressWarnings("unchecked")
         List<Object[]> rows = em.createNativeQuery("""
                 SELECT
-                    u.user_id,
+                    u.id,
                     u.username
                 FROM blocks b
                 JOIN users u ON b.blocked_id = u.id

@@ -32,7 +32,7 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
                 GROUP BY room_id
             ) mc ON mc.room_id = r.id
             JOIN messages lm ON lm.room_id = r.id AND lm.seq = r.last_seq
-            JOIN users ls ON lm.sender_id = ls.id
+            JOIN users ls ON lm.actor_id = ls.id
             WHERE
                 rm_me.user_id = :viewerId
             """, nativeQuery = true)

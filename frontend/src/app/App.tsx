@@ -4,9 +4,8 @@ import AppLayout from './AppLayout.tsx';
 import { useAuth } from '../features/auth/AuthProvider.tsx';
 
 export default function App() {
-
     const { isLoggedIn, isLoading } = useAuth();
-
+    
     if (isLoading) return <div>Loading...</div>
 
     return (
