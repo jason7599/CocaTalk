@@ -27,8 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         try {
-            const res = await api.get("/me");
-            setUser(res.data);
+            setUser((await api.get<UserInfo>("/me")).data);
         } catch {
             localStorage.removeItem("token");
             setUser(null);
@@ -51,6 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await api.post("/auth/register", { username, password });
     };
 
+    // triggers useBootstrap's clear session
     const logout = () => {
         localStorage.removeItem("token");
         setUser(null);
@@ -72,8 +72,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
     const ctx = useContext(AuthContext);
     if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
     return ctx;
+};
+
+// eslint-disable-next-line react-refresh/only-export-components
+export const useRequiredAuth = () => {
+    const ctx = useAuth();
+
+    if (!ctx.user) {
+        throw new Error("useRequireAuth must be used when user is authenticated");
+    }
+
+    return {
+        ...ctx,
+        user: ctx.user,
+    };
 };

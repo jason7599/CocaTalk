@@ -8,6 +8,7 @@ import java.util.List;
 
 public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> {
 
+    // TODO: add logic of omitting empty direct chatrooms
     /**
      * @param viewerId Id of the user to view these summaries
      * @return List of chatroom summary rows (without member name previews)

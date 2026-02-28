@@ -1,22 +1,18 @@
 import type React from "react";
 import { useEffect, useMemo, useState } from "react";
-import { useModal } from "./ModalContext";
 import { useContactsStore } from "./contactsStore";
 import { UserPlusIcon, XMarkIcon } from "@heroicons/react/24/solid";
 import type { UserInfo } from "../../shared/types";
-import { searchUsers } from "../../api/userApi";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import { useUserStore } from "../../store/userStore";
+import { useModal } from "../../shared/ModalContext";
+import { useRequiredAuth } from "../auth/AuthProvider";
 
 const MIN_QUERY_LENGTH = 3;
 const DEBOUNCE_MS = 400;
 
 const AddContactModal: React.FC = () => {
     const { closeModal } = useModal();
-    const user = useUserStore((s) => s.user);
-
-    const contacts = useContactsStore((s) => s.contacts);
-    const addContact = useContactsStore((s) => s.addContact);
+    const user = useRequiredAuth();
 
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<UserInfo[]>([]);
@@ -25,10 +21,6 @@ const AddContactModal: React.FC = () => {
 
     const trimmed = query.trim();
     const canSearch = trimmed.length >= MIN_QUERY_LENGTH;
-
-    const contactIds = useMemo(
-        () => new Set(contacts.map((c) => c.id))
-        , [contacts]);
 
     const helperText = useMemo(() => {
         if (!trimmed) return "Search by username or username#tag.";
@@ -39,29 +31,29 @@ const AddContactModal: React.FC = () => {
     }, [trimmed, canSearch, loading, results.length]);
 
     // Debounced Search
-    useEffect(() => {
-        if (!canSearch) {
-            setResults([]);
-            return;
-        }
+    // useEffect(() => {
+    //     if (!canSearch) {
+    //         setResults([]);
+    //         return;
+    //     }
 
-        setLoading(true);
+    //     setLoading(true);
 
-        const handle = setTimeout(async () => {
-            setError(null);
+    //     const handle = setTimeout(async () => {
+    //         setError(null);
 
-            try {
-                const users = await searchUsers(trimmed);
-                setResults(users);
-            } catch {
-                setError("Failed to search users");
-            } finally {
-                setLoading(false);
-            }
-        }, DEBOUNCE_MS);
+    //         try {
+    //             const users = await searchUsers(trimmed);
+    //             setResults(users);
+    //         } catch {
+    //             setError("Failed to search users");
+    //         } finally {
+    //             setLoading(false);
+    //         }
+    //     }, DEBOUNCE_MS);
 
-        return () => clearTimeout(handle);
-    }, [trimmed, canSearch]);
+    //     return () => clearTimeout(handle);
+    // }, [trimmed, canSearch]);
 
     const onAdd = async (userId: number) => {
         await addContact(userId);

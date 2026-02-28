@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { loadChatrooms } from "../api/chatroomApi";
+import type { ChatroomSummary } from "../../shared/types";
 
 /*
 Lazy initializing DM rooms.
@@ -15,37 +16,22 @@ Lazy initializing DM rooms.
     This is only done if A is currently looking at an empty DM chatroom with B. 
     So this will require us to store info about with whom the user is looking at an empty DM with, if they are.
 */
-
 type ChatroomsState = {
-    chatrooms: ChatroomSummary[];
+    byId: Record<number, ChatroomSummary>;
+    allIds: number[];
 
-    loading: boolean;
-    error: string | null;
+    hydrate: (rooms: ChatroomSummary[]) => void;
+    reset: () => void;
 
-    // bootstrap + pending queue
-    // Whether this store has completed the state load from the DB,
-    // And is ready to safely reconcile incremental updates
-    _bootStrapped: boolean;
-    _pendingPreviews: Record<number, MessagePreviewPayload>;
+    upsert: (room: ChatroomSummary) => void;
+    remove: (roomId: string) => void;
 
-    // "reducers" (pure-ish)
-    putChatroom: (room: ChatroomSummary) => void;
-    removeChatroom: (roomId: number) => void;
-
-    setMyLastAck: (roomId: number, ackSeq: number) => void;
-
-    // "commands" (async, call API then reducers)
-    fetch: () => Promise<void>;
-    // WS reducer
-    onNewMessagePreview: (preview: MessagePreviewPayload) => void;
-    onGroupChatCreated: (created: GroupChatCreatedPayload) => void;
-
-    _flushPendingPreviews: () => void;
+    // applyPreview: (preview: MessagePreview) => void;
 };
 
 function sortByLastMessageAtDesc(rooms: ChatroomSummary[]) {
     return [...rooms].sort(
-        (a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()
+        (a, b) => new Date(b.lastMessage.createdAt).getTime() - new Date(a.lastMessageAt).getTime()
     );
 }
 
@@ -117,7 +103,7 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
 
             const idx = s.chatrooms.findIndex((r) => r.id === preview.roomId);
             if (idx === -1) {
-                console.warn(`[chatroomsStore.onNewMessage] room of ${preview.roomId} not found!`); 
+                console.warn(`[chatroomsStore.onNewMessage] room of ${preview.roomId} not found!`);
                 return s; // no-op
             }
 

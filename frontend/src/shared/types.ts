@@ -5,28 +5,29 @@ export interface UserInfo {
 
 export type MessageKind = "USER" | "EVENT";
 export type EventMessageType =
-  | "GROUP_CREATED"
-  | "MEMBER_JOINED"
-  | "MEMBER_LEFT"
-  | "MEMBER_REMOVED";
+    | "GROUP_CREATED"
+    | "MEMBER_JOINED"
+    | "MEMBER_LEFT"
+    | "MEMBER_REMOVED";
 
 interface BaseMessage {
-  seq: number;
-  createdAt: string;
+    roomId: number;
+    seq: number;
+    createdAt: string;
 }
 
 export type UserMessage = BaseMessage & {
-  kind: "USER";
-  eventType: null;
-  senderName: string;
-  content: string;
+    kind: "USER";
+    eventType: null;
+    senderName: string;
+    content: string;
 };
 
 export type EventMessage = BaseMessage & {
-  kind: "EVENT";
-  eventType: EventMessageType;
-  senderName: null;
-  content: null;
+    kind: "EVENT";
+    eventType: EventMessageType;
+    senderName: null;
+    content: null;
 };
 
 export type MessageSummary = UserMessage | EventMessage;
@@ -39,5 +40,11 @@ export interface ChatroomSummary {
     memberNamesPreview: string[];
     totalMemberCount: number;
     myLastAck: number;
-    lastMessage: MessageSummary;
+    lastMessage: MessageSummary | null;
+};
+
+export interface UserBootstrapDto {
+    chatroomSummaries: ChatroomSummary[];
+    contacts: UserInfo[];
+    blockedUsers: UserInfo[];
 };

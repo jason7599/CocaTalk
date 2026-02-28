@@ -5,20 +5,25 @@ import {
     UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useModal } from "../shared/ModalContext";
+import LogoutModal from "../features/auth/LogoutModal";
+import { useRequiredAuth } from "../features/auth/AuthProvider";
+import ContactsTab from "../features/contacts/ContactsTab";
+import ChatroomsTab from "../features/chat/ChatroomsTab";
 
 const Sidebar: React.FC = () => {
     const { showModal } = useModal();
-
+    const { user } = useRequiredAuth();
+    
     const [activeTab, setActiveTab] = useState<"contacts" | "chats">("chats");
 
     return (
         <aside className="
-                w-1/4 min-w-[320px] flex flex-col
-                border-r border-white/10
-                bg-gradient-to-b from-[#0d0d16]/80 via-[#0c0c14]/85 to-[#0a0a12]/90
-                backdrop-blur-xl
-                relative
-                overflow-hidden
+            w-1/4 min-w-[320px] flex flex-col
+            border-r border-white/10
+            bg-gradient-to-b from-[#0d0d16]/80 via-[#0c0c14]/85 to-[#0a0a12]/90
+            backdrop-blur-xl
+            relative
+            overflow-hidden
         ">
             <div className="pointer-events-none absolute inset-0 -z-10">
                 <div className="absolute -top-32 -left-24 h-72 w-72 rounded-full bg-pink-500/10 blur-3xl" />
@@ -42,14 +47,7 @@ const Sidebar: React.FC = () => {
 
                         <div className="min-w-0">
                             <p className="truncate font-semibold text-slate-100 leading-tight">
-                                {/* {user ? (
-                                    <>
-                                        <span>{user.username}</span>
-                                        <span className="ml-0.5 text-xs font-medium text-slate-400">
-                                            #{user.tag}
-                                        </span>
-                                    </>
-                                ) : <>Loading</>} */}
+                                <span>{user.username}</span>
                             </p>
                         </div>
                     </div>
@@ -119,7 +117,7 @@ const Sidebar: React.FC = () => {
 
             {/* CONTENT */}
             <div className="flex-1 overflow-y-auto bg-black/10">
-                {/* {activeTab === "contacts" ? <ContactsTab /> : <ChatroomsTab />} */}
+                {activeTab === "contacts" ? <ContactsTab /> : <ChatroomsTab />}
             </div>
 
             <div

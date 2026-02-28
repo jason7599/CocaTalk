@@ -2,11 +2,14 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import AuthPage from '../features/auth/AuthPage.tsx'
 import AppLayout from './AppLayout.tsx';
 import { useAuth } from '../features/auth/AuthProvider.tsx';
+import { useSessionLifecycle } from '../features/session/useSessionLifecycle.ts';
+import SessionLoadingScreen from '../features/session/SessionLoadingScreen.tsx';
 
 export default function App() {
     const { isLoggedIn, isLoading } = useAuth();
-    
-    if (isLoading) return <div>Loading...</div>
+    const { bootstrapping } = useSessionLifecycle();
+
+    if (isLoading || bootstrapping) return <SessionLoadingScreen />;
 
     return (
         <Router>

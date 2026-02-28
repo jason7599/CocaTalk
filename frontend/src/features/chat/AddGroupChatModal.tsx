@@ -1,13 +1,12 @@
 import type React from "react";
-import { useModal } from "./ModalContext";
 import { useContactsStore } from "../../features/contacts/contactsStore";
 import { useMemo, useState } from "react";
 import { CheckIcon, UserGroupIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { createGroupChat } from "../../api/chatroomApi";
+import { useModal } from "../../shared/ModalContext";
 
 const AddGroupChatModal: React.FC = () => {
     const { closeModal } = useModal();
-    const contacts = useContactsStore((s) => s.contacts);
+    const contacts = useContactsStore((s) => s.getAll());
 
     const [selected, setSelected] = useState<Set<number>>(new Set());
     const [loading, setLoading] = useState(false);
@@ -33,7 +32,7 @@ const AddGroupChatModal: React.FC = () => {
         if (!canCreate || loading) return;
 
         setLoading(true);
-        await createGroupChat(Array.from(selected));
+        // await createGroupChat(Array.from(selected));
         closeModal();
         setLoading(false);
     };
@@ -159,9 +158,6 @@ const AddGroupChatModal: React.FC = () => {
                                                 <div className="min-w-0">
                                                     <div className="truncate font-semibold">
                                                         <span>{c.username}</span>
-                                                        <span className="ml-0.5 text-xs font-medium text-slate-400">
-                                                            #{c.tag}
-                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>

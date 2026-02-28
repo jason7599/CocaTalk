@@ -1,5 +1,9 @@
 import React, { useMemo } from "react";
 import { ChatBubbleLeftRightIcon, PlusCircleIcon } from "@heroicons/react/24/solid";
+import type { ChatroomSummary } from "../../shared/types";
+import { useModal } from "../../shared/ModalContext";
+import { useRequiredAuth } from "../auth/AuthProvider";
+import AddGroupChatModal from "./AddGroupChatModal";
 
 function formatTime(ts: string | number | Date) {
     const d = new Date(ts);
@@ -14,32 +18,23 @@ function formatDate(ts: string | number | Date) {
 }
 
 function getUnreadCount(room: ChatroomSummary) {
-    return room.lastSeq - room.myLastAck;
+    return room.lastMessage?.seq ?? 0 - room.myLastAck;
 }
 
 const ChatroomsTab: React.FC = () => {
     const { showModal } = useModal();
 
-    const chatrooms = useChatroomsStore((s) => s.chatrooms);
-    const setActiveRoom = useActiveRoomStore((s) => s.setActiveRoom);
-    const chatEndpoint = useActiveRoomStore((s) => s.chatEndpoint);
+    let chatrooms: ChatroomSummary[] = [];
 
-    const activeRoomId = chatEndpoint?.dmProxy? null : chatEndpoint?.roomId;
-
-    const user = useUserStore((s) => s.user);
-    if (!user) return null;
+    const { user } = useRequiredAuth();
     
     const sorted = useMemo(() => {
         return [...chatrooms].sort((a, b) => {
-            const ta = new Date(a.lastMessageAt ?? 0).getTime();
-            const tb = new Date(b.lastMessageAt ?? 0).getTime();
+            const ta = new Date(a.lastMessage?.createdAt ?? 0).getTime();
+            const tb = new Date(b.lastMessage?.createdAt ?? 0).getTime();
             return tb - ta;
         });
     }, [chatrooms]);
-
-    const handleClick = (chatroom: ChatroomSummary) => {
-        if (chatroom.id !== activeRoomId) setActiveRoom(chatroom.id);
-    };
 
     return (
         <>
@@ -93,27 +88,26 @@ const ChatroomsTab: React.FC = () => {
                         {/* List */}
                         <div className="flex flex-col gap-2">
                             {sorted.map((chatroom) => {
-                                const isActive = activeRoomId === chatroom.id;
                                 const lastText = chatroom.lastMessage ?? "No messages yet";
-                                const lastAt = chatroom.lastMessageAt;
+                                const lastAt = chatroom.lastMessage?.createdAt ?? 0;
                                 const unreadCount = getUnreadCount(chatroom);
 
                                 return (
                                     <button
-                                        key={chatroom.id}
+                                        key={chatroom.roomId}
                                         type="button"
-                                        onClick={() => handleClick(chatroom)}
+                                        // onClick={() => handleClick(chatroom)}
                                         className={[
                                             "group relative w-full text-left",
                                             "rounded-2xl border backdrop-blur-xl",
                                             "px-4 py-3 transition",
                                             "focus:outline-none focus:ring-2 focus:ring-rose-300/25",
-                                            isActive
-                                                ? "border-rose-500/30 bg-white/8"
-                                                : "border-white/10 bg-white/5 hover:bg-white/8",
+                                            // isActive
+                                            //     ? "border-rose-500/30 bg-white/8"
+                                            //     : "border-white/10 bg-white/5 hover:bg-white/8",
                                         ].join(" ")}
                                     >
-                                        {/* Active neon rail */}
+                                        {/* Active neon rail
                                         <div
                                             className={[
                                                 "absolute left-0 top-2 bottom-2 w-[3px] rounded-full transition-opacity",
@@ -122,7 +116,7 @@ const ChatroomsTab: React.FC = () => {
                                                     : "opacity-0 group-hover:opacity-60 bg-white/20",
                                             ].join(" ")}
                                             aria-hidden="true"
-                                        />
+                                        /> */}
 
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="min-w-0">
@@ -132,9 +126,9 @@ const ChatroomsTab: React.FC = () => {
                                                             "h-9 w-9 flex-none rounded-full",
                                                             "bg-gradient-to-br from-pink-500/20 to-red-500/20",
                                                             "ring-1 ring-white/10",
-                                                            isActive
-                                                                ? "shadow-[0_0_18px_rgba(244,63,94,0.16)]"
-                                                                : "shadow-none",
+                                                            // isActive
+                                                            //     ? "shadow-[0_0_18px_rgba(244,63,94,0.16)]"
+                                                            //     : "shadow-none",
                                                         ].join(" ")}
                                                         aria-hidden="true"
                                                     />
@@ -142,19 +136,19 @@ const ChatroomsTab: React.FC = () => {
                                                         <div
                                                             className={[
                                                                 "truncate font-semibold",
-                                                                isActive ? "text-slate-100" : "text-slate-100/90",
+                                                                // isActive ? "text-slate-100" : "text-slate-100/90",
                                                             ].join(" ")}
                                                         >
-                                                            {getChatroomDisplayName(user.id, chatroom)}
+                                                            {/* {getChatroomDisplayName(user.id, chatroom)} */}
                                                         </div>
 
                                                         <div
                                                             className={[
                                                                 "truncate text-sm",
-                                                                isActive ? "text-slate-300" : "text-slate-400",
+                                                                // isActive ? "text-slate-300" : "text-slate-400",
                                                             ].join(" ")}
                                                         >
-                                                            {lastText}
+                                                            {/* {lastText} */}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -186,7 +180,7 @@ const ChatroomsTab: React.FC = () => {
                                             </div>
                                         </div>
 
-                                        {isActive && (
+                                        {/* {isActive && (
                                             <div
                                                 className="pointer-events-none absolute inset-0 rounded-2xl"
                                                 style={{
@@ -195,7 +189,7 @@ const ChatroomsTab: React.FC = () => {
                                                 }}
                                                 aria-hidden="true"
                                             />
-                                        )}
+                                        )} */}
                                     </button>
                                 );
                             })}

@@ -43,6 +43,7 @@ public class ChatroomService {
                         row.getTotalMemberCount(),
                         row.getMyLastAck(),
                         new MessageSummary(
+                                row.getRoomId(),
                                 row.getLastSeq(),
                                 row.getLastMessageKind(),
                                 row.getLastMessageEventType(),

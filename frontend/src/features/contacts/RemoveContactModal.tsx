@@ -1,7 +1,7 @@
 import type React from "react";
-import { useModal } from "./ModalContext";
 import { useContactsStore } from "./contactsStore";
 import { ExclamationTriangleIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { useModal } from "../../shared/ModalContext";
 
 type RemoveContactModalProps = {
     contactId: number;

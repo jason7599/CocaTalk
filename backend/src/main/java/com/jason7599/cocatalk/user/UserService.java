@@ -24,7 +24,6 @@ public class UserService {
 
     public UserBootstrapDto bootstrap(Long userId) {
         return new UserBootstrapDto(
-                getUserInfo(userId),
                 chatroomService.getChatroomSummaries(userId),
                 userRelationRepository.getContacts(userId),
                 userRelationRepository.getBlockedUsers(userId)

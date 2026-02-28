@@ -2,64 +2,70 @@ import { create } from "zustand";
 import type { UserInfo } from "../../shared/types";
 
 type ContactsState = {
-    contacts: UserInfo[];
-
-    loading: boolean;
+    contacts: Record<number, UserInfo>;
 
     error: string | null;
 
-    fetch: () => Promise<void>;
-    addContact: (userId: number) => Promise<void>;
+    // UI state mutations
+    hydrate: (contacts: UserInfo[]) => void;
+    upsert: (contact: UserInfo) => void;
+    removeLocal: (contactId: number) => void;
+    reset: () => void;
+
+    // API actions
+    addContact: (contactId: number) => Promise<void>;
     removeContact: (contactId: number) => Promise<void>;
-    clearError: () => void;
+
+    // Selectors
+    isContact: (userId: number) => boolean;
 };
 
 export const useContactsStore = create<ContactsState>((set, get) => ({
-    contacts: [],
-    loading: false,
+    contacts: {},
     error: null,
 
-    fetch: async () => {
-        set({ loading: true, error: null });
-        try {
-            const data = await apiListContacts();
-            set({ contacts: data });
-        } catch (err: any) {
-            set({ error: err.message });
-        } finally {
-            set({ loading: false });
-        }
+    // UI state mutations
+    hydrate: (contacts) => {
+        set({
+            contacts: Object.fromEntries(contacts.map((c) => [c.id, c]))
+        });
     },
 
-    addContact: async (userId) => {
-        set({ error: null });
-        try {
-            const created = await apiAddContact(userId);
-
-            set((s) => {
-                if (s.contacts.some((c) => c.id === created.id)) return s;
-                return {
-                    contacts: [...s.contacts, created].sort((a, b) =>
-                        a.username.localeCompare(b.username)
-                    )
-                };
-            })
-        } catch (err: any) {
-            set({ error: err.message });
-            throw err;
-        }
+    upsert: (contact) => {
+        set((state) => ({
+            contacts: {
+                ...state.contacts,
+                [contact.id]: contact
+            }
+        }));
     },
 
-    removeContact: async (contactId: number) => {
-        set({ error: null });
-        try {
-            await apiRemoveContact(contactId);
-            set((s) => ({ contacts: s.contacts.filter((c) => c.id !== contactId) }));
-        } catch (err: any) {
-            set({ error: err.message });
-            throw err;
-        }
+    removeLocal: (contactId) => {
+        set((state) => {
+            const next = { ...state.contacts };
+            delete next[contactId];
+            return { contacts: next };
+        });
     },
 
-    clearError: () => set({error: null})
+    reset: () => {
+        set({
+            contacts: {},
+            error: null
+        });
+    },
+
+    // API actions
+    addContact: async (contactId) => {
+
+    },
+
+    removeContact: async (contactId) => {
+
+    },
+
+    // Selectors
+    isContact: (userId) => {
+        return userId in get().contacts;
+    }
 }));
