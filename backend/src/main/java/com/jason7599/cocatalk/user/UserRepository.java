@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
@@ -22,4 +23,9 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
             LIMIT :limit
             """, nativeQuery = true)
     List<UserInfo> searchUsers(String query, Long viewerId, int limit);
+
+    // @Profile("dev")
+    // TODO: for dev only
+    @Query("select u.username from UserEntity u")
+    Set<String> findAllUsernames();
 }
