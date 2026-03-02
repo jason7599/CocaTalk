@@ -2,23 +2,26 @@ import type React from "react";
 import { useContactsStore } from "./contactsStore";
 import { ExclamationTriangleIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useModal } from "../../shared/ModalContext";
+import type { UserInfo } from "../../shared/types";
+import { useState } from "react";
 
-type RemoveContactModalProps = {
-    contactId: number;
-    contactName: string;
-};
-
-const RemoveContactModal: React.FC<RemoveContactModalProps> = ({
-    contactId,
-    contactName,
-}) => {
+const RemoveContactModal: React.FC<{ contact: UserInfo }> = ({ contact }) => {
     const { closeModal } = useModal();
     const removeContact = useContactsStore((s) => s.removeContact);
 
+    const [removing, setRemoving] = useState(false);
+    
     const handleRemove = async () => {
-        await removeContact(contactId);
-        closeModal();
-    }
+        if (removing) return;
+
+        setRemoving(true);
+        try {
+            await removeContact(contact.userId);
+            closeModal();
+        } finally {
+            setRemoving(false);
+        }
+    };
 
     return (
         <div className="w-[520px] max-w-[92vw]">
@@ -53,7 +56,7 @@ const RemoveContactModal: React.FC<RemoveContactModalProps> = ({
                                     <p className="mt-1 text-sm text-slate-400">
                                         You’re about to remove{" "}
                                         <span className="font-semibold text-slate-200">
-                                            {contactName}
+                                            {contact.username}
                                         </span>{" "}
                                         from your contacts.
                                     </p>
@@ -63,6 +66,7 @@ const RemoveContactModal: React.FC<RemoveContactModalProps> = ({
                             <button
                                 type="button"
                                 onClick={closeModal}
+                                disabled={removing}
                                 className="
                                     rounded-xl p-2
                                     text-slate-300 hover:text-slate-100
@@ -85,6 +89,7 @@ const RemoveContactModal: React.FC<RemoveContactModalProps> = ({
                             <button
                                 type="button"
                                 onClick={closeModal}
+                                disabled={removing}
                                 className="
                                     rounded-xl px-4 py-2 text-sm font-semibold
                                     text-slate-200 bg-white/5 border border-white/10
@@ -99,6 +104,7 @@ const RemoveContactModal: React.FC<RemoveContactModalProps> = ({
                             <button
                                 type="button"
                                 onClick={handleRemove}
+                                disabled={removing}
                                 className="
                                     rounded-xl px-4 py-2 text-sm font-semibold text-white
                                     bg-gradient-to-br from-pink-500 via-rose-500 to-red-500
@@ -109,7 +115,7 @@ const RemoveContactModal: React.FC<RemoveContactModalProps> = ({
                                     focus:outline-none focus:ring-2 focus:ring-rose-300/35
                                 "
                             >
-                                Remove
+                                {removing ? "Removing..." : "Remove" }
                             </button>
                         </div>
                     </div>

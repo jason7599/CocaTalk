@@ -17,10 +17,10 @@ public class ChatroomService {
     private final ChatroomRepository chatroomRepository;
 
     public List<ChatroomSummary> getChatroomSummaries(Long userId) {
-        List<ChatroomSummaryRow> chatroomSummaryRows = chatroomRepository.getChatroomSummaries(userId);
+        List<ChatroomSummaryQueryRow> chatroomSummaryRows = chatroomRepository.getChatroomSummaries(userId);
 
         List<ChatroomMemberNameRow> memberNameRows = chatroomRepository.fetchRoomMemberPreviewRows(
-                chatroomSummaryRows.stream().map(ChatroomSummaryRow::getRoomId).toList(),
+                chatroomSummaryRows.stream().map(ChatroomSummaryQueryRow::getRoomId).toList(),
                 userId,
                 MEMBER_NAMES_PREVIEW_PER_ROOM
         );

@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         try {
-            setUser((await api.get<UserInfo>("/me")).data);
+            setUser((await api.get<UserInfo>("/users/me")).data);
         } catch {
             localStorage.removeItem("token");
             setUser(null);
@@ -84,7 +84,7 @@ export const useRequiredAuth = () => {
     const ctx = useAuth();
 
     if (!ctx.user) {
-        throw new Error("useRequireAuth must be used when user is authenticated");
+        throw new Error("useRequiredAuth must be used when user is authenticated");
     }
 
     return {

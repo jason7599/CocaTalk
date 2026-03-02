@@ -1,9 +1,10 @@
 import { create } from "zustand";
 import type { UserInfo } from "../../shared/types";
+import { addContact as apiAddContact, removeContact as apiRemoveContact } from "./contactsApi";
 
 type ContactsState = {
     contacts: Record<number, UserInfo>;
-
+    addingIds: Set<number>;
     error: string | null;
 
     // UI state mutations
@@ -15,19 +16,17 @@ type ContactsState = {
     // API actions
     addContact: (contactId: number) => Promise<void>;
     removeContact: (contactId: number) => Promise<void>;
-
-    // Selectors
-    isContact: (userId: number) => boolean;
 };
 
 export const useContactsStore = create<ContactsState>((set, get) => ({
     contacts: {},
+    addingIds: new Set<number>(),
     error: null,
 
     // UI state mutations
     hydrate: (contacts) => {
         set({
-            contacts: Object.fromEntries(contacts.map((c) => [c.id, c]))
+            contacts: Object.fromEntries(contacts.map((c) => [c.userId, c]))
         });
     },
 
@@ -35,7 +34,7 @@ export const useContactsStore = create<ContactsState>((set, get) => ({
         set((state) => ({
             contacts: {
                 ...state.contacts,
-                [contact.id]: contact
+                [contact.userId]: contact
             }
         }));
     },
@@ -57,15 +56,34 @@ export const useContactsStore = create<ContactsState>((set, get) => ({
 
     // API actions
     addContact: async (contactId) => {
+        set((state) => {
+            const next = new Set(state.addingIds);
+            next.add(contactId);
+            return { addingIds: next };
+        })
 
+        try {
+            const contact = await apiAddContact(contactId);
+
+            set((state) => ({
+                contacts: {
+                    ...state.contacts,
+                    [contact.userId]: contact
+                }
+            }));
+        } catch (err: any) {
+            set({ error: err.message });
+        } finally {
+            set((state) => {
+                const next = new Set(state.addingIds);
+                next.delete(contactId);
+                return { addingIds: next };
+            });
+        }
     },
 
     removeContact: async (contactId) => {
-
+        await apiRemoveContact(contactId);
+        get().removeLocal(contactId);
     },
-
-    // Selectors
-    isContact: (userId) => {
-        return userId in get().contacts;
-    }
 }));

@@ -10,7 +10,7 @@ import java.time.Instant;
  * Unlike the real ChatroomSummary DTO,
  * this DTO does not include the list of member names.
  */
-public interface ChatroomSummaryRow {
+public interface ChatroomSummaryQueryRow {
     Long getRoomId();
     ChatroomType getRoomType();
     int getTotalMemberCount();

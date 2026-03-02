@@ -7,9 +7,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
+
+    private static final int USER_QUERY_RESULT_LIMIT = 20;
+    private static final int USER_QUERY_STRING_MIN_LENGTH = 3;
 
     private final UserRepository userRepository;
     private final ChatroomService chatroomService;
@@ -26,7 +31,15 @@ public class UserService {
         return new UserBootstrapDto(
                 chatroomService.getChatroomSummaries(userId),
                 userRelationRepository.getContacts(userId),
-                userRelationRepository.getBlockedUsers(userId)
+                userRelationRepository.getBlockedUsers(userId) // Do we really need this?
         );
+    }
+
+    public List<UserInfo> searchUsers(String query, Long viewerId) {
+        // defensive
+        if (query.length() < USER_QUERY_STRING_MIN_LENGTH) {
+            return List.of();
+        }
+        return userRepository.searchUsers(query, viewerId, USER_QUERY_RESULT_LIMIT);
     }
 }

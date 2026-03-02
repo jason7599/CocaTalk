@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
     UserIcon,
     LockClosedIcon,
@@ -31,6 +31,10 @@ const AuthPage: React.FC = () => {
         setUsername("");
         setPassword("");
     };
+
+    useEffect(() => {
+        resetFields();
+    }, [isLogin]);
 
     const handleSubmit = async (ev: React.FormEvent) => {
         ev.preventDefault();

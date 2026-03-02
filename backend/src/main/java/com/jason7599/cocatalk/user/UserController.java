@@ -1,27 +1,55 @@
 package com.jason7599.cocatalk.user;
 
 import com.jason7599.cocatalk.security.CustomUserDetails;
+import com.jason7599.cocatalk.user.relation.UserRelationService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
-@RequestMapping("/me")
+@RequestMapping("/users")
 @RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
+    private final UserRelationService userRelationService;
 
-    @GetMapping
-    public ResponseEntity<UserInfo> getCurrentUser(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        return ResponseEntity.ok(userService.getUserInfo(userDetails.getId()));
+    @GetMapping("/me")
+    public UserInfo getCurrentUser(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        return userService.getUserInfo(userDetails.getId());
     }
 
-    @GetMapping("/bootstrap")
-    public ResponseEntity<UserBootstrapDto> bootstrap(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        return ResponseEntity.ok(userService.bootstrap(userDetails.getId()));
+    @GetMapping("/me/bootstrap")
+    public UserBootstrapDto bootstrap(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        return userService.bootstrap(userDetails.getId());
+    }
+
+    @GetMapping("/search")
+    public List<UserInfo> searchUsers(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam String query
+    ) {
+        return userService.searchUsers(query, userDetails.getId());
+    }
+
+    @PostMapping("/contacts/{targetId}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public UserInfo addContact(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable("targetId") Long targetId
+    ) {
+        return userRelationService.addContact(userDetails.getId(), targetId);
+    }
+
+    @DeleteMapping("/contacts/{targetId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeContact(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable("targetId") Long targetId
+    ) {
+        userRelationService.removeContact(userDetails.getId(), targetId);
     }
 }

@@ -37,12 +37,12 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             WHERE
                 rm_me.user_id = :viewerId
             """, nativeQuery = true)
-    List<ChatroomSummaryRow> getChatroomSummaries(@Param("viewerId") Long viewerId);
+    List<ChatroomSummaryQueryRow> getChatroomSummaries(@Param("viewerId") Long viewerId);
 
     /**
      * Batch-fetch top limitPerRoom member names for each chatroom
      * @param roomIds List of chatroom Ids
-     * @param viewerId user Id to exclude from the preview list
+     * @param viewerId User Id to exclude from the preview list
      * @param limitPerRoom Limit on how many member names to fetch per room
      */
     @Query(value = """

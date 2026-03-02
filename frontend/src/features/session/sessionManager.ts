@@ -11,10 +11,9 @@ export const sessionManager = {
         bootstrapping = true;
 
         try {
-            const res = (await api.get<UserBootstrapDto>("/me/bootstrap")).data;
-
-            useContactsStore.getState().hydrate(res.contacts);
+            const res = (await api.get<UserBootstrapDto>("/users/me/bootstrap")).data;
             // useChatroomsStore.getState().hydrate(res.chatroomSummaries);
+            useContactsStore.getState().hydrate(res.contacts);
             // useBlockedUsersStore.getState().hydrate(res.blockedUsers);
         } finally {
             bootstrapping = false;
@@ -22,9 +21,8 @@ export const sessionManager = {
     },
 
     clearSession() {
-        useContactsStore.getState().reset();
-
         // useChatroomsStore.getState().reset();
+        useContactsStore.getState().reset();
         // useBlockedUsersStore.getState().reset();
     },
 };

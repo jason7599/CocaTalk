@@ -1,18 +1,63 @@
 import type React from "react";
 import { useEffect, useMemo, useState } from "react";
-import { useContactsStore } from "./contactsStore";
 import { UserPlusIcon, XMarkIcon } from "@heroicons/react/24/solid";
-import type { UserInfo } from "../../shared/types";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { useModal } from "../../shared/ModalContext";
-import { useRequiredAuth } from "../auth/AuthProvider";
+import { searchUsers } from "./contactsApi";
+import type { UserInfo } from "../../shared/types";
+import { useContactsStore } from "./contactsStore";
 
 const MIN_QUERY_LENGTH = 3;
 const DEBOUNCE_MS = 400;
 
+const UserEntry: React.FC<{ user: UserInfo }> = ({ user }) => {
+
+    const isContact = useContactsStore((s) => !!s.contacts[user.userId]);
+    const isAdding = useContactsStore((s) => s.addingIds.has(user.userId));
+    const addContact = useContactsStore((s) => s.addContact);
+    const isBlocked = false; // TODO 
+
+    const disabled = isContact || isBlocked || isAdding;
+
+    return (
+        <div className={`flex items-center justify-between gap-3 px-4 py-3 transition ${disabled ? "opacity-60" : "hover:bg-white/5"}`}>
+            <div className="flex items-center gap-3 min-w-0">
+                <div className="h-9 w-9 rounded-full bg-gradient-to-br from-pink-500/20 to-red-500/20 ring-1 ring-white/10" />
+                <div className="truncate font-semibold">
+                    <span>{user.username}</span>
+                </div>
+            </div>
+
+            {isContact ? (
+                <span className="text-xs font-semibold text-slate-400">
+                    Added
+                </span>
+            ) : isBlocked ? (
+                <span className="text-xs font-semibold text-slate-500">
+                    Blocked
+                </span>
+            ) : (
+                <button
+                    disabled={isAdding}
+                    onClick={() => addContact(user.userId)}
+                    className="
+                        rounded-xl px-3 py-1.5 text-xs font-semibold
+                        text-white
+                        bg-gradient-to-br from-pink-500 via-rose-500 to-red-500
+                        shadow-sm shadow-rose-500/25
+                        hover:brightness-110 transition
+                        disabled:opacity-70 disabled:cursor-not-allowed
+                    "
+                >
+                    {isAdding ? "Adding..." : "Add"}
+                </button>
+            )}
+        </div>
+    );
+};
+
 const AddContactModal: React.FC = () => {
     const { closeModal } = useModal();
-    const user = useRequiredAuth();
 
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<UserInfo[]>([]);
@@ -23,7 +68,7 @@ const AddContactModal: React.FC = () => {
     const canSearch = trimmed.length >= MIN_QUERY_LENGTH;
 
     const helperText = useMemo(() => {
-        if (!trimmed) return "Search by username or username#tag.";
+        if (!trimmed) return "Search by username.";
         if (!canSearch) return `Type at least ${MIN_QUERY_LENGTH} characters.`;
         if (loading) return "Searching...";
         if (results.length === 0) return "No results found";
@@ -31,33 +76,29 @@ const AddContactModal: React.FC = () => {
     }, [trimmed, canSearch, loading, results.length]);
 
     // Debounced Search
-    // useEffect(() => {
-    //     if (!canSearch) {
-    //         setResults([]);
-    //         return;
-    //     }
+    useEffect(() => {
+        if (!canSearch) {
+            setResults([]);
+            return;
+        }
 
-    //     setLoading(true);
+        setLoading(true);
 
-    //     const handle = setTimeout(async () => {
-    //         setError(null);
+        const handle = setTimeout(async () => {
+            setError(null);
 
-    //         try {
-    //             const users = await searchUsers(trimmed);
-    //             setResults(users);
-    //         } catch {
-    //             setError("Failed to search users");
-    //         } finally {
-    //             setLoading(false);
-    //         }
-    //     }, DEBOUNCE_MS);
+            try {
+                const users = await searchUsers(trimmed);
+                setResults(users);
+            } catch {
+                setError("Failed to search users");
+            } finally {
+                setLoading(false);
+            }
+        }, DEBOUNCE_MS);
 
-    //     return () => clearTimeout(handle);
-    // }, [trimmed, canSearch]);
-
-    const onAdd = async (userId: number) => {
-        await addContact(userId);
-    }
+        return () => clearTimeout(handle);
+    }, [trimmed, canSearch]);
 
     return (
         <div className="w-[520px] max-w-[92vw]">
@@ -109,7 +150,7 @@ const AddContactModal: React.FC = () => {
                             <input
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
-                                placeholder="Search username or username#tag"
+                                placeholder="Search username"
                                 autoFocus
                                 className="
                                     w-full rounded-2xl pl-12 pr-4 py-3
@@ -129,59 +170,15 @@ const AddContactModal: React.FC = () => {
 
                         {/* Results */}
                         <div className="max-h-[320px] overflow-y-auto divide-y divide-white/10">
-                            {results.map((u) => {
-                                const isSelf = user && u.id === user.id;
-                                const inContacts = contactIds.has(u.id);
-
-                                return (
-                                    <div
-                                        key={u.id}
-                                        className={`
-                                            flex items-center justify-between gap-3 px-4 py-3 transition
-                                            ${!isSelf && !inContacts ? "hover:bg-white/5" : "opacity-60"}    
-                                        `}
-                                    >
-                                        <div className="flex items-center gap-3 min-w-0">
-                                            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-pink-500/20 to-red-500/20 ring-1 ring-white/10" />
-                                            <div className="truncate font-semibold">
-                                                <span>{u.username}</span>
-                                                <span className="ml-0.5 text-xs font-medium text-slate-400">
-                                                    #{u.tag}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        {/* Right-side state */}
-                                        {isSelf ? (
-                                            <span className="text-xs font-semibold text-slate-400">
-                                                You
-                                            </span>
-                                        ) : inContacts ? (
-                                            <span className="text-xs font-semibold text-slate-400">
-                                                Added
-                                            </span>
-                                        ) : (
-                                            <button
-                                                onClick={() => onAdd(u.id)}
-                                                className="
-                                                    rounded-xl px-3 py-1.5 text-xs font-semibold
-                                                    text-white
-                                                    bg-gradient-to-br from-pink-500 via-rose-500 to-red-500
-                                                    shadow-sm shadow-rose-500/25
-                                                    hover:brightness-110 transition
-                                                "
-                                            >
-                                                Add
-                                            </button>
-                                        )}
-                                    </div>
-                                );
-                            })}
+                            {results.map(u => (
+                                <UserEntry key={u.userId} user={u} />
+                            ))}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
     );
 };
 

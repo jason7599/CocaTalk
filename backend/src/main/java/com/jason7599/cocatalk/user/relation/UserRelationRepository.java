@@ -34,6 +34,29 @@ public class UserRelationRepository {
                 .toList();
     }
 
+    /**
+     * @throws DataIntegrityViolationException When already contacts
+     */
+    public void addContact(Long userId, Long targetId) {
+        em.createNativeQuery("""
+                INSERT INTO contacts (user_id, contact_id)
+                VALUES (:userId, :targetId)
+                """)
+                .setParameter("userId", userId)
+                .setParameter("targetId", targetId)
+                .executeUpdate();
+    }
+
+    public void removeContact(Long userId, Long targetId) {
+        em.createNativeQuery("""
+                DELETE FROM contacts
+                WHERE user_id = :userId AND contact_id = :targetId
+                """)
+                .setParameter("userId", userId)
+                .setParameter("targetId", targetId)
+                .executeUpdate();
+    }
+
     public List<UserInfo> getBlockedUsers(Long userId) {
         @SuppressWarnings("unchecked")
         List<Object[]> rows = em.createNativeQuery("""

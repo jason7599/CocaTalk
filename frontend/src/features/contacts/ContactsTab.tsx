@@ -94,9 +94,9 @@ const ContactsTab: React.FC = () => {
                     </div>
                 ) : (
                     <div className="divide-y divide-white/10">
-                        {filtered.map((contact) => (
+                        {filtered.map((c) => (
                             <div
-                                key={contact.id}
+                                key={c.userId}
                                 className="
                                     group flex items-center justify-between gap-3
                                     px-5 py-4
@@ -117,7 +117,7 @@ const ContactsTab: React.FC = () => {
                                         />
                                         <div className="min-w-0">
                                             <div className="truncate font-semibold text-slate-100">
-                                                <span>{contact.username}</span>
+                                                <span>{c.username}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -144,10 +144,7 @@ const ContactsTab: React.FC = () => {
                                     <button
                                         onClick={() =>
                                             showModal(
-                                                <RemoveContactModal
-                                                    contactId={contact.id}
-                                                    contactName={contact.username}
-                                                />
+                                                <RemoveContactModal contact={c}/>
                                             )
                                         }
                                         className="
