@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import type { UserInfo } from "../../shared/types";
+import { addBlock as apiAddBlock, removeBlock as apiRemoveBlock } from "./blockUserApi";
+import { useContactsStore } from "../contacts/contactsStore";
 
 type BlockedUsersState = {
     blockedUsers: Record<number, UserInfo>;
@@ -46,10 +48,12 @@ export const useBlockedUsersStore = create<BlockedUsersState>((set, get) => ({
     },
 
     addBlock: async (targetId) => {
-        
+        get().upsert(await apiAddBlock(targetId));
+        useContactsStore.getState().removeLocal(targetId);
     },
 
     removeBlock: async (targetId) => {
-
+        await apiRemoveBlock(targetId);
+        get().removeLocal(targetId);
     },
 }));

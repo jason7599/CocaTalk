@@ -43,12 +43,18 @@ public class UserRelationService {
     }
 
     @Transactional
-    public void addBlock(Long userId, Long targetId) {
+    public UserInfo addBlock(Long userId, Long targetId) {
         if (userId.equals(targetId)) {
             throw new ApiError(HttpStatus.BAD_REQUEST, "Cannot block self");
         }
 
+        UserEntity target = userRepository.findById(targetId)
+                        .orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND, "Target user not found"));
+
+        removeContact(userId, targetId);
         userRelationRepository.addBlock(userId, targetId);
+
+        return new UserInfo(target);
     }
 
     @Transactional

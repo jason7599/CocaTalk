@@ -55,11 +55,11 @@ public class UserController {
 
     @PostMapping("/block/{targetId}")
     @ResponseStatus(HttpStatus.CREATED)
-    public void addBlock(
+    public UserInfo addBlock(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable("targetId") Long targetId
     ) {
-        userRelationService.addBlock(userDetails.getId(), targetId);
+        return userRelationService.addBlock(userDetails.getId(), targetId);
     }
 
     @DeleteMapping("/block/{targetId}")

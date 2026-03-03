@@ -8,6 +8,8 @@ const BlockedUsersPanel: React.FC = () => {
         a.username.localeCompare(b.username, undefined, { sensitivity: "base" })
     );
 
+    const removeBlock = useBlockedUsersStore((s) => s.removeBlock);
+
     if (blockedUsersList.length === 0) {
         return (
             <div className="
@@ -63,6 +65,7 @@ const BlockedUsersPanel: React.FC = () => {
             <div className="space-y-3">
                 {blockedUsersList.map((user) => (
                     <div
+                        key={user.userId}
                         className="
                             group relative
                             flex items-center justify-between
@@ -90,6 +93,7 @@ const BlockedUsersPanel: React.FC = () => {
 
                         {/* Right Side */}
                         <button
+                            onClick={() => removeBlock(user.userId)}
                             className="
                                 text-sm font-medium
                                 text-rose-400

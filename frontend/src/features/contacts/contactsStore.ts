@@ -5,7 +5,6 @@ import { addContact as apiAddContact, removeContact as apiRemoveContact } from "
 type ContactsState = {
     contacts: Record<number, UserInfo>;
     addingIds: Set<number>;
-    error: string | null;
 
     // UI state mutations
     hydrate: (contacts: UserInfo[]) => void;
@@ -21,7 +20,6 @@ type ContactsState = {
 export const useContactsStore = create<ContactsState>((set, get) => ({
     contacts: {},
     addingIds: new Set<number>(),
-    error: null,
 
     // UI state mutations
     hydrate: (contacts) => {
@@ -50,7 +48,6 @@ export const useContactsStore = create<ContactsState>((set, get) => ({
     reset: () => {
         set({
             contacts: {},
-            error: null
         });
     },
 
@@ -63,16 +60,7 @@ export const useContactsStore = create<ContactsState>((set, get) => ({
         })
 
         try {
-            const contact = await apiAddContact(contactId);
-
-            set((state) => ({
-                contacts: {
-                    ...state.contacts,
-                    [contact.userId]: contact
-                }
-            }));
-        } catch (err: unknown) {
-            set({ error: err.message });
+            get().upsert(await apiAddContact(contactId));
         } finally {
             set((state) => {
                 const next = new Set(state.addingIds);
