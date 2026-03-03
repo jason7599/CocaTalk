@@ -1,14 +1,14 @@
 import type React from "react";
 import { useState } from "react";
 import {
-    ArrowRightStartOnRectangleIcon,
+    Cog6ToothIcon,
     UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useModal } from "../shared/ModalContext";
-import LogoutModal from "../features/auth/LogoutModal";
 import { useRequiredAuth } from "../features/auth/AuthProvider";
 import ContactsTab from "../features/contacts/ContactsTab";
 import ChatroomsTab from "../features/chat/ChatroomsTab";
+import SettingsModal from "../features/session/SettingsModal";
 
 const Sidebar: React.FC = () => {
     const { showModal } = useModal();
@@ -58,11 +58,10 @@ const Sidebar: React.FC = () => {
                             hover:bg-rose-50 transition
                             focus:outline-none focus:ring-2 focus:ring-rose-200
                         "
-                        title="Log out"
-                        onClick={() => showModal(<LogoutModal />)}
+                        title="Settings"
+                        onClick={() => showModal(<SettingsModal />)}
                     >
-                        <ArrowRightStartOnRectangleIcon className="w-6 h-6 text-rose-400" />
-
+                        <Cog6ToothIcon className="w-6 h-6 text-rose-400" />
                     </button>
                 </div>
 

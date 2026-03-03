@@ -71,7 +71,7 @@ export const useContactsStore = create<ContactsState>((set, get) => ({
                     [contact.userId]: contact
                 }
             }));
-        } catch (err: any) {
+        } catch (err: unknown) {
             set({ error: err.message });
         } finally {
             set((state) => {

@@ -1,6 +1,7 @@
 import api from "../../services/api";
 import type { UserBootstrapDto } from "../../shared/types";
 import { useContactsStore } from "../contacts/contactsStore";
+import { useBlockedUsersStore } from "../userblock/blockedUsersStore";
 
 let bootstrapping = false;
 
@@ -14,7 +15,7 @@ export const sessionManager = {
             const res = (await api.get<UserBootstrapDto>("/users/me/bootstrap")).data;
             // useChatroomsStore.getState().hydrate(res.chatroomSummaries);
             useContactsStore.getState().hydrate(res.contacts);
-            // useBlockedUsersStore.getState().hydrate(res.blockedUsers);
+            useBlockedUsersStore.getState().hydrate(res.blockedUsers);
         } finally {
             bootstrapping = false;
         }
@@ -23,6 +24,6 @@ export const sessionManager = {
     clearSession() {
         // useChatroomsStore.getState().reset();
         useContactsStore.getState().reset();
-        // useBlockedUsersStore.getState().reset();
+        useBlockedUsersStore.getState().reset();
     },
 };

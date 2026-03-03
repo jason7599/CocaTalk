@@ -66,6 +66,7 @@ public class UserRelationRepository {
                 FROM blocks b
                 JOIN users u ON b.blocked_id = u.id
                 WHERE b.user_id = :userId
+                ORDER BY u.username
                 """)
                 .setParameter("userId", userId)
                 .getResultList();

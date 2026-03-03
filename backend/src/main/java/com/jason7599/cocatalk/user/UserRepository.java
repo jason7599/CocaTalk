@@ -17,14 +17,13 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
                 u.username
             FROM users u
             WHERE
-                LOWER(u.username) ILIKE CONCAT(:query, '%')
+                POSITION(LOWER(:query) IN LOWER(u.username)) > 0
                 AND u.id <> :viewerId
             ORDER BY u.username
             LIMIT :limit
             """, nativeQuery = true)
     List<UserInfo> searchUsers(String query, Long viewerId, int limit);
 
-    // @Profile("dev")
     // TODO: for dev only
     @Query("select u.username from UserEntity u")
     Set<String> findAllUsernames();
