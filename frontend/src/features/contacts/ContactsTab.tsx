@@ -3,13 +3,13 @@ import {
     ChatBubbleLeftIcon,
     MagnifyingGlassIcon,
     UserPlusIcon,
-    XMarkIcon,
 } from "@heroicons/react/24/solid";
 import { useMemo, useState } from "react";
 import { useModal } from "../../shared/ModalContext";
 import AddContactModal from "./AddContactModal";
-import RemoveContactModal from "./RemoveContactModal";
 import { useContactsStore } from "./contactsStore";
+import ContactActionsModal from "./ContactsActionModal";
+import { EllipsisVerticalIcon } from "@heroicons/react/24/outline";
 
 const ContactsTab: React.FC = () => {
 
@@ -142,11 +142,7 @@ const ContactsTab: React.FC = () => {
                                     </button>
 
                                     <button
-                                        onClick={() =>
-                                            showModal(
-                                                <RemoveContactModal contact={c}/>
-                                            )
-                                        }
+                                        onClick={() => showModal(<ContactActionsModal contact={c}/>)}
                                         className="
                                             inline-flex items-center gap-1.5
                                             rounded-xl px-3 py-2 text-xs font-semibold
@@ -157,10 +153,9 @@ const ContactsTab: React.FC = () => {
                                             transition
                                             focus:outline-none focus:ring-2 focus:ring-rose-300/25
                                         "
-                                        title="Remove contact"
+                                        title="More options"
                                     >
-                                        <XMarkIcon className="h-4 w-4" />
-                                        <span className="hidden sm:inline">Remove</span>
+                                        <EllipsisVerticalIcon className="h-4 w-4" />
                                     </button>
                                 </div>
                             </div>
