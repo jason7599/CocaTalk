@@ -57,7 +57,7 @@ export const useContactsStore = create<ContactsState>((set, get) => ({
             const next = new Set(state.addingIds);
             next.add(contactId);
             return { addingIds: next };
-        })
+        });
 
         try {
             get().upsert(await apiAddContact(contactId));

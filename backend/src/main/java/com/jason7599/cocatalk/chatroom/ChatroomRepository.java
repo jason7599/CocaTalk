@@ -8,7 +8,6 @@ import java.util.List;
 
 public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> {
 
-    // TODO: add logic of omitting empty direct chatrooms
     /**
      * @param viewerId Id of the user to view these summaries
      * @return List of chatroom summary rows (without member name previews)
@@ -36,6 +35,7 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             JOIN users ls ON lm.actor_id = ls.id
             WHERE
                 rm_me.user_id = :viewerId
+                AND r.last_seq > 0
             """, nativeQuery = true)
     List<ChatroomSummaryQueryRow> getChatroomSummaries(@Param("viewerId") Long viewerId);
 
@@ -68,4 +68,14 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             @Param("roomIds") List<Long> roomIds,
             @Param("viewerId") Long viewerId,
             @Param("limitPerRoom") int limitPerRoom);
+
+//  No @Modifying since this query returns a row instead of an int (rows affected)
+    @Query(value = """
+            INSERT INTO rooms (type, direct_user_id1, direct_user_id2)
+            VALUES ('DIRECT', LEAST(:u1, :u2), GREATEST(:u1, :u2))
+            ON CONFLICT ON CONSTRAINT uniq_direct_room
+            DO UPDATE SET id = rooms.id -- This is just a harmless no-op update so that it returns this existing row
+            RETURNING *
+            """, nativeQuery = true)
+    ChatroomEntity getOrCreateDirectChatroom(@Param("u1") Long u1, @Param("u2") Long u2);
 }
