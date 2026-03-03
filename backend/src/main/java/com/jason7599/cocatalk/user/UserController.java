@@ -52,4 +52,22 @@ public class UserController {
     ) {
         userRelationService.removeContact(userDetails.getId(), targetId);
     }
+
+    @PostMapping("/block/{targetId}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void addBlock(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable("targetId") Long targetId
+    ) {
+        userRelationService.addBlock(userDetails.getId(), targetId);
+    }
+
+    @DeleteMapping("/block/{targetId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeBlock(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable("targetId") Long targetId
+    ) {
+        userRelationService.removeBlock(userDetails.getId(), targetId);
+    }
 }

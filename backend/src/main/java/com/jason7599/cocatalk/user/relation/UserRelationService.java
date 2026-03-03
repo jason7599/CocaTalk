@@ -41,4 +41,18 @@ public class UserRelationService {
     public void removeContact(Long userId, Long targetId) {
         userRelationRepository.removeContact(userId, targetId);
     }
+
+    @Transactional
+    public void addBlock(Long userId, Long targetId) {
+        if (userId.equals(targetId)) {
+            throw new ApiError(HttpStatus.BAD_REQUEST, "Cannot block self");
+        }
+
+        userRelationRepository.addBlock(userId, targetId);
+    }
+
+    @Transactional
+    public void removeBlock(Long userId, Long targetId) {
+        userRelationRepository.removeBlock(userId, targetId);
+    }
 }

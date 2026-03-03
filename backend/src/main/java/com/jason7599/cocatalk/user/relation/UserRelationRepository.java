@@ -77,4 +77,24 @@ public class UserRelationRepository {
                         (String) r[1]))
                 .toList();
     }
+
+    public void addBlock(Long userId, Long targetId) {
+        em.createNativeQuery("""
+                INSERT INTO blocks (user_id, blocked_id)
+                VALUES (:userId, :targetId)
+                """)
+                .setParameter("userId", userId)
+                .setParameter("targetId", targetId)
+                .executeUpdate();
+    }
+
+    public void removeBlock(Long userId, Long targetId) {
+        em.createNativeQuery("""
+                DELETE FROM blocks
+                WHERE user_id = :userId AND blocked_id = :targetId
+                """)
+                .setParameter("userId", userId)
+                .setParameter("targetId", targetId)
+                .executeUpdate();
+    }
 }
