@@ -2,6 +2,7 @@ import type React from "react";
 import { ModalProvider } from "../shared/ModalContext";
 import { StompProvider } from "../services/ws/stompContext";
 import Sidebar from "./Sidebar";
+import ChatWindow from "../features/chat/ChatWindow";
 
 const AppLayout: React.FC = () => {
     
@@ -11,7 +12,7 @@ const AppLayout: React.FC = () => {
 
             <div className="h-screen flex">
                 <Sidebar />
-                {/* <ChatWindow /> */}
+                <ChatWindow />
             </div>
 
         </ModalProvider>

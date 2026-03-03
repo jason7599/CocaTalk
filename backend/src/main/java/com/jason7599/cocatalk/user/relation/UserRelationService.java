@@ -10,12 +10,18 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class UserRelationService {
 
     private final UserRepository userRepository;
     private final UserRelationRepository userRelationRepository;
+
+    public List<UserInfo> getContacts(Long userId) {
+        return userRelationRepository.getContacts(userId);
+    }
 
     @Transactional
     public UserInfo addContact(Long userId, Long targetId) {
@@ -42,6 +48,11 @@ public class UserRelationService {
         userRelationRepository.removeContact(userId, targetId);
     }
 
+    public List<UserInfo> getBlockedUsers(Long userId) {
+        return userRelationRepository.getBlockedUsers(userId);
+    }
+
+    // TODO: websocket event
     @Transactional
     public UserInfo addBlock(Long userId, Long targetId) {
         if (userId.equals(targetId)) {
@@ -57,6 +68,7 @@ public class UserRelationService {
         return new UserInfo(target);
     }
 
+    // TODO: websocket event
     @Transactional
     public void removeBlock(Long userId, Long targetId) {
         userRelationRepository.removeBlock(userId, targetId);

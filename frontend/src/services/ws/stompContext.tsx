@@ -43,8 +43,9 @@ export const StompProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 // defensive
                 notificationSubRef.current?.unsubscribe();
                 notificationSubRef.current = c.subscribe(
-                    "/user/queue/notifications",
+                    "/user/queue/notifications", // This handles all messages
                     (frame: IMessage) => {
+                        
                     }
                 );
             },
@@ -68,4 +69,5 @@ export const StompProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return <StompContext.Provider value={{ client, connected }}>{children}</StompContext.Provider>;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useStomp = () => useContext(StompContext);

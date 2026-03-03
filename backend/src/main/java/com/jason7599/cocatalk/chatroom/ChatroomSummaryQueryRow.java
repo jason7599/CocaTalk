@@ -12,7 +12,6 @@ import java.time.Instant;
  */
 public interface ChatroomSummaryQueryRow {
     Long getRoomId();
-    ChatroomType getRoomType();
     int getTotalMemberCount();
     Long getMyLastAck();
     Long getLastSeq();

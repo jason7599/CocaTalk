@@ -19,7 +19,7 @@ public class ChatroomService {
     public List<ChatroomSummary> getChatroomSummaries(Long userId) {
         List<ChatroomSummaryQueryRow> chatroomSummaryRows = chatroomRepository.getChatroomSummaries(userId);
 
-        List<ChatroomMemberNameRow> memberNameRows = chatroomRepository.fetchRoomMemberPreviewRows(
+        List<ChatroomMemberNameRow> memberNameRows = chatroomRepository.batchFetchMemberNameRows(
                 chatroomSummaryRows.stream().map(ChatroomSummaryQueryRow::getRoomId).toList(),
                 userId,
                 MEMBER_NAMES_PREVIEW_PER_ROOM
@@ -38,7 +38,6 @@ public class ChatroomService {
         return chatroomSummaryRows.stream()
                 .map(row -> new ChatroomSummary(
                         row.getRoomId(),
-                        row.getRoomType(),
                         memberNamesMap.getOrDefault(row.getRoomId(), List.of()),
                         row.getTotalMemberCount(),
                         row.getMyLastAck(),
@@ -52,5 +51,24 @@ public class ChatroomService {
                                 row.getLastMessageAt()
                         )
                 )).toList();
+    }
+
+    public ChatroomSummary getChatroomSummary(Long roomId, Long viewerId) {
+        ChatroomSummaryQueryRow row = chatroomRepository.getChatroomSummary(roomId, viewerId);
+        return new ChatroomSummary(
+                row.getRoomId(),
+                chatroomRepository.fetchMemberNamesPreview(roomId, viewerId, MEMBER_NAMES_PREVIEW_PER_ROOM),
+                row.getTotalMemberCount(),
+                row.getMyLastAck(),
+                new MessageSummary(
+                        row.getRoomId(),
+                        row.getLastSeq(),
+                        row.getLastMessageKind(),
+                        row.getLastMessageEventType(),
+                        row.getLastSenderName(),
+                        row.getLastMessage(),
+                        row.getLastMessageAt()
+                )
+        );
     }
 }

@@ -5,6 +5,7 @@ package com.jason7599.cocatalk.chatroom;
  */
 public record ChatroomMemberNameRow(
         Long roomId,
+        Long userId,
         String username
 ) {
 }
