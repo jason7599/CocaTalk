@@ -6,6 +6,7 @@ import { useModal } from "../../shared/ModalContext";
 import { searchUsers } from "./contactsApi";
 import type { UserInfo } from "../../shared/types";
 import { useContactsStore } from "./contactsStore";
+import { useBlockedUsersStore } from "../userblock/blockedUsersStore";
 
 const MIN_QUERY_LENGTH = 3;
 const DEBOUNCE_MS = 400;
@@ -15,7 +16,7 @@ const UserEntry: React.FC<{ user: UserInfo }> = ({ user }) => {
     const isContact = useContactsStore((s) => !!s.contacts[user.userId]);
     const isAdding = useContactsStore((s) => s.addingIds.has(user.userId));
     const addContact = useContactsStore((s) => s.addContact);
-    const isBlocked = false; // TODO 
+    const isBlocked = useBlockedUsersStore((s) => !!s.blockedUsers[user.userId]);
 
     const disabled = isContact || isBlocked || isAdding;
 

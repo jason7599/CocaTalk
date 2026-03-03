@@ -2,14 +2,13 @@ import type React from "react";
 import {
     ChatBubbleLeftIcon,
     MagnifyingGlassIcon,
-    UserPlusIcon,
 } from "@heroicons/react/24/solid";
 import { useMemo, useState } from "react";
 import { useModal } from "../../shared/ModalContext";
 import AddContactModal from "./AddContactModal";
 import { useContactsStore } from "./contactsStore";
 import ContactActionsModal from "./ContactsActionModal";
-import { EllipsisVerticalIcon } from "@heroicons/react/24/outline";
+import { EllipsisVerticalIcon, UserCircleIcon, UserPlusIcon } from "@heroicons/react/24/outline";
 
 const ContactsTab: React.FC = () => {
 
@@ -106,15 +105,7 @@ const ContactsTab: React.FC = () => {
                             >
                                 <div className="min-w-0">
                                     <div className="flex items-center gap-3">
-                                        <div
-                                            className="
-                                                h-9 w-9 flex-none rounded-full
-                                                bg-gradient-to-br from-pink-500/20 to-red-500/20
-                                                ring-1 ring-white/10
-                                                shadow-[0_0_18px_rgba(244,63,94,0.15)]
-                                            "
-                                            aria-hidden="true"
-                                        />
+                                        <UserCircleIcon className="h-7 w-7 text-rose-400 opacity-80" />
                                         <div className="min-w-0">
                                             <div className="truncate font-semibold text-slate-100">
                                                 <span>{c.username}</span>
@@ -142,7 +133,7 @@ const ContactsTab: React.FC = () => {
                                     </button>
 
                                     <button
-                                        onClick={() => showModal(<ContactActionsModal contact={c}/>)}
+                                        onClick={() => showModal(<ContactActionsModal contact={c} />)}
                                         className="
                                             inline-flex items-center gap-1.5
                                             rounded-xl px-3 py-2 text-xs font-semibold
