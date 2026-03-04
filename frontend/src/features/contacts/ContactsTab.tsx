@@ -116,7 +116,7 @@ const ContactsTab: React.FC = () => {
 
                                 <div className="flex items-center gap-2">
                                     <button
-                                        // onClick={() => handleDm(contact.id)}
+                                        onClick={() => handleDm(contact.id)}
                                         className="
                                             inline-flex items-center gap-1.5
                                             rounded-xl px-3 py-2 text-xs font-semibold

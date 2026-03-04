@@ -2,22 +2,13 @@ import React, { useEffect, useRef, useState } from "react";
 import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
 import ChatHeader from "./ChatHeader";
 import { useStomp } from "../../services/ws/stompContext";
-import { useActiveRoomStore } from "./activeRoomStore";
+import { useActiveChatroomStore } from "./activeChatroomStore";
 import MessageBubble from "./MessageBubble";
 
 const ChatWindow: React.FC = () => {
     const { connected } = useStomp();
 
-    const chatEndpoint = useActiveRoomStore((s) => s.chatEndpoint);
-    const sendMessage = useActiveRoomStore((s) => s.sendMessage);
-
-    const roomStatus = useActiveRoomStore((s) => s.status);
-    const messages = useActiveRoomStore((s) => s.messages);
-
-    const hasMoreMessages = useActiveRoomStore((s) => s.hasMoreMessages);
-    const loadingOlderMessages = useActiveRoomStore((s) => s.loadingOlderMessages);
-    const loadOlderMessages = useActiveRoomStore((s) => s.loadOlderMessages);
-    const setNearBottomInStore = useActiveRoomStore((s) => s.setNearBottom);
+    const activeRoomId = useActiveChatroomStore((s) => s.activeRoomId);
 
     const [message, setMessage] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
@@ -25,10 +16,10 @@ const ChatWindow: React.FC = () => {
     useEffect(() => {
         setMessage("");
         inputRef.current?.focus();
-    }, [chatEndpoint]);
+    }, [activeRoomId]);
 
     const trimmed = message.trimStart();
-    const canSend = connected && chatEndpoint != null && trimmed.length > 0;
+    const canSend = connected && activeRoomId != null && trimmed.length > 0;
 
     const handleSend = () => {
         if (!canSend) return;
@@ -38,28 +29,21 @@ const ChatWindow: React.FC = () => {
         setMessage("");
         inputRef.current?.focus();
     };
-
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter") {
-            e.preventDefault();
-            handleSend();
-        }
-    };
-
+    
     // scroll behavior
     const didInitialScrollRef = useRef(false);
     const listRef = useRef<HTMLDivElement>(null);
     const skipAutoScrollRef = useRef(false);
     const [isNearBottom, setIsNearBottom] = useState(true);
-
+    
     // Sentinel refs
     const topSentinelRef = useRef<HTMLDivElement>(null);
     const bottomSentinelRef = useRef<HTMLDivElement>(null);
-
+    
     const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
         bottomSentinelRef.current?.scrollIntoView({ behavior, block: "end" });
     };
-
+    
     // NEW: Near-bottom tracking via bottom sentinel (no scroll math)
     useEffect(() => {
         const root = listRef.current;
@@ -81,7 +65,7 @@ const ChatWindow: React.FC = () => {
 
         io.observe(bottom);
         return () => io.disconnect();
-    }, [chatEndpoint, setNearBottomInStore]);
+    }, [activeRoomId]);
 
     // Infinite scroll (load older messages when top sentinel appears)
     useEffect(() => {
@@ -119,7 +103,7 @@ const ChatWindow: React.FC = () => {
         io.observe(sentinel);
         return () => io.disconnect();
     }, [
-        chatEndpoint,
+        activeRoomId,
         roomStatus,
         hasMoreMessages,
         loadingOlderMessages,
@@ -152,7 +136,14 @@ const ChatWindow: React.FC = () => {
         scrollToBottom("smooth");
     }, [messages.length, isNearBottom]);
 
-    if (chatEndpoint == null) {
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            handleSend();
+        }
+    };
+
+    if (activeRoomId == null) {
         return (
             <div className="flex-1 flex items-center justify-center text-slate-400 text-lg bg-[#0b0b14]">
                 Select a chatroom to start chatting
@@ -207,7 +198,7 @@ const ChatWindow: React.FC = () => {
             </div>
 
             {/* JUMP TO LATEST (overlay, does NOT affect scrollHeight) */}
-            {chatEndpoint != null && !isNearBottom && (
+            {!isNearBottom && (
                 <div className="pointer-events-none absolute bottom-28 left-0 right-0 z-20 flex justify-center">
                     <button
                         onClick={() => scrollToBottom("smooth")}
