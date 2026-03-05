@@ -1,7 +1,20 @@
 import { create } from "zustand";
-import type { UserInfo } from "../../shared/types";
+import type { ChatroomMeta, UserInfo } from "../../shared/types";
+import { bootstrap } from "./chatroomApi";
+import { useChatroomsStore } from "./chatroomsStore";
 
 const ACK_DEBOUNCE_MS = 400;
+
+interface ChatroomData {
+    meta: ChatroomMeta;
+    members: Record<number, UserInfo>; // Record allows username resolution when displaying messages
+    messages: MessageResponse[];
+
+    // pagination stuff 
+    nextCursor: number | null;
+    hasMoreMessages: boolean;
+    loadingOlderMessages: boolean;
+};
 
 type ActiveChatroomState = {
     // currently opened chatroom
@@ -11,13 +24,8 @@ type ActiveChatroomState = {
     status: "IDLE" | "LOADING" | "READY" | "ERROR";
     error: string | null;
 
-    members: Record<number, UserInfo>; // Record allows username resolution when displaying messages
-    messages: MessageResponse[];
-
-    // pagination stuff 
-    nextCursor: number | null;
-    hasMoreMessages: boolean;
-    loadingOlderMessages: boolean;
+    // room session contents
+    data: ChatroomData | null;
 
     // UI behavior for ACK
     isNearBottom: boolean; // whether user is currently near the bottom of the message list in the UI
@@ -30,7 +38,7 @@ type ActiveChatroomState = {
     // stale fetch guards
     _epoch: number; // increments every time the active room changes, used to invalidate async fetches from previous rooms
     _abort: AbortController | null; // for canceling ongoing fetches when switching rooms
-    
+
     setActiveChatroom: (roomId: number) => void;
     clearActiveChatroom: () => void;
 
@@ -76,16 +84,11 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             status: "LOADING",
             error: null,
 
-            members: {},
-            messages: [],
+            data: null,
 
-            nextCursor: null,
-            hasMoreMessages: false,
-            loadingOlderMessages: false,
-            
             _abort: abort,
             _epoch: nextEpoch,
-            
+
             isNearBottom: true,
             _ackTimer: null,
             _pendingAck: 0,
@@ -104,25 +107,27 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
 
     const loadInitialRoomData = async (roomId: number, epoch: number, abort: AbortController) => {
         try {
-            // todo: fetch ChatroomMeta, Members & message page
-            const [messagePage, memberInfos] = await Promise.all([
-                loadMessages(roomId, { signal: abort.signal }),
-                getMembersInfo(roomId, { signal: abort.signal })
-            ]);
+            const bootstrapData = await bootstrap(roomId);
 
             if (!isStillCurrent(roomId, epoch, abort)) return;
 
-            const members = Object.fromEntries(memberInfos.map((m) => [m.id, m]));
+            const members = Object.fromEntries(
+                bootstrapData.members.map((m) => [m.userId, m])
+            );
 
             set({
                 status: "READY",
-                messages: messagePage.messages,
-                nextCursor: messagePage.nextCursor,
-                hasMoreMessages: messagePage.hasMore,
-                members
+                data: {
+                    meta: bootstrapData.meta,
+                    members,
+                    messages: bootstrapData.messages,
+                    nextCursor: bootstrapData.nextCursor,
+                    hasMoreMessages: bootstrapData.hasMore,
+                    loadingOlderMessages: false
+                },
             });
 
-            // After initial load, if we're near bottom (typical), ack latest.
+            // After initial load, if we're near bottom, typical, ack latest.
             get()._maybeAckLatestVisible();
 
         } catch (err: any) {
@@ -141,16 +146,11 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
         status: "IDLE",
         error: null,
 
-        members: {},
-        messages: [],
+        data: null,
 
-        nextCursor: null,
-        hasMoreMessages: false,
-        loadingOlderMessages: false,
-        
         _epoch: 0,
         _abort: null,
-        
+
         isNearBottom: true,
         _ackTimer: null,
         _pendingAck: 0,
@@ -177,12 +177,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
                 status: "IDLE",
                 error: null,
 
-                members: {},
-                messages: [],
-
-                nextCursor: null,
-                hasMoreMessages: false,
-                loadingOlderMessages: false,
+                data: null,
 
                 _epoch: get()._epoch + 1
             });
@@ -209,7 +204,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
         receiveMessage: (msg) => {
             console.log("receive", msg);
         },
-        
+
         // ack public api
         setNearBottom: (near) => {
             const prev = get().isNearBottom;
@@ -224,23 +219,27 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
         ackUpTo: (seq) => {
             // monotonic
             const s = get();
+            if (s.activeRoomId == null) return;
             if (seq <= s._pendingAck) return;
 
             set({ _pendingAck: seq });
-            
+
             // schedule a debounce flush
             get()._scheduleAckFlush();
-            
-            // todo: useChatroomsStore.getState().setMyLastAck(s.chatEndpoint.roomId, nextPending);
+
+            useChatroomsStore.getState().setMyLastAck(s.activeRoomId, seq);
         },
-        
+
         _maybeAckLatestVisible: () => {
             const s = get();
-            
-            if (!s.isNearBottom) return;
-            if (s.messages.length === 0) return;
 
-            get().ackUpTo(s.messages.at(-1).seq);
+            if (!s.isNearBottom) return;
+            if (s.status !== "READY") return;
+
+            const messages = s.data!.messages;
+            if (messages.length === 0) return;
+
+            get().ackUpTo(messages.at(-1).seq);
         },
 
         _scheduleAckFlush: () => {
@@ -290,49 +289,77 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             });
         },
 
-        loadOlderMessages: async () => {
+        lloadOlderMessages: async () => {
             const s = get();
-            const roomId = s.activeRoomId;
 
-            if (roomId == null) return;
             if (s.status !== "READY") return;
-            if (s.loadingOlderMessages) return;
-            if (!s.hasMoreMessages) return;
-            if (s.nextCursor == null) return;
+
+            const roomId = s.activeRoomId;
+            const data = s.data;
+
+            if (!roomId || !data) return;
+            if (data.loadingOlderMessages) return;
+            if (!data.hasMoreMessages) return;
+            if (data.nextCursor == null) return;
 
             const epoch = s._epoch;
             const abort = s._abort;
-
             if (!abort) return;
 
-            set({ loadingOlderMessages: true });
+            // mark loading
+            set((cur) => {
+                if (cur.status !== "READY") return cur;
+
+                return {
+                    data: {
+                        ...cur.data!,
+                        loadingOlderMessages: true
+                    }
+                };
+            });
 
             try {
                 const page = await loadMessages(roomId, {
-                    cursor: s.nextCursor,
-                    signal: abort?.signal,
+                    cursor: data.nextCursor,
+                    signal: abort.signal
                 });
 
-                if (!isStillCurrent(roomId, epoch, abort)) {
-                    return;
-                }
+                if (!isStillCurrent(roomId, epoch, abort)) return;
 
                 set((cur) => {
+                    if (cur.status !== "READY") return cur;
+
                     return {
-                        messages: [...page.messages, ...cur.messages],
-                        nextCursor: page.nextCursor,
-                        hasMoreMessages: page.hasMore
+                        data: {
+                            ...cur.data!,
+                            messages: [...page.messages, ...cur.data!.messages],
+                            nextCursor: page.nextCursor,
+                            hasMoreMessages: page.hasMore,
+                            loadingOlderMessages: false
+                        }
                     };
                 });
+
             } catch (err: any) {
                 if (!abort.signal.aborted) {
                     set({ error: err.message });
                 }
-            } finally {
+
                 if (isStillCurrent(roomId, epoch, abort)) {
-                    set({ loadingOlderMessages: false });
+                    set((cur) => {
+                        if (cur.status !== "READY") return cur;
+
+                        return {
+                            data: {
+                                ...cur.data!,
+                                loadingOlderMessages: false
+                            }
+                        };
+                    });
                 }
             }
-        },
+        }
+
+        
     };
 });

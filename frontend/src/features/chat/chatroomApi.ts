@@ -1,12 +1,12 @@
 import api from "../../services/api";
-import type { ChatroomMeta } from "../../shared/types";
+import type { ChatroomBootstrapDto } from "../../shared/types";
 
 export async function resolveDirectChatroom(targetUserId: number): Promise<number> {
     return (await api.post("/chats/direct", { targetUserId })).data;
 };
 
-export async function getChatroomMeta(roomId: number): Promise<ChatroomMeta> {
-    return (await api.get(`/chats/${roomId}/meta`)).data;
+export async function bootstrap(roomId: number): Promise<ChatroomBootstrapDto> {
+    return (await api.get(`/chats/${roomId}/bootstrap`)).data;
 }
 
 // omit cursor for inital load - loading latest messages

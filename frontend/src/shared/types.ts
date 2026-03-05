@@ -61,3 +61,9 @@ export type ChatroomMeta =
         groupCreatorId: number;
     }
 ;
+
+export interface ChatroomBootstrapDto {
+    meta: ChatroomMeta;
+    members: UserInfo[]; // includes self
+    // todo: initial message page
+};
