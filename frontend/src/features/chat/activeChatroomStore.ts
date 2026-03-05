@@ -19,31 +19,33 @@ type ActiveChatroomState = {
     hasMoreMessages: boolean;
     loadingOlderMessages: boolean;
 
-    // stale fetch guards
-    _epoch: number; // increments every time the active room changes, used to invalidate async fetches from previous rooms
-    _abort: AbortController | null; // for canceling ongoing fetches when switching rooms
+    // UI behavior for ACK
+    isNearBottom: boolean; // whether user is currently near the bottom of the message list in the UI
 
     // ACK state
-    _isNearBottom: boolean; // whether user is currently near the bottom of the message list in the UI
     _ackTimer: number | null; // timer ID for the debounced ACK flush
     _pendingAck: number; // highest seq number scheduled to be ACKed
     _lastSentAck: number; // last highest ACK actually sent to the server
 
+    // stale fetch guards
+    _epoch: number; // increments every time the active room changes, used to invalidate async fetches from previous rooms
+    _abort: AbortController | null; // for canceling ongoing fetches when switching rooms
+    
     setActiveChatroom: (roomId: number) => void;
     clearActiveChatroom: () => void;
 
     sendMessage: (content: string) => void;
     receiveMessage: (msg: MessageResponse) => void;
 
+    loadOlderMessages: () => Promise<void>;
+
     setNearBottom: (near: boolean) => void;
     ackUpTo: (seq: number) => void;
 
-    scheduleAckFlush: () => void;
-    flushAckNow: () => void;
+    _scheduleAckFlush: () => void;
+    _flushAckNow: () => void;
 
     _maybeAckLatestVisible: () => void;
-
-    loadOlderMessages: () => Promise<void>;
 };
 
 /**
@@ -59,7 +61,7 @@ type ActiveChatroomState = {
 export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => {
 
     /**
-     * Starts a new room transaction by:
+     * Sets the activeRoomId, and starts a new room transaction by:
      * 1. Incrementing the _epoch, invalidates previous requests
      * 2. Create a new abort controller
      * 3. Reset room related state
@@ -80,11 +82,11 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             nextCursor: null,
             hasMoreMessages: false,
             loadingOlderMessages: false,
-
+            
             _abort: abort,
             _epoch: nextEpoch,
-
-            _isNearBottom: true,
+            
+            isNearBottom: true,
             _ackTimer: null,
             _pendingAck: 0,
             _lastSentAck: 0,
@@ -102,6 +104,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
 
     const loadInitialRoomData = async (roomId: number, epoch: number, abort: AbortController) => {
         try {
+            // todo: fetch ChatroomDetails & message page
             const [messagePage, memberInfos] = await Promise.all([
                 loadMessages(roomId, { signal: abort.signal }),
                 getMembersInfo(roomId, { signal: abort.signal })
@@ -144,11 +147,11 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
         nextCursor: null,
         hasMoreMessages: false,
         loadingOlderMessages: false,
-
+        
         _epoch: 0,
         _abort: null,
-
-        _isNearBottom: true,
+        
+        isNearBottom: true,
         _ackTimer: null,
         _pendingAck: 0,
         _lastSentAck: 0,
@@ -157,7 +160,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             const prevAbort = get()._abort;
             prevAbort?.abort();
 
-            get().flushAckNow(); // acks are forced when changing rooms
+            get()._flushAckNow(); // acks are forced when changing rooms
 
             const { epoch, abort } = beginRoomTransaction(roomId);
 
@@ -166,7 +169,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
 
         clearActiveChatroom: () => {
             get()._abort?.abort();
-            get().flushAckNow();
+            get()._flushAckNow();
 
             set({
                 activeRoomId: null,
@@ -196,6 +199,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
 
             console.log("Send", body);
 
+            // todo
             // stompClient.publish({
             //     destination: "/app/chat.send",
             //     body: JSON.stringify(body)
@@ -205,11 +209,11 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
         receiveMessage: (msg) => {
             console.log("receive", msg);
         },
-
+        
         // ack public api
         setNearBottom: (near) => {
-            const prev = get()._isNearBottom;
-            set({ _isNearBottom: near });
+            const prev = get().isNearBottom;
+            set({ isNearBottom: near });
 
             // If user just scrolled back to bottom, ack whatever is now visible
             if (!prev && near) {
@@ -225,17 +229,21 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             set({ _pendingAck: seq });
             
             // schedule a debounce flush
-            get().scheduleAckFlush();
+            get()._scheduleAckFlush();
             
-            // useChatroomsStore.getState().setMyLastAck(s.chatEndpoint.roomId, nextPending);
+            // todo: useChatroomsStore.getState().setMyLastAck(s.chatEndpoint.roomId, nextPending);
         },
-
+        
         _maybeAckLatestVisible: () => {
-            if (!get()._isNearBottom || get().messages.length === 0) return;
-            get().ackUpTo(lastSeq);
+            const s = get();
+            
+            if (!s.isNearBottom) return;
+            if (s.messages.length === 0) return;
+
+            get().ackUpTo(s.messages.at(-1).seq);
         },
 
-        scheduleAckFlush: () => {
+        _scheduleAckFlush: () => {
             const s = get();
 
             // only when no scheduled task
@@ -246,13 +254,13 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             const timer = window.setTimeout(() => {
                 const cur = get();
                 if (cur.activeRoomId !== roomId) return;
-                get().flushAckNow();
+                get()._flushAckNow();
             }, ACK_DEBOUNCE_MS);
 
             set({ _ackTimer: timer });
         },
 
-        flushAckNow: () => {
+        _flushAckNow: () => {
             const s = get();
 
             if (s._ackTimer != null) {

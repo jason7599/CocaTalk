@@ -9,10 +9,20 @@ const ChatWindow: React.FC = () => {
     const { connected } = useStomp();
 
     const activeRoomId = useActiveChatroomStore((s) => s.activeRoomId);
+    const roomStatus = useActiveChatroomStore((s) => s.status);
+    const messages = useActiveChatroomStore((s) => s.messages);
+    const hasMoreMessages = useActiveChatroomStore((s) => s.hasMoreMessages);
+    const loadingOlderMessages = useActiveChatroomStore((s) => s.loadingOlderMessages);
+    const isNearBottom = useActiveChatroomStore((s) => s.isNearBottom);
+    const setNearBottom = useActiveChatroomStore((s) => s.setNearBottom);
+    const loadOlderMessages = useActiveChatroomStore((s) => s.loadOlderMessages);
+    const sendMessage = useActiveChatroomStore((s) => s.sendMessage);
+
 
     const [message, setMessage] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
 
+    // clear message input on room change
     useEffect(() => {
         setMessage("");
         inputRef.current?.focus();
@@ -29,22 +39,21 @@ const ChatWindow: React.FC = () => {
         setMessage("");
         inputRef.current?.focus();
     };
-    
+
     // scroll behavior
     const didInitialScrollRef = useRef(false);
     const listRef = useRef<HTMLDivElement>(null);
     const skipAutoScrollRef = useRef(false);
-    const [isNearBottom, setIsNearBottom] = useState(true);
-    
+
     // Sentinel refs
     const topSentinelRef = useRef<HTMLDivElement>(null);
     const bottomSentinelRef = useRef<HTMLDivElement>(null);
-    
+
     const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
         bottomSentinelRef.current?.scrollIntoView({ behavior, block: "end" });
     };
-    
-    // NEW: Near-bottom tracking via bottom sentinel (no scroll math)
+
+    // Near-bottom tracking via bottom sentinel
     useEffect(() => {
         const root = listRef.current;
         const bottom = bottomSentinelRef.current;
@@ -53,8 +62,7 @@ const ChatWindow: React.FC = () => {
         const io = new IntersectionObserver(
             ([entry]) => {
                 const near = entry.isIntersecting;
-                setIsNearBottom(near);
-                setNearBottomInStore(near);
+                setNearBottom(near);
             },
             {
                 root,
@@ -65,7 +73,7 @@ const ChatWindow: React.FC = () => {
 
         io.observe(bottom);
         return () => io.disconnect();
-    }, [activeRoomId]);
+    }, [activeRoomId, setNearBottom]);
 
     // Infinite scroll (load older messages when top sentinel appears)
     useEffect(() => {
@@ -114,9 +122,8 @@ const ChatWindow: React.FC = () => {
     useEffect(() => {
         didInitialScrollRef.current = false;
         skipAutoScrollRef.current = false;
-        setIsNearBottom(true);
-        setNearBottomInStore(true);
-    }, [chatEndpoint, setNearBottomInStore]);
+        setNearBottom(true);
+    }, [activeRoomId, setNearBottom]);
 
     // Initial scroll to bottom once messages render
     useEffect(() => {

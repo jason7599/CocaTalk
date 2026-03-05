@@ -12,7 +12,7 @@ import java.util.List;
 public record ChatroomDetails(
         Long roomId,
         ChatroomType type,
-        List<UserInfo> otherMembers, // does not include the requester
+        List<UserInfo> members, // does not include the requester
         Long groupCreatorId, // only for group chats
         boolean blockedByOtherUser // only for direct, whether the other user has blocked me
 ) {

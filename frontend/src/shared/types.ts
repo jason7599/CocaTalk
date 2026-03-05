@@ -3,6 +3,13 @@ export interface UserInfo {
     username: string;
 };
 
+export interface UserBootstrapDto {
+    chatroomSummaries: ChatroomSummary[];
+    contacts: UserInfo[];
+    blockedUsers: UserInfo[];
+};
+
+
 export type MessageKind = "USER" | "EVENT";
 export type EventMessageType =
     | "GROUP_CREATED"
@@ -14,7 +21,7 @@ interface BaseMessage {
     roomId: number;
     seq: number;
     createdAt: string;
-}
+};
 
 export type UserMessage = BaseMessage & {
     kind: "USER";
@@ -32,6 +39,7 @@ export type EventMessage = BaseMessage & {
 
 export type MessageSummary = UserMessage | EventMessage;
 
+
 export type ChatroomType = "DIRECT" | "GROUP";
 
 export interface ChatroomSummary {
@@ -43,8 +51,17 @@ export interface ChatroomSummary {
     lastMessage: MessageSummary;
 };
 
-export interface UserBootstrapDto {
-    chatroomSummaries: ChatroomSummary[];
-    contacts: UserInfo[];
-    blockedUsers: UserInfo[];
-};
+export type ChatroomDetails =
+    | {
+        roomId: number;
+        type: "DIRECT";
+        members: UserInfo[];
+        directChatBlocked: boolean;
+    }
+    | {
+        roomId: number;
+        type: "GROUP";
+        members: UserInfo[];
+        groupCreatorId: number;
+    }
+;
