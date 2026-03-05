@@ -15,7 +15,7 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
-    private final UserBootstrapService bootstrapService;
+    private final SessionBootstrapService sessionBootstrapService;
     private final UserRelationService userRelationService;
 
     @GetMapping("/me")
@@ -25,7 +25,7 @@ public class UserController {
 
     @GetMapping("/me/bootstrap")
     public UserBootstrapDto bootstrap(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        return bootstrapService.bootstrap(userDetails.getId());
+        return sessionBootstrapService.bootstrap(userDetails.getId());
     }
 
     @GetMapping("/search")

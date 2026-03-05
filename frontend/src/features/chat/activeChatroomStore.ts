@@ -104,7 +104,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
 
     const loadInitialRoomData = async (roomId: number, epoch: number, abort: AbortController) => {
         try {
-            // todo: fetch ChatroomDetails & message page
+            // todo: fetch ChatroomMeta, Members & message page
             const [messagePage, memberInfos] = await Promise.all([
                 loadMessages(roomId, { signal: abort.signal }),
                 getMembersInfo(roomId, { signal: abort.signal })

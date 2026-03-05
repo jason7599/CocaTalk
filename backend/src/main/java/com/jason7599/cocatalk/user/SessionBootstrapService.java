@@ -7,12 +7,11 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class UserBootstrapService {
+public class SessionBootstrapService {
 
     private final ChatroomService chatroomService;
     private final UserRelationService userRelationService;
 
-    // "because semantically, bootstrap() is NOT user domain behavior"
     public UserBootstrapDto bootstrap(Long userId) {
         return new UserBootstrapDto(
                 chatroomService.getChatroomSummaries(userId),

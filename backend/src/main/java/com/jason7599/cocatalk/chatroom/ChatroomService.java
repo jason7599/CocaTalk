@@ -20,7 +20,6 @@ public class ChatroomService {
     private static final int MEMBER_NAMES_PREVIEW_PER_ROOM = 4;
 
     private final ChatroomRepository chatroomRepository;
-    private final ChatroomMemberService chatroomMemberService;
     private final UserRelationService userRelationService;
 
     public List<ChatroomSummary> getChatroomSummaries(Long userId) {
@@ -64,8 +63,14 @@ public class ChatroomService {
                 )).toList();
     }
 
+    public void assertMembership(Long roomId, Long userId) {
+        if (!chatroomRepository.isChatroomMember(roomId, userId)) {
+            throw new ApiError(HttpStatus.FORBIDDEN, "Not a member of this room");
+        }
+    }
+
     public ChatroomSummary getChatroomSummary(Long roomId, Long viewerId) {
-        chatroomMemberService.assertMembership(roomId, viewerId);
+        assertMembership(roomId, viewerId);
 
         ChatroomSummaryQueryRow row = chatroomRepository.getChatroomSummary(roomId, viewerId);
         return new ChatroomSummary(
@@ -102,9 +107,16 @@ public class ChatroomService {
         return roomId;
     }
 
-    public ChatroomMeta fetchMetadata(Long roomId, Long viewerId) {
-        chatroomMemberService.assertMembership(roomId, viewerId);
+    public ChatroomBootstrapDto bootstrap(Long roomId, Long viewerId) {
+        assertMembership(roomId, viewerId);
 
+        return new ChatroomBootstrapDto(
+                fetchMetadata(roomId, viewerId),
+                chatroomRepository.fetchMembers(roomId)
+        );
+    }
+
+    private ChatroomMeta fetchMetadata(Long roomId, Long viewerId) {
         ChatroomEntity room = chatroomRepository.findById(roomId)
                 .orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND, "Room not found"));
 
