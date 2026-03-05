@@ -21,10 +21,10 @@ public class ChatroomController {
     }
 
     @PostMapping("/direct")
-    public ChatroomDetails getOrCreateDirectChatroom(
+    public Long resolveDirectChatroom(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody DirectChatRequest request
     ) {
-        return chatroomService.getOrCreateDirectChatroom(userDetails.getId(), request.targetUserId());
+        return chatroomService.resolveDirectChatroom(userDetails.getId(), request.targetUserId());
     }
 }

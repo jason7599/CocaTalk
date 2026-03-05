@@ -90,26 +90,14 @@ public class ChatroomService {
      * @param targetId The target user of this direct chatroom
      */
     @Transactional
-    public ChatroomDetails getOrCreateDirectChatroom(Long requesterId, Long targetId) {
+    public Long resolveDirectChatroom(Long requesterId, Long targetId) {
         if (requesterId.equals(targetId)) {
             throw new ApiError(HttpStatus.BAD_REQUEST, "Cannot create direct chatroom with self");
         }
 
-        // throws 404 if not found
-        UserInfo targetUser = userService.getUserInfo(targetId);
-
-        boolean blockedByTarget = userRelationService.hasBlocked(targetId, requesterId);
-
         Long roomId = chatroomRepository.getOrCreateDirectChatroom(requesterId, targetId);
-
         chatroomRepository.ensureDirectChatroomMembers(roomId, requesterId, targetId);
 
-        return new ChatroomDetails(
-                roomId,
-                ChatroomType.DIRECT,
-                List.of(targetUser),
-                null,
-                blockedByTarget
-        );
+        return roomId;
     }
 }
