@@ -9,6 +9,7 @@ import AddContactModal from "./AddContactModal";
 import { useContactsStore } from "./contactsStore";
 import ContactActionsModal from "./ContactsActionModal";
 import { EllipsisVerticalIcon, UserCircleIcon, UserPlusIcon } from "@heroicons/react/24/outline";
+import { openDirectChatroom } from "../chat/chatroomActions";
 
 const ContactsTab: React.FC = () => {
 
@@ -30,7 +31,7 @@ const ContactsTab: React.FC = () => {
     }, [contactList, search]);
 
     const handleDm = (targetId: number) => {
-        console.log("HIIII", targetId);
+        openDirectChatroom(targetId);
     };
 
     return (

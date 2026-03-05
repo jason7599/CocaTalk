@@ -115,7 +115,7 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
     @Query(value = """
             INSERT INTO rooms (type, direct_user_id1, direct_user_id2)
             VALUES ('DIRECT', LEAST(:u1, :u2), GREATEST(:u1, :u2))
-            ON CONFLICT ON CONSTRAINT uniq_direct_room
+            ON CONFLICT (direct_user_id1, direct_user_id2) WHERE type = 'DIRECT'
             DO UPDATE SET id = rooms.id -- This is just a harmless no-op update so that it returns this existing row
             RETURNING id
             """, nativeQuery = true)

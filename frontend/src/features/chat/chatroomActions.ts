@@ -1,11 +1,12 @@
 import { useActiveChatroomStore } from "./activeChatroomStore";
+import { resolveDirectChatroom } from "./chatroomApi";
 import { useChatroomsStore } from "./chatroomsStore";
 
-export async function getOrCreateDirectChat(targetUserId: number) {
+export async function openDirectChatroom(targetUserId: number) {
     const chatrooms = useChatroomsStore.getState();
     const active = useActiveChatroomStore.getState();
 
-    // 1. search locally
+    // first, search locally
     const existing = chatrooms.chatrooms.find(
         r =>
             r.type === "DIRECT"
@@ -14,5 +15,7 @@ export async function getOrCreateDirectChat(targetUserId: number) {
 
     if (existing) {
         active.setActiveChatroom(existing.roomId);
+    } else {
+        active.setActiveChatroom(await resolveDirectChatroom(targetUserId));
     }
 };

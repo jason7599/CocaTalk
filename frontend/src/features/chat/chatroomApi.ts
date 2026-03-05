@@ -1,6 +1,6 @@
 import api from "../../services/api";
 
-export async function resolveDirectChatroomId(targetUserId: number): Promise<number> {
+export async function resolveDirectChatroom(targetUserId: number): Promise<number> {
     return (await api.post("/chats/direct", { targetUserId })).data;
 };
 
