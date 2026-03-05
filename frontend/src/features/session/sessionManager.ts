@@ -1,5 +1,6 @@
 import api from "../../services/api";
 import type { UserBootstrapDto } from "../../shared/types";
+import { useChatroomsStore } from "../chat/chatroomsStore";
 import { useContactsStore } from "../contacts/contactsStore";
 import { useBlockedUsersStore } from "../userblock/blockedUsersStore";
 
@@ -13,7 +14,7 @@ export const sessionManager = {
 
         try {
             const res = (await api.get<UserBootstrapDto>("/users/me/bootstrap")).data;
-            // useChatroomsStore.getState().hydrate(res.chatroomSummaries);
+            useChatroomsStore.getState().hydrate(res.chatroomSummaries);
             useContactsStore.getState().hydrate(res.contacts);
             useBlockedUsersStore.getState().hydrate(res.blockedUsers);
         } finally {
@@ -22,7 +23,7 @@ export const sessionManager = {
     },
 
     clearSession() {
-        // useChatroomsStore.getState().reset();
+        useChatroomsStore.getState().reset();
         useContactsStore.getState().reset();
         useBlockedUsersStore.getState().reset();
     },

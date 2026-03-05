@@ -29,6 +29,10 @@ const ContactsTab: React.FC = () => {
         return contactList.filter(c => c.username.toLowerCase().includes(q));
     }, [contactList, search]);
 
+    const handleDm = (targetId: number) => {
+        console.log("HIIII", targetId);
+    };
+
     return (
         <div className="flex flex-col gap-4 p-4 text-slate-100">
             {/* Top Controls */}
@@ -116,7 +120,7 @@ const ContactsTab: React.FC = () => {
 
                                 <div className="flex items-center gap-2">
                                     <button
-                                        onClick={() => handleDm(contact.id)}
+                                        onClick={() => handleDm(c.userId)}
                                         className="
                                             inline-flex items-center gap-1.5
                                             rounded-xl px-3 py-2 text-xs font-semibold
