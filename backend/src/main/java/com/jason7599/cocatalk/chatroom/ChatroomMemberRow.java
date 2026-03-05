@@ -1,9 +1,9 @@
 package com.jason7599.cocatalk.chatroom;
 
 /**
- * Used for batch fetching room member names
+ * Used for batch fetching room members
  */
-public record ChatroomMemberNameRow(
+public record ChatroomMemberRow(
         Long roomId,
         Long userId,
         String username

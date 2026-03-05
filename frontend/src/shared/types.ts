@@ -36,7 +36,8 @@ export type ChatroomType = "DIRECT" | "GROUP";
 
 export interface ChatroomSummary {
     roomId: number;
-    memberNamesPreview: string[];
+    type: ChatroomType;
+    membersPreview: UserInfo[];
     totalMemberCount: number;
     myLastAck: number;
     lastMessage: MessageSummary;

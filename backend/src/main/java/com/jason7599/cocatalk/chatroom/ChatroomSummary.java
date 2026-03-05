@@ -1,6 +1,7 @@
 package com.jason7599.cocatalk.chatroom;
 
 import com.jason7599.cocatalk.message.MessageSummary;
+import com.jason7599.cocatalk.user.UserInfo;
 
 import java.util.List;
 
@@ -12,7 +13,8 @@ import java.util.List;
  */
 public record ChatroomSummary(
     Long roomId,
-    List<String> memberNamesPreview,
+    ChatroomType type,
+    List<UserInfo> membersPreview,
     int totalMemberCount,
     Long myLastAck,
     MessageSummary lastMessage

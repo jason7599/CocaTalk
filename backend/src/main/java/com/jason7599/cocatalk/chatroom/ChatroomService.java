@@ -23,23 +23,25 @@ public class ChatroomService {
     private final ChatroomRepository chatroomRepository;
     private final UserService userService;
     private final UserRelationService userRelationService;
-    private final ChatroomMemberService chatroomMemberService;
 
     public List<ChatroomSummary> getChatroomSummaries(Long userId) {
         List<ChatroomSummaryQueryRow> chatroomSummaryRows = chatroomRepository.getChatroomSummaries(userId);
 
-        List<ChatroomMemberNameRow> memberNameRows = chatroomRepository.batchFetchMemberNameRows(
+        List<ChatroomMemberRow> memberRows = chatroomRepository.batchFetchMemberRows(
                 chatroomSummaryRows.stream().map(ChatroomSummaryQueryRow::getRoomId).toList(),
                 userId,
                 MEMBER_NAMES_PREVIEW_PER_ROOM
         );
 
-        Map<Long, List<String>> memberNamesMap =
-                memberNameRows.stream()
+        Map<Long, List<UserInfo>> membersMap =
+                memberRows.stream()
                         .collect(Collectors.groupingBy(
-                                ChatroomMemberNameRow::roomId,
+                                ChatroomMemberRow::roomId,
                                 Collectors.mapping(
-                                        ChatroomMemberNameRow::username,
+                                        row -> new UserInfo(
+                                                row.userId(),
+                                                row.username()
+                                        ),
                                         Collectors.toList()
                                 )
                         ));
@@ -47,7 +49,8 @@ public class ChatroomService {
         return chatroomSummaryRows.stream()
                 .map(row -> new ChatroomSummary(
                         row.getRoomId(),
-                        memberNamesMap.getOrDefault(row.getRoomId(), List.of()),
+                        row.getRoomType(),
+                        membersMap.getOrDefault(row.getRoomId(), List.of()),
                         row.getTotalMemberCount(),
                         row.getMyLastAck(),
                         new MessageSummary(
@@ -66,7 +69,8 @@ public class ChatroomService {
         ChatroomSummaryQueryRow row = chatroomRepository.getChatroomSummary(roomId, viewerId);
         return new ChatroomSummary(
                 row.getRoomId(),
-                chatroomRepository.fetchMemberNamesPreview(roomId, viewerId, MEMBER_NAMES_PREVIEW_PER_ROOM),
+                row.getRoomType(),
+                chatroomRepository.fetchMembersPreview(roomId, viewerId, MEMBER_NAMES_PREVIEW_PER_ROOM),
                 row.getTotalMemberCount(),
                 row.getMyLastAck(),
                 new MessageSummary(

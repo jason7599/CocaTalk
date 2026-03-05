@@ -1,8 +1,6 @@
 import { create } from "zustand";
 import type { UserInfo } from "../../shared/types";
 
-
-
 const ACK_DEBOUNCE_MS = 400;
 
 type ActiveChatroomState = {
