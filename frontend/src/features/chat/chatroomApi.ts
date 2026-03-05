@@ -1,8 +1,13 @@
 import api from "../../services/api";
+import type { ChatroomMeta } from "../../shared/types";
 
 export async function resolveDirectChatroom(targetUserId: number): Promise<number> {
     return (await api.post("/chats/direct", { targetUserId })).data;
 };
+
+export async function getChatroomMeta(roomId: number): Promise<ChatroomMeta> {
+    return (await api.get(`/chats/${roomId}/meta`)).data;
+}
 
 // omit cursor for inital load - loading latest messages
 // limit is defaulted to 30 in the backend.

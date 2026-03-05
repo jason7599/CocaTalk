@@ -27,4 +27,12 @@ public class ChatroomController {
     ) {
         return chatroomService.resolveDirectChatroom(userDetails.getId(), request.targetUserId());
     }
+
+    @GetMapping("/{roomId}/meta")
+    public ChatroomMeta getMetadata(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long roomId
+    ) {
+        return chatroomService.fetchMetadata(roomId, userDetails.getId());
+    }
 }

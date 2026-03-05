@@ -142,4 +142,11 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             WHERE rm.room_id = :roomId
             """, nativeQuery = true)
     List<UserInfo> fetchMembers(@Param("roomId") Long roomId);
+
+    @Query(value = """
+            SELECT COUNT(*) > 0
+            FROM room_members
+            WHERE room_id = :roomId AND user_id = :userId
+            """, nativeQuery = true)
+    boolean isChatroomMember(@Param("roomId") Long roomId, @Param("userId") Long userId);
 }

@@ -3,7 +3,6 @@ package com.jason7599.cocatalk.chatroom;
 import com.jason7599.cocatalk.exception.ApiError;
 import com.jason7599.cocatalk.message.MessageSummary;
 import com.jason7599.cocatalk.user.UserInfo;
-import com.jason7599.cocatalk.user.UserService;
 import com.jason7599.cocatalk.user.relation.UserRelationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +20,7 @@ public class ChatroomService {
     private static final int MEMBER_NAMES_PREVIEW_PER_ROOM = 4;
 
     private final ChatroomRepository chatroomRepository;
-    private final UserService userService;
+    private final ChatroomMemberService chatroomMemberService;
     private final UserRelationService userRelationService;
 
     public List<ChatroomSummary> getChatroomSummaries(Long userId) {
@@ -66,6 +65,8 @@ public class ChatroomService {
     }
 
     public ChatroomSummary getChatroomSummary(Long roomId, Long viewerId) {
+        chatroomMemberService.assertMembership(roomId, viewerId);
+
         ChatroomSummaryQueryRow row = chatroomRepository.getChatroomSummary(roomId, viewerId);
         return new ChatroomSummary(
                 row.getRoomId(),
@@ -99,5 +100,29 @@ public class ChatroomService {
         chatroomRepository.ensureDirectChatroomMembers(roomId, requesterId, targetId);
 
         return roomId;
+    }
+
+    public ChatroomMeta fetchMetadata(Long roomId, Long viewerId) {
+        chatroomMemberService.assertMembership(roomId, viewerId);
+
+        ChatroomEntity room = chatroomRepository.findById(roomId)
+                .orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND, "Room not found"));
+
+        if (room.getType() == ChatroomType.DIRECT) {
+            Long otherUserId = room.getDirectUserId1().equals(viewerId)
+                    ? room.getDirectUserId2()
+                    : room.getDirectUserId1();
+            return new ChatroomMeta(
+                    ChatroomType.DIRECT,
+                    null,
+                    userRelationService.hasBlocked(otherUserId, viewerId)
+            );
+        } else {
+            return new ChatroomMeta(
+                    ChatroomType.GROUP,
+                    room.getGroupCreatorId(),
+                    false
+            );
+        }
     }
 }

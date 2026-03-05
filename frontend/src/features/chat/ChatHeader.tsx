@@ -1,40 +1,27 @@
 import type React from "react";
 import { EllipsisVerticalIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { useActiveChatroomStore } from "./activeChatroomStore";
+import { useRequiredAuth } from "../auth/AuthProvider";
+import { useContactsStore } from "../contacts/contactsStore";
+import { useChatroomsStore } from "./chatroomsStore";
+import { useStomp } from "../../services/ws/stompContext";
 
 const ChatHeader: React.FC = () => {
-    const chatEndpoint = useActiveRoomStore(s => s.chatEndpoint);
-    const clearActiveRoom = useActiveRoomStore(s => s.clearActiveRoom);
-
+    const activeRoomId = useActiveChatroomStore(s => s.activeRoomId);
+    const clearActiveRoom = useActiveChatroomStore(s => s.clearActiveChatroom);
+    
     const chatrooms = useChatroomsStore(s => s.chatrooms);
     const contacts = useContactsStore(s => s.contacts);
     const addContact = useContactsStore(s => s.addContact);
+    
     const connected = useStomp().connected;
-
-    const user = useUserStore((s) => s.user);
-    if (!user) return null;
-
-    if (!chatEndpoint) return null;
+    
+    const { user } = useRequiredAuth();
+    
+    if (!activeRoomId) return null;
 
     let displayName: string | null = null;
     let subjectUserId: number | null = null;
-
-    if (chatEndpoint.dmProxy) {
-        subjectUserId = chatEndpoint.otherUserId;
-        const contact = contacts.find(c => c.id === subjectUserId);
-        if (!contact) return null;
-        displayName = contact.username;
-    } else {
-        const room = chatrooms.find(r => r.id === chatEndpoint.roomId);
-        if (!room) return null;
-        displayName = getChatroomDisplayName(user.id, room);
-        if (room.type === "DIRECT") {
-            subjectUserId = room.otherUserId;
-        } else {
-            subjectUserId = room.groupCreatorId;
-        }
-    }
-
-    const subjectInContacts = !chatEndpoint.dmProxy && contacts.some(c => c.id === subjectUserId);
 
     return (
         <div className="relative z-10 border-b border-white/10 bg-[#0f0f18]/70 backdrop-blur-xl">

@@ -1,19 +1,10 @@
-import type { ChatroomSummary, RoomMemberInfo } from "../shared/types";
+import type { UserInfo } from "../types";
 
 export function deriveChatroomName(
     myId: number,
-    memberInfosPreview: RoomMemberInfo[],
+    members: UserInfo[],
     totalMemberCount: number
 ): string {
-    const otherMemberCount = totalMemberCount - 1;
-
-    if (otherMemberCount === 0) {
-        return "Empty Chatroom";
-    }
-
-    const memberNamesPreview = memberInfosPreview.filter(
-        m => m.userId !== myId
-    ).map(m => m.username);
 
     let res = memberNamesPreview.join(", ");
     if (otherMemberCount > memberNamesPreview.length) {

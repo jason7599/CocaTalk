@@ -51,17 +51,13 @@ export interface ChatroomSummary {
     lastMessage: MessageSummary;
 };
 
-export type ChatroomDetails =
+export type ChatroomMeta =
     | {
-        roomId: number;
         type: "DIRECT";
-        members: UserInfo[];
-        directChatBlocked: boolean;
+        blockedByOtherUser: boolean;
     }
     | {
-        roomId: number;
         type: "GROUP";
-        members: UserInfo[];
         groupCreatorId: number;
     }
 ;

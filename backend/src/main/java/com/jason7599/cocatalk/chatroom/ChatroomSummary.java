@@ -6,10 +6,11 @@ import com.jason7599.cocatalk.user.UserInfo;
 import java.util.List;
 
 /**
- * DTO to be sent to the FE to populate the sidebar.
- * 1. Batch-fetched upon user bootstrap after login
- * 2. WebSocket event when new chatroom is created
- * => (Direct chatroom created, group chatroom created, user invited to group)
+ * Lightweight representation of a chatroom used for rendering the chatroom list in the sidebar panel.
+ * This DTO is delivered to the client in 2 situations:
+ * 1. During user bootstrap ater login (batch-fetched for all chatrooms)
+ * 2. Via WebSocket events when the user's chatroom list should change
+ *  (e.g., direct chat created, group created, invited to group)
  */
 public record ChatroomSummary(
     Long roomId,
