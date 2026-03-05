@@ -23,8 +23,10 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
                 r.last_seq AS lastSeq,
                 lm.kind AS lastMessageKind,
                 lm.event_type AS lastMessageEventType,
+                lm.actor_id AS lastActorId,
                 ls.username AS lastSenderName,
                 lm.content AS lastMessage,
+                lm.event_data AS lastEventData,
                 lm.created_at AS lastMessageAt
             FROM room_members rm_me
             JOIN rooms r ON rm_me.room_id = r.id
@@ -50,8 +52,10 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
                 r.last_seq AS lastSeq,
                 lm.kind AS lastMessageKind,
                 lm.event_type AS lastMessageEventType,
+                lm.actor_id AS lastActorId,
                 ls.username AS lastSenderName,
                 lm.content AS lastMessage,
+                lm.event_data AS lastEventData,
                 lm.created_at AS lastMessageAt
             FROM room_members rm_me
             JOIN rooms r ON rm_me.room_id = r.id

@@ -1,5 +1,6 @@
 package com.jason7599.cocatalk.chatroom;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.jason7599.cocatalk.message.EventMessageType;
 import com.jason7599.cocatalk.message.MessageKind;
 
@@ -18,7 +19,9 @@ public interface ChatroomSummaryQueryRow {
     Long getLastSeq();
     MessageKind getLastMessageKind();
     EventMessageType getLastMessageEventType();
+    Long getLastActorId();
     String getLastSenderName();
     String getLastMessage();
+    JsonNode getLastEventData();
     Instant getLastMessageAt();
 }

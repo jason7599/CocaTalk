@@ -1,7 +1,7 @@
 package com.jason7599.cocatalk.chatroom;
 
 import com.jason7599.cocatalk.exception.ApiError;
-import com.jason7599.cocatalk.message.MessageSummary;
+import com.jason7599.cocatalk.message.MessageDto;
 import com.jason7599.cocatalk.user.UserInfo;
 import com.jason7599.cocatalk.user.relation.UserRelationService;
 import jakarta.transaction.Transactional;
@@ -51,13 +51,15 @@ public class ChatroomService {
                         membersMap.getOrDefault(row.getRoomId(), List.of()),
                         row.getTotalMemberCount(),
                         row.getMyLastAck(),
-                        new MessageSummary(
+                        new MessageDto(
                                 row.getRoomId(),
                                 row.getLastSeq(),
                                 row.getLastMessageKind(),
                                 row.getLastMessageEventType(),
+                                row.getLastActorId(),
                                 row.getLastSenderName(),
                                 row.getLastMessage(),
+                                row.getLastEventData(),
                                 row.getLastMessageAt()
                         )
                 )).toList();
@@ -79,13 +81,15 @@ public class ChatroomService {
                 chatroomRepository.fetchMembersPreview(roomId, viewerId, MEMBER_NAMES_PREVIEW_PER_ROOM),
                 row.getTotalMemberCount(),
                 row.getMyLastAck(),
-                new MessageSummary(
+                new MessageDto(
                         row.getRoomId(),
                         row.getLastSeq(),
                         row.getLastMessageKind(),
                         row.getLastMessageEventType(),
+                        row.getLastActorId(),
                         row.getLastSenderName(),
                         row.getLastMessage(),
+                        row.getLastEventData(),
                         row.getLastMessageAt()
                 )
         );
