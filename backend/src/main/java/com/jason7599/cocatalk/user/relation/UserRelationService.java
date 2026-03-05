@@ -73,4 +73,8 @@ public class UserRelationService {
     public void removeBlock(Long userId, Long targetId) {
         userRelationRepository.removeBlock(userId, targetId);
     }
+
+    public boolean hasBlocked(Long blockerId, Long blockeeId) {
+        return userRelationRepository.hasBlocked(blockerId, blockeeId);
+    }
 }

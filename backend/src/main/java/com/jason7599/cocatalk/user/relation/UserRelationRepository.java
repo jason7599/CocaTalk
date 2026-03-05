@@ -97,4 +97,17 @@ public class UserRelationRepository {
                 .setParameter("targetId", targetId)
                 .executeUpdate();
     }
+
+    public boolean hasBlocked(Long blockerId, Long blockeeId) {
+        return (Boolean) em.createNativeQuery("""
+                SELECT EXISTS (
+                    SELECT 1
+                    FROM blocks
+                    WHERE user_id = :blockerId AND blocked_id = :blockeeId
+                )
+                """)
+                .setParameter("blockerId", blockerId)
+                .setParameter("blockeeId", blockeeId)
+                .getSingleResult();
+    }
 }

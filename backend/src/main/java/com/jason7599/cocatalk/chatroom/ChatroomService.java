@@ -1,7 +1,13 @@
 package com.jason7599.cocatalk.chatroom;
 
+import com.jason7599.cocatalk.exception.ApiError;
 import com.jason7599.cocatalk.message.MessageSummary;
+import com.jason7599.cocatalk.user.UserInfo;
+import com.jason7599.cocatalk.user.UserService;
+import com.jason7599.cocatalk.user.relation.UserRelationService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,6 +21,9 @@ public class ChatroomService {
     private static final int MEMBER_NAMES_PREVIEW_PER_ROOM = 4;
 
     private final ChatroomRepository chatroomRepository;
+    private final UserService userService;
+    private final UserRelationService userRelationService;
+    private final ChatroomMemberService chatroomMemberService;
 
     public List<ChatroomSummary> getChatroomSummaries(Long userId) {
         List<ChatroomSummaryQueryRow> chatroomSummaryRows = chatroomRepository.getChatroomSummaries(userId);
@@ -69,6 +78,34 @@ public class ChatroomService {
                         row.getLastMessage(),
                         row.getLastMessageAt()
                 )
+        );
+    }
+
+    /**
+     * @param requesterId Requesting user of this operation
+     * @param targetId The target user of this direct chatroom
+     */
+    @Transactional
+    public ChatroomDetails getOrCreateDirectChatroom(Long requesterId, Long targetId) {
+        if (requesterId.equals(targetId)) {
+            throw new ApiError(HttpStatus.BAD_REQUEST, "Cannot create direct chatroom with self");
+        }
+
+        // throws 404 if not found
+        UserInfo targetUser = userService.getUserInfo(targetId);
+
+        boolean blockedByTarget = userRelationService.hasBlocked(targetId, requesterId);
+
+        Long roomId = chatroomRepository.getOrCreateDirectChatroom(requesterId, targetId);
+
+        chatroomRepository.ensureDirectChatroomMembers(roomId, requesterId, targetId);
+
+        return new ChatroomDetails(
+                roomId,
+                ChatroomType.DIRECT,
+                List.of(targetUser),
+                null,
+                blockedByTarget
         );
     }
 }

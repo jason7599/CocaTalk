@@ -1,6 +1,8 @@
 package com.jason7599.cocatalk.chatroom;
 
+import com.jason7599.cocatalk.user.UserInfo;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -104,13 +106,35 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             """, nativeQuery = true)
     List<String> fetchMemberNamesPreview(@Param("roomId") Long roomId, @Param("viewerId") Long viewerId, @Param("limit") int limit);
 
-//  No @Modifying since this query returns a row instead of an int (rows affected)
+    // No @Modifying since this query returns a row value instead of number of rows affected
     @Query(value = """
             INSERT INTO rooms (type, direct_user_id1, direct_user_id2)
             VALUES ('DIRECT', LEAST(:u1, :u2), GREATEST(:u1, :u2))
             ON CONFLICT ON CONSTRAINT uniq_direct_room
             DO UPDATE SET id = rooms.id -- This is just a harmless no-op update so that it returns this existing row
-            RETURNING *
+            RETURNING id
             """, nativeQuery = true)
-    ChatroomEntity getOrCreateDirectChatroom(@Param("u1") Long u1, @Param("u2") Long u2);
+    Long getOrCreateDirectChatroom(@Param("u1") Long u1, @Param("u2") Long u2);
+
+    /**
+     * Ensures that the 2 users participating in a DIRECT chatroom are present in room_members.
+     * This method is specifically intended for DIRECT chatrooms created via getOrCreateChatroom.
+     * This method is intentionally idempotent.
+     */
+    @Modifying
+    @Query(value = """
+            INSERT INTO room_members (room_id, user_id)
+            VALUES (:roomId, :u1), (:roomId, :u2)
+            ON CONFLICT DO NOTHING
+            """, nativeQuery = true)
+    void ensureDirectChatroomMembers(@Param("roomId") Long roomId, @Param("u1") Long u1, @Param("u2") Long u2);
+
+    @Query(value = """
+            SELECT
+                u.id AS userId,
+                u.username
+            FROM room_members rm JOIN users u ON rm.user_id = u.id
+            WHERE rm.room_id = :roomId
+            """, nativeQuery = true)
+    List<UserInfo> fetchMembers(@Param("roomId") Long roomId);
 }
