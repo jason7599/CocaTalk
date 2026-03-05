@@ -1,16 +1,15 @@
 import type React from "react";
+import { useRequiredAuth } from "../../auth/AuthProvider";
+import type { MessageDto } from "../../../shared/types";
+import { useActiveChatroomStore } from "../activeChatroomStore";
 
-type Props = {
-    message: MessageResponse;
-};
+const MessageBubble: React.FC<{ message: MessageDto }> = ({ message }) => {
+    const { user } = useRequiredAuth();
+    const isMe = message.actorId === user.userId;
 
-const MessageBubble: React.FC<Props> = ({ message }) => {
-    const user = useUserStore((s) => s.user);
-    const isMe = message.senderId === user?.id;
-
-    // const senderUsername = useActiveRoomStore(
-    //     (s) => s.members[message.senderId]?.username ?? ""
-    // );
+    const senderUsername = useActiveChatroomStore(
+        (s) => s.data?.members[message.actorId]?.username ?? ""
+    );
 
     return (
         <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>

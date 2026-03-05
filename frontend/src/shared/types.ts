@@ -60,6 +60,11 @@ export type ChatroomMeta =
     }
 ;
 
+export const EMPTY_META: ChatroomMeta = {
+    type: "DIRECT",
+    blockedByOtherUser: true
+};
+
 export interface ChatroomBootstrapDto {
     meta: ChatroomMeta;
     members: UserInfo[]; // includes self

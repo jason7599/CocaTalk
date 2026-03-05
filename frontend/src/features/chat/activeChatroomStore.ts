@@ -1,20 +1,9 @@
 import { create } from "zustand";
-import type { ChatroomMeta, UserInfo } from "../../shared/types";
+import { EMPTY_META, type ChatroomMeta, type MessageDto, type UserInfo } from "../../shared/types";
 import { bootstrap } from "./chatroomApi";
 import { useChatroomsStore } from "./chatroomsStore";
 
 const ACK_DEBOUNCE_MS = 400;
-
-interface ChatroomData {
-    meta: ChatroomMeta;
-    members: Record<number, UserInfo>; // Record allows username resolution when displaying messages
-    messages: MessageResponse[];
-
-    // pagination stuff 
-    nextCursor: number | null;
-    hasMoreMessages: boolean;
-    loadingOlderMessages: boolean;
-};
 
 type ActiveChatroomState = {
     // currently opened chatroom
@@ -25,7 +14,14 @@ type ActiveChatroomState = {
     error: string | null;
 
     // room session contents
-    data: ChatroomData | null;
+    meta: ChatroomMeta;
+    members: Record<number, UserInfo>; // Record allows username resolution when displaying messages
+    messages: MessageDto[];
+
+    // pagination stuff 
+    nextCursor: number | null;
+    hasMoreMessages: boolean;
+    loadingOlderMessages: boolean;
 
     // UI behavior for ACK
     isNearBottom: boolean; // whether user is currently near the bottom of the message list in the UI
@@ -43,7 +39,7 @@ type ActiveChatroomState = {
     clearActiveChatroom: () => void;
 
     sendMessage: (content: string) => void;
-    receiveMessage: (msg: MessageResponse) => void;
+    receiveMessage: (msg: MessageDto) => void;
 
     loadOlderMessages: () => Promise<void>;
 
@@ -84,7 +80,13 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             status: "LOADING",
             error: null,
 
-            data: null,
+            meta: EMPTY_META,
+            members: {},
+            messages: [],
+
+            nextCursor: null,
+            hasMoreMessages: false,
+            loadingOlderMessages: false,
 
             _abort: abort,
             _epoch: nextEpoch,
@@ -117,14 +119,12 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
 
             set({
                 status: "READY",
-                data: {
-                    meta: bootstrapData.meta,
-                    members,
-                    messages: bootstrapData.messages,
-                    nextCursor: bootstrapData.nextCursor,
-                    hasMoreMessages: bootstrapData.hasMore,
-                    loadingOlderMessages: false
-                },
+                meta: bootstrapData.meta,
+                members,
+                messages: bootstrapData.messages,
+                nextCursor: bootstrapData.nextCursor,
+                hasMoreMessages: bootstrapData.hasMore,
+                loadingOlderMessages: false
             });
 
             // After initial load, if we're near bottom, typical, ack latest.
@@ -146,7 +146,13 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
         status: "IDLE",
         error: null,
 
-        data: null,
+        meta: EMPTY_META,
+        members: {},
+        messages: [],
+
+        nextCursor: null,
+        hasMoreMessages: false,
+        loadingOlderMessages: false,
 
         _epoch: 0,
         _abort: null,
@@ -177,7 +183,9 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
                 status: "IDLE",
                 error: null,
 
-                data: null,
+                meta: EMPTY_META,
+                members: {},
+                messages: [],
 
                 _epoch: get()._epoch + 1
             });
@@ -236,10 +244,10 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             if (!s.isNearBottom) return;
             if (s.status !== "READY") return;
 
-            const messages = s.data!.messages;
+            const messages = s.messages;
             if (messages.length === 0) return;
 
-            get().ackUpTo(messages.at(-1).seq);
+            get().ackUpTo(messages.at(-1)!.seq);
         },
 
         _scheduleAckFlush: () => {
@@ -289,38 +297,28 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             });
         },
 
-        lloadOlderMessages: async () => {
+        loadOlderMessages: async () => {
             const s = get();
 
             if (s.status !== "READY") return;
 
             const roomId = s.activeRoomId;
-            const data = s.data;
 
-            if (!roomId || !data) return;
-            if (data.loadingOlderMessages) return;
-            if (!data.hasMoreMessages) return;
-            if (data.nextCursor == null) return;
+            if (roomId == null) return;
+            if (s.loadingOlderMessages) return;
+            if (!s.hasMoreMessages) return;
+            if (s.nextCursor == null) return;
 
             const epoch = s._epoch;
             const abort = s._abort;
             if (!abort) return;
 
             // mark loading
-            set((cur) => {
-                if (cur.status !== "READY") return cur;
-
-                return {
-                    data: {
-                        ...cur.data!,
-                        loadingOlderMessages: true
-                    }
-                };
-            });
+            set({ loadingOlderMessages: true });
 
             try {
                 const page = await loadMessages(roomId, {
-                    cursor: data.nextCursor,
+                    cursor: s.nextCursor,
                     signal: abort.signal
                 });
 
@@ -330,13 +328,10 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
                     if (cur.status !== "READY") return cur;
 
                     return {
-                        data: {
-                            ...cur.data!,
-                            messages: [...page.messages, ...cur.data!.messages],
-                            nextCursor: page.nextCursor,
-                            hasMoreMessages: page.hasMore,
-                            loadingOlderMessages: false
-                        }
+                        messages: [...page.messages, ...cur.messages],
+                        nextCursor: page.nextCursor,
+                        hasMoreMessages: page.hasMore,
+                        loadingOlderMessages: false
                     };
                 });
 
@@ -346,20 +341,11 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
                 }
 
                 if (isStillCurrent(roomId, epoch, abort)) {
-                    set((cur) => {
-                        if (cur.status !== "READY") return cur;
-
-                        return {
-                            data: {
-                                ...cur.data!,
-                                loadingOlderMessages: false
-                            }
-                        };
-                    });
+                    set({ loadingOlderMessages: false });
                 }
             }
         }
 
-        
+
     };
 });
