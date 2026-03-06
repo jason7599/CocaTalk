@@ -27,7 +27,7 @@ type ActiveChatroomState = {
     isNearBottom: boolean; // whether user is currently near the bottom of the message list in the UI
 
     // ACK state
-    _ackTimer: number | null; // timer ID for the debounced ACK flush
+    _ackTimer: ReturnType<typeof setTimeout> | null; // timer ID for the debounced ACK flush
     _pendingAck: number; // highest seq number scheduled to be ACKed
     _lastSentAck: number; // last highest ACK actually sent to the server
 
@@ -187,6 +187,10 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
                 members: {},
                 messages: [],
 
+                nextCursor: null,
+                hasMoreMessages: false,
+                loadingOlderMessages: false,
+
                 _epoch: get()._epoch + 1
             });
         },
@@ -233,7 +237,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             set({ _pendingAck: seq });
 
             // schedule a debounce flush
-            get()._scheduleAckFlush();
+            s._scheduleAckFlush();
 
             useChatroomsStore.getState().setMyLastAck(s.activeRoomId, seq);
         },
@@ -247,7 +251,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             const messages = s.messages;
             if (messages.length === 0) return;
 
-            get().ackUpTo(messages.at(-1)!.seq);
+            s.ackUpTo(messages.at(-1)!.seq);
         },
 
         _scheduleAckFlush: () => {
@@ -259,8 +263,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             const roomId = s.activeRoomId;
 
             const timer = window.setTimeout(() => {
-                const cur = get();
-                if (cur.activeRoomId !== roomId) return;
+                if (get().activeRoomId !== roomId) return;
                 get()._flushAckNow();
             }, ACK_DEBOUNCE_MS);
 
@@ -325,7 +328,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
                 if (!isStillCurrent(roomId, epoch, abort)) return;
 
                 set((cur) => {
-                    if (cur.status !== "READY") return cur;
+                    if (cur.status !== "READY") return {};
 
                     return {
                         messages: [...page.messages, ...cur.messages],
