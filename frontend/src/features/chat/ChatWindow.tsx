@@ -18,7 +18,6 @@ const ChatWindow: React.FC = () => {
     const loadOlderMessages = useActiveChatroomStore((s) => s.loadOlderMessages);
     const sendMessage = useActiveChatroomStore((s) => s.sendMessage);
 
-
     const [message, setMessage] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -193,7 +192,7 @@ const ChatWindow: React.FC = () => {
                 ) : (
                     <div className="flex flex-col gap-2">
                         {messages.map((m) => (
-                            <MessageBubble message={m} key={m.seqNo} />
+                            <MessageBubble message={m} key={m.seq} />
                         ))}
 
                     </div>

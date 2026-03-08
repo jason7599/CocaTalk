@@ -153,4 +153,11 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             WHERE room_id = :roomId AND user_id = :userId
             """, nativeQuery = true)
     boolean isChatroomMember(@Param("roomId") Long roomId, @Param("userId") Long userId);
+
+    @Query(value = """
+            SELECT last_ack
+            FROM room_members
+            WHERE room_id = :roomId AND user_id = :userId
+            """, nativeQuery = true)
+    Long getMyLastAck(@Param("roomId") Long roomId, @Param("userId") Long userId);
 }

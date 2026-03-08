@@ -1,11 +1,15 @@
 package com.jason7599.cocatalk.message;
 
-import com.jason7599.cocatalk.chatroom.ChatroomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * Low-level message service for chatrooms.
+ * This service does NOT perform membership authorization checks.
+ * All message-related operations MUST be invoked through ChatroomService.
+ */
 @Service
 @RequiredArgsConstructor
 public class MessageService {
@@ -13,23 +17,32 @@ public class MessageService {
     private static final int PAGE_SIZE = 30;
 
     private final MessageRepository messageRepository;
-    private final ChatroomService chatroomService;
 
-    public MessagePage loadMessages(Long roomId, Long viewerId, Long cursor) {
-        chatroomService.assertMembership(roomId, viewerId);
+    /**
+     * IMPORTANT:
+     * This method does NOT perform membership or authorization checks.
+     * Callers must ensure the viewer is a member of the room before invoking.
+     * Intended to be used only by ChatroomService.
+     */
+    public MessagePage fetchMessagesBefore(Long roomId, Long cursor) {
+        long effectiveCursor = cursor == null ? Long.MAX_VALUE : cursor;
 
         // ordered by seq asc
-        List<MessageDto> list = messageRepository.fetchMessages(roomId, cursor, PAGE_SIZE + 1);
+        List<MessageDto> messages = messageRepository.fetchMessages(roomId, effectiveCursor, PAGE_SIZE + 1);
 
-        boolean hasMore = list.size() == PAGE_SIZE + 1;
+        boolean hasMore = messages.size() == PAGE_SIZE + 1;
         if (hasMore) {
-            list.removeFirst();
+            messages.removeFirst();
         }
 
         return new MessagePage(
-                list,
-                list.isEmpty() ? null : list.getFirst().seq(),
+                messages,
+                messages.isEmpty() ? null : messages.getFirst().seq(),
                 hasMore
         );
+    }
+
+    public MessagePage fetchLatestMessages(Long roomId) {
+        return fetchMessagesBefore(roomId, null);
     }
 }

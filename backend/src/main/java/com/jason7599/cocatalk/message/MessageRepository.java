@@ -31,6 +31,6 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
             ORDER BY seq ASC
             """, nativeQuery = true)
     List<MessageDto> fetchMessages(@Param("roomId") Long roomId,
-                                   @Param("cursor") Long cursor,
+                                   @Param("cursor") long cursor,
                                    @Param("limit") int limit);
 }

@@ -2,6 +2,7 @@ package com.jason7599.cocatalk.chatroom;
 
 import com.jason7599.cocatalk.exception.ApiError;
 import com.jason7599.cocatalk.message.MessageDto;
+import com.jason7599.cocatalk.message.MessageService;
 import com.jason7599.cocatalk.user.UserInfo;
 import com.jason7599.cocatalk.user.relation.UserRelationService;
 import jakarta.transaction.Transactional;
@@ -13,6 +14,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * ChatroomService is the public API for all chatroom-related operations.
+ * All message operations (loading, sending, acknowledging) must go through
+ * this service to ensure membership and permission checks are enforced.
+ * Lower-level services such as MessageService should not be called directly by controllers.
+ */
 @Service
 @RequiredArgsConstructor
 public class ChatroomService {
@@ -21,6 +28,7 @@ public class ChatroomService {
 
     private final ChatroomRepository chatroomRepository;
     private final UserRelationService userRelationService;
+    private final MessageService messageService;
 
     public List<ChatroomSummary> getChatroomSummaries(Long userId) {
         List<ChatroomSummaryQueryRow> chatroomSummaryRows = chatroomRepository.getChatroomSummaries(userId);
@@ -116,7 +124,9 @@ public class ChatroomService {
 
         return new ChatroomBootstrapDto(
                 fetchMetadata(roomId, viewerId),
-                chatroomRepository.fetchMembers(roomId)
+                chatroomRepository.fetchMembers(roomId),
+                messageService.fetchLatestMessages(roomId),
+                chatroomRepository.getMyLastAck(roomId, viewerId)
         );
     }
 
