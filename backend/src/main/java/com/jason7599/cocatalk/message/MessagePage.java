@@ -4,7 +4,17 @@ import java.util.List;
 
 public record MessagePage(
         List<MessageDto> messages,
-        Long nextCursor,
-        boolean hasMoreMessages
+        Long startSeq, // first in this window
+        Long endSeq, // last in this window
+        boolean hasOlder
 ) {
+
+    public static MessagePage empty() {
+        return new MessagePage(
+                List.of(),
+                null,
+                null,
+                false
+        );
+    }
 }

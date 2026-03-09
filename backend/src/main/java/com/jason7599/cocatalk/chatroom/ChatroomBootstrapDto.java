@@ -9,6 +9,7 @@ public record ChatroomBootstrapDto(
         ChatroomMeta meta,
         List<UserInfo> members,
         MessagePage initialPage,
-        Long lastAck // my previous last ack
+        Long lastReadSeq, // my previous last ack
+        Long lastSeq     // current snapshot of the latest seq
 ) {
 }

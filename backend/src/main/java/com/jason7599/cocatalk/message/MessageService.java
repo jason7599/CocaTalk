@@ -14,35 +14,80 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MessageService {
 
-    private static final int PAGE_SIZE = 30;
+    private static final int MESSAGE_PAGE_SIZE = 50;
+    private static final int AROUND_BEFORE_LIMIT = 10;
+    private static final int AROUND_AFTER_LIMIT = 40;
 
     private final MessageRepository messageRepository;
 
     /**
-     * IMPORTANT:
-     * This method does NOT perform membership or authorization checks.
-     * Callers must ensure the viewer is a member of the room before invoking.
-     * Intended to be used only by ChatroomService.
+     * User scrolls up
      */
-    public MessagePage fetchMessagesBefore(Long roomId, Long cursor) {
-        long effectiveCursor = cursor == null ? Long.MAX_VALUE : cursor;
-
+    public MessagePage fetchMessagesBefore(Long roomId, long cursor) {
         // ordered by seq asc
-        List<MessageDto> messages = messageRepository.fetchMessages(roomId, effectiveCursor, PAGE_SIZE + 1);
+        List<MessageDto> messages = messageRepository.fetchMessagesBefore(roomId, cursor, MESSAGE_PAGE_SIZE + 1);
 
-        boolean hasMore = messages.size() == PAGE_SIZE + 1;
-        if (hasMore) {
+        if (messages.isEmpty()) {
+            return MessagePage.empty();
+        }
+
+        boolean hasOlder = messages.size() == MESSAGE_PAGE_SIZE + 1;
+        if (hasOlder) {
             messages.removeFirst();
         }
 
         return new MessagePage(
                 messages,
-                messages.isEmpty() ? null : messages.getFirst().seq(),
-                hasMore
+                messages.getFirst().seq(),
+                messages.getLast().seq(),
+                hasOlder
         );
     }
 
-    public MessagePage fetchLatestMessages(Long roomId) {
-        return fetchMessagesBefore(roomId, null);
+    /**
+     * Initial load, fetch messages around the user's last ack.
+     */
+    public MessagePage fetchMessagesAround(Long roomId, long cursor) {
+        List<MessageDto> messages
+                = messageRepository.fetchMessagesAround(roomId, cursor, AROUND_BEFORE_LIMIT + 1, AROUND_AFTER_LIMIT);
+
+        if (messages.isEmpty()) {
+            return MessagePage.empty();
+        }
+
+        int olderCount = 0;
+        for (; olderCount <= Math.min(messages.size() - 1, AROUND_BEFORE_LIMIT)
+                && messages.get(olderCount).seq() < cursor;
+             olderCount++);
+
+        boolean hasOlder = olderCount == AROUND_BEFORE_LIMIT + 1;
+        if (hasOlder) {
+            messages.removeFirst();
+        }
+
+        return new MessagePage(
+                messages,
+                messages.getFirst().seq(),
+                messages.getLast().seq(),
+                hasOlder
+        );
+    }
+
+    /**
+     * User scrolls down
+     */
+    public MessagePage fetchMessagesAfter(Long roomId, long cursor) {
+        List<MessageDto> messages = messageRepository.fetchMessagesAfter(roomId, cursor, MESSAGE_PAGE_SIZE);
+
+        if (messages.isEmpty()) {
+            return MessagePage.empty();
+        }
+
+        return new MessagePage(
+                messages,
+                messages.getFirst().seq(),
+                messages.getLast().seq(),
+                true // hasOlder is irrelevant for forward pagination
+        );
     }
 }

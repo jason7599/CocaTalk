@@ -122,33 +122,35 @@ public class ChatroomService {
     public ChatroomBootstrapDto bootstrap(Long roomId, Long viewerId) {
         assertMembership(roomId, viewerId);
 
-        return new ChatroomBootstrapDto(
-                fetchMetadata(roomId, viewerId),
-                chatroomRepository.fetchMembers(roomId),
-                messageService.fetchLatestMessages(roomId),
-                chatroomRepository.getMyLastAck(roomId, viewerId)
-        );
-    }
-
-    private ChatroomMeta fetchMetadata(Long roomId, Long viewerId) {
         ChatroomEntity room = chatroomRepository.findById(roomId)
                 .orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND, "Room not found"));
 
+        ChatroomMeta meta;
         if (room.getType() == ChatroomType.DIRECT) {
             Long otherUserId = room.getDirectUserId1().equals(viewerId)
                     ? room.getDirectUserId2()
                     : room.getDirectUserId1();
-            return new ChatroomMeta(
+            meta = new ChatroomMeta(
                     ChatroomType.DIRECT,
                     null,
                     userRelationService.hasBlocked(otherUserId, viewerId)
             );
         } else {
-            return new ChatroomMeta(
+            meta = new ChatroomMeta(
                     ChatroomType.GROUP,
                     room.getGroupCreatorId(),
                     false
             );
         }
+
+        Long lastReadSeq = chatroomRepository.getMyLastAck(roomId, viewerId);
+
+        return new ChatroomBootstrapDto(
+                meta,
+                chatroomRepository.fetchMembers(roomId),
+                messageService.fetchMessagesAround(roomId, lastReadSeq),
+                lastReadSeq,
+                room.getLastSeq()
+        );
     }
 }

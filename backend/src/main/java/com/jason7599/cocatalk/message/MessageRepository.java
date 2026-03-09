@@ -8,29 +8,72 @@ import java.util.List;
 
 public interface MessageRepository extends JpaRepository<MessageEntity, MessageId> {
 
+    String MESSAGE_SELECT = """
+            SELECT
+                m.room_id AS roomId,
+                m.seq,
+                m.kind,
+                m.event_type AS eventType,
+                m.actor_id AS actorId,
+                u.username AS senderName,
+                m.content,
+                m.event_data AS eventData,
+                m.created_at AS createdAt
+            FROM messages m JOIN users u ON m.actor_id = u.id
+            """;
+
     @Query(value = """
             SELECT *
-            FROM (
-                SELECT
-                    m.room_id AS roomId,
-                    m.seq,
-                    m.kind,
-                    m.event_type AS eventType,
-                    m.actor_id AS actorId,
-                    u.username AS senderName,
-                    m.content,
-                    m.event_data AS eventData,
-                    m.created_at AS createdAt
-                FROM messages m
-                JOIN users u ON m.actor_id = u.id
+            FROM ("""
+                + MESSAGE_SELECT + """
                 WHERE m.room_id = :roomId
-                    AND (:cursor IS NULL OR m.seq < :cursor)
+                    AND m.seq < :cursor
                 ORDER BY m.seq DESC
                 LIMIT :limit
             )
             ORDER BY seq ASC
             """, nativeQuery = true)
-    List<MessageDto> fetchMessages(@Param("roomId") Long roomId,
-                                   @Param("cursor") long cursor,
-                                   @Param("limit") int limit);
+    List<MessageDto> fetchMessagesBefore(@Param("roomId") Long roomId,
+                                         @Param("cursor") long cursor,
+                                         @Param("limit") int limit);
+
+    @Query(value = """
+            (
+                SELECT *
+                FROM ("""
+                    + MESSAGE_SELECT + """
+                    WHERE m.room_id = :roomId
+                        AND m.seq < :cursor
+                    ORDER BY m.seq DESC
+                    LIMIT :limitBefore
+                )
+                ORDER BY seq ASC
+            )
+            UNION ALL
+            (
+                SELECT *
+                FROM ("""
+                    + MESSAGE_SELECT + """
+                    WHERE m.room_id = :roomId
+                        AND m.seq >= :cursor
+                    ORDER BY seq ASC
+                    LIMIT :limitAfter
+                )
+            )
+            """, nativeQuery = true)
+    List<MessageDto> fetchMessagesAround(@Param("roomId") Long roomId,
+                                         @Param("cursor") long cursor,
+                                         @Param("limitBefore") int limitBefore,
+                                         @Param("limitAfter") int limitAfter);
+
+    @Query(value =
+            MESSAGE_SELECT + """
+            WHERE m.room_id = :roomId
+                AND m.seq > :cursor
+            ORDER BY m.seq ASC
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<MessageDto> fetchMessagesAfter(@Param("roomId") Long roomId,
+                                        @Param("cursor") long cursor,
+                                        @Param("limit") int limit);
 }
