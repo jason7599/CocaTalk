@@ -76,4 +76,40 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
     List<MessageDto> fetchMessagesAfter(@Param("roomId") Long roomId,
                                         @Param("cursor") long cursor,
                                         @Param("limit") int limit);
+
+    @Query(value = """
+            WITH next_seq AS (
+                UPDATE rooms
+                SET last_seq = last_seq + 1
+                WHERE id = :roomId
+                RETURNING last_seq
+            )
+            INSERT INTO messages (
+                room_id,
+                seq,
+                actor_id,
+                kind,
+                event_type,
+                content,
+                event_data
+            )
+            SELECT
+                :roomId,
+                last_seq,
+                :actorId,
+                :kind,
+                :eventType,
+                :content,
+                CAST(:eventData AS jsonb)
+            FROM next_seq
+            RETURNING *
+            """, nativeQuery = true)
+    MessageEntity insertMessage(
+            @Param("roomId") Long roomId,
+            @Param("actorId") Long actorId,
+            @Param("kind") String kind,
+            @Param("eventType") String eventType,
+            @Param("content") String content,
+            @Param("eventData") String eventData
+    );
 }
