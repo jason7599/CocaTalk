@@ -9,7 +9,7 @@ export async function openDirectChatroom(targetUserId: number) {
     // first, search locally
     const existing = chatrooms.chatrooms.find(
         r =>
-            r.type === "DIRECT"
+            r.roomType === "DIRECT"
         && r.membersPreview.some(m => m.userId === targetUserId)
     );
 

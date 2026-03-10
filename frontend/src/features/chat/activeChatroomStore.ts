@@ -3,6 +3,7 @@ import { EMPTY_META, type ChatroomMeta, type MessageDto, type UserInfo } from ".
 import { bootstrap } from "./chatroomApi";
 import { useChatroomsStore } from "./chatroomsStore";
 import { loadMessages } from "./message/messageApi";
+import { errorMessage } from "../../shared/utils/errors";
 
 const ACK_DEBOUNCE_MS = 400;
 
@@ -157,7 +158,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             if (!isStillCurrent(roomId, epoch, abort)) return;
             set({
                 status: "ERROR",
-                error: err instanceof Error ? err.message : "Unknown error"
+                error: errorMessage(err)
             });
         }
     };
@@ -375,7 +376,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
 
             } catch (err: unknown) {
                 if (!abort.signal.aborted) {
-                    set({ error: err instanceof Error ? err.message : "Unknown error" });
+                    set({ error: errorMessage(err) });
                 }
 
                 if (isStillCurrent(roomId, epoch, abort)) {
