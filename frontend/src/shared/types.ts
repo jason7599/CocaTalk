@@ -37,6 +37,13 @@ export type EventMessage = BaseMessage & {
 
 export type MessageDto = UserMessage | EventMessage;
 
+export interface MessagePage {
+    messages: MessageDto[];
+    startSeq: number;
+    endSeq: number;
+    hasOlder: boolean;
+};
+
 
 export type ChatroomType = "DIRECT" | "GROUP";
 
@@ -68,5 +75,7 @@ export const EMPTY_META: ChatroomMeta = {
 export interface ChatroomBootstrapDto {
     meta: ChatroomMeta;
     members: UserInfo[]; // includes self
-    // todo: initial message page
+    initialPage: MessagePage;
+    lastReadSeq: number;
+    lastSeq: number;
 };
