@@ -2,6 +2,7 @@ package com.jason7599.cocatalk.chatroom;
 
 import com.jason7599.cocatalk.exception.ApiError;
 import com.jason7599.cocatalk.message.MessageDto;
+import com.jason7599.cocatalk.message.MessagePage;
 import com.jason7599.cocatalk.message.MessageService;
 import com.jason7599.cocatalk.user.UserInfo;
 import com.jason7599.cocatalk.user.relation.UserRelationService;
@@ -152,5 +153,15 @@ public class ChatroomService {
                 lastReadSeq,
                 room.getLastSeq()
         );
+    }
+
+    public MessagePage loadMessagesBefore(Long roomId, long cursor, Long viewerId) {
+        assertMembership(roomId, viewerId);
+        return messageService.fetchMessagesBefore(roomId, cursor);
+    }
+
+    public MessagePage loadMessagesAfter(Long roomId, long cursor, Long viewerId) {
+        assertMembership(roomId, viewerId);
+        return messageService.fetchMessagesAfter(roomId, cursor);
     }
 }
