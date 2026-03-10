@@ -1,0 +1,1 @@
+ALTER TABLE messages ADD COLUMN actor_name VARCHAR(25) NOT NULL;

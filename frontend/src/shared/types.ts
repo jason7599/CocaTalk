@@ -14,12 +14,12 @@ interface BaseMessage {
     roomId: number;
     seq: number;
     actorId: number;
+    actorName: string;
     createdAt: string;
 };
 
 export type UserMessage = BaseMessage & {
     kind: "USER";
-    senderName: string;
     content: string;
 };
 

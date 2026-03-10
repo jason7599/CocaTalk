@@ -1,6 +1,7 @@
 package com.jason7599.cocatalk.message;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -15,11 +16,11 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
                 m.kind,
                 m.event_type AS eventType,
                 m.actor_id AS actorId,
-                u.username AS senderName,
+                m.actor_name AS actorName,
                 m.content,
                 m.event_data AS eventData,
                 m.created_at AS createdAt
-            FROM messages m JOIN users u ON m.actor_id = u.id
+            FROM messages m
             """;
 
     @Query(value = """
@@ -77,6 +78,7 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
                                         @Param("cursor") long cursor,
                                         @Param("limit") int limit);
 
+    @Modifying
     @Query(value = """
             WITH next_seq AS (
                 UPDATE rooms
@@ -88,6 +90,7 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
                 room_id,
                 seq,
                 actor_id,
+                actor_name,
                 kind,
                 event_type,
                 content,
@@ -97,6 +100,7 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
                 :roomId,
                 last_seq,
                 :actorId,
+                :actorName,
                 :kind,
                 :eventType,
                 :content,
@@ -107,6 +111,7 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
     MessageEntity insertMessage(
             @Param("roomId") Long roomId,
             @Param("actorId") Long actorId,
+            @Param("actorName") String actorName,
             @Param("kind") String kind,
             @Param("eventType") String eventType,
             @Param("content") String content,

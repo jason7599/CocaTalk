@@ -20,7 +20,7 @@ public interface ChatroomSummaryQueryRow {
     MessageKind getLastMessageKind();
     EventMessageType getLastMessageEventType();
     Long getLastActorId();
-    String getLastSenderName();
+    String getLastActorName();
     String getLastMessage();
     JsonNode getLastEventData();
     Instant getLastMessageAt();

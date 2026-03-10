@@ -17,7 +17,7 @@ type ActiveChatroomState = {
 
     // room session contents
     meta: ChatroomMeta;
-    members: Record<number, UserInfo>; // Record allows username resolution when displaying messages
+    members: Record<number, UserInfo>; // Todo: convert to list, as now MessageDto holds the actor_name
     messages: MessageDto[];
 
     // pagination stuff 

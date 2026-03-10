@@ -23,6 +23,8 @@ public class MessageEntity {
 
     private Long actorId;
 
+    private String actorName;
+
     @Enumerated(EnumType.STRING)
     private MessageKind kind;
 

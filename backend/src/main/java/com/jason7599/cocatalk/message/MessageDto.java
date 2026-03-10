@@ -10,7 +10,7 @@ public record MessageDto(
         MessageKind kind,
         EventMessageType eventType,
         Long actorId,
-        String senderName,
+        String actorName,
         String content,
         JsonNode eventData,
         Instant createdAt

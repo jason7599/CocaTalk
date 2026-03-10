@@ -66,7 +66,7 @@ public class ChatroomService {
                                 row.getLastMessageKind(),
                                 row.getLastMessageEventType(),
                                 row.getLastActorId(),
-                                row.getLastSenderName(),
+                                row.getLastActorName(),
                                 row.getLastMessage(),
                                 row.getLastEventData(),
                                 row.getLastMessageAt()
@@ -96,7 +96,7 @@ public class ChatroomService {
                         row.getLastMessageKind(),
                         row.getLastMessageEventType(),
                         row.getLastActorId(),
-                        row.getLastSenderName(),
+                        row.getLastActorName(),
                         row.getLastMessage(),
                         row.getLastEventData(),
                         row.getLastMessageAt()
