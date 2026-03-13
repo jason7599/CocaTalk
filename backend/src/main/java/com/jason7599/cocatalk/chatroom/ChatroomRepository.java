@@ -71,7 +71,7 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
                 AND r.id = :roomId
             """, nativeQuery = true)
     ChatroomSummary.Projection getChatroomSummary(@Param("roomId") Long roomId,
-                                                 @Param("viewerId") Long viewerId);
+                                                  @Param("viewerId") Long viewerId);
 
     /**
      * Batch-fetch top limitPerRoom members for each chatroom
@@ -93,29 +93,26 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             )
             SELECT
                 cte.roomId,
-                u.id AS userId,
                 u.username
             FROM cte JOIN users u ON cte.userId = u.id
             WHERE cte.rn <= :limitPerRoom
             """, nativeQuery = true)
-    List<ChatroomMemberRow> batchFetchMemberRows(
+    List<ChatroomMemberNameRow> batchFetchMemberRows(
             @Param("roomIds") List<Long> roomIds,
             @Param("viewerId") Long viewerId,
             @Param("limitPerRoom") int limitPerRoom);
 
     @Query(value = """
-            SELECT
-                u.id AS userId,
-                u.username
+            SELECT u.username
             FROM room_members rm JOIN users u on rm.user_id = u.id
             WHERE rm.room_id = :roomId
                 AND rm.user_id <> :viewerId
             ORDER BY rm.joined_at
             LIMIT :limit
             """, nativeQuery = true)
-    List<UserInfo> fetchMembersPreview(@Param("roomId") Long roomId,
-                                       @Param("viewerId") Long viewerId,
-                                       @Param("limit") int limit);
+    List<String> fetchMemberNamesPreview(@Param("roomId") Long roomId,
+                                         @Param("viewerId") Long viewerId,
+                                         @Param("limit") int limit);
 
     // No @Modifying since this query returns a row value instead of number of rows affected
     @Query(value = """
@@ -146,8 +143,9 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
                 u.username
             FROM room_members rm JOIN users u ON rm.user_id = u.id
             WHERE rm.room_id = :roomId
+                AND rm.user_id <> :viewerId
             """, nativeQuery = true)
-    List<UserInfo> fetchMembers(@Param("roomId") Long roomId);
+    List<UserInfo> fetchMembers(@Param("roomId") Long roomId, @Param("viewerId") Long viewerId);
 
     @Query(value = """
             SELECT COUNT(*) > 0

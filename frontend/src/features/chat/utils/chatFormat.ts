@@ -1,33 +1,51 @@
-import type { ChatroomSummary, EventMessage, MessageDto } from "../../../shared/types";
+import type { ChatroomSummary, EventMessage, MessageDto, UserInfo } from "../../../shared/types";
 
-export function getChatroomDisplayName(chatroom: ChatroomSummary): string {
-    const previewNames = chatroom.membersPreview.map(m => m.username);
+export function formatChatroomDisplayNameFromSummary(chatroom: ChatroomSummary): string {
+    return formatChatroomDisplayName(
+        chatroom.memberNamesPreview,
+        chatroom.totalMemberCount
+    );
+}
 
-    // total other members excluding the viewer
+export function formatChatroomDisplayNameFromMembers(members: UserInfo[]): string {
+    return formatChatroomDisplayName(
+        members.map(m => m.username),
+        members.length + 1 // since this excludes user
+    );
+}
+
+function formatChatroomDisplayName(memberNames: string[], totalMemberCount: number): string {
+    if (memberNames.length === 0) {
+        return "Empty chat";
+    }
+
+    const sorted = [...memberNames].sort((a, b) =>
+        a.localeCompare(b)
+    );
+
+    const preview = sorted.slice(0, 4);
+    const base = preview.join(", ");
+
     const remaining =
-        chatroom.totalMemberCount - previewNames.length - 1;
-
-    const base = previewNames.join(", ");
+        totalMemberCount - preview.length - 1; // minus viewer
 
     if (remaining > 0) {
         return `${base} and ${remaining} more`;
     }
 
     return base;
-};
+}
 
 export function formatLastMessage(message: MessageDto): string {
     switch (message.kind) {
         case "USER":
             return `${message.actorName}: ${message.content}`;
-
         case "EVENT":
             return formatEventMessage(message);
-
         default:
             return "";
     }
-}
+};
 
 function formatEventMessage(message: EventMessage): string {
     switch (message.eventType) {
@@ -58,4 +76,4 @@ function formatEventMessage(message: EventMessage): string {
         default:
             return "System event";
     }
-}
+};

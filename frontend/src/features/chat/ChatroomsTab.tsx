@@ -5,7 +5,7 @@ import { useModal } from "../../shared/ModalContext";
 import AddGroupChatModal from "./AddGroupChatModal";
 import { useChatroomsStore } from "./chatroomsStore";
 import { useActiveChatroomStore } from "./activeChatroomStore";
-import { getChatroomDisplayName, formatLastMessage } from "./utils/format";
+import { formatLastMessage, formatChatroomDisplayNameFromSummary } from "./utils/chatFormat";
 
 function formatTime(ts: string | number | Date) {
     const d = new Date(ts);
@@ -146,7 +146,7 @@ const ChatroomsTab: React.FC = () => {
                                                                 isActive ? "text-slate-100" : "text-slate-100/90",
                                                             ].join(" ")}
                                                         >
-                                                            {getChatroomDisplayName(chatroom)}
+                                                            {formatChatroomDisplayNameFromSummary(chatroom)}
                                                         </div>
 
                                                         <div

@@ -7,7 +7,7 @@ import java.util.List;
 
 public record ChatroomBootstrapDto(
         ChatroomMeta meta,
-        List<UserInfo> members,
+        List<UserInfo> members, // excludes me
         MessagePage initialPage,
         long lastReadSeq, // my previous last ack
         long lastSeq     // current snapshot of the latest seq

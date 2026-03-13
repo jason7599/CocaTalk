@@ -10,7 +10,7 @@ export async function openDirectChatroom(targetUserId: number) {
     const existing = chatrooms.chatrooms.find(
         r =>
             r.roomType === "DIRECT"
-        && r.membersPreview.some(m => m.userId === targetUserId)
+        && r.memberNamesPreview.some(m => m.userId === targetUserId)
     );
 
     if (existing) {

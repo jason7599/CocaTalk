@@ -1,27 +1,33 @@
 import type React from "react";
 import { EllipsisVerticalIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useActiveChatroomStore } from "./activeChatroomStore";
-import { useRequiredAuth } from "../auth/AuthProvider";
 import { useContactsStore } from "../contacts/contactsStore";
-import { useChatroomsStore } from "./chatroomsStore";
 import { useStomp } from "../../services/ws/stompContext";
+import { formatChatroomDisplayNameFromMembers } from "./utils/chatFormat";
 
 const ChatHeader: React.FC = () => {
-    const activeRoomId = useActiveChatroomStore(s => s.activeRoomId);
-    const clearActiveRoom = useActiveChatroomStore(s => s.clearActiveChatroom);
-    
-    const chatrooms = useChatroomsStore(s => s.chatrooms);
-    const contacts = useContactsStore(s => s.contacts);
-    const addContact = useContactsStore(s => s.addContact);
-    
     const connected = useStomp().connected;
-    
-    const { user } = useRequiredAuth();
-    
+
+    const activeRoomId = useActiveChatroomStore((s) => s.activeRoomId);
+    const roomStatus = useActiveChatroomStore((s) => s.status);
+    const members = useActiveChatroomStore((s) => s.members);
+    const roomMeta = useActiveChatroomStore((s) => s.meta);
+    const clearActiveRoom = useActiveChatroomStore((s) => s.clearActiveChatroom);
+
+    const contacts = useContactsStore((s) => s.contacts);
+    const addContact = useContactsStore((s) => s.addContact);
+
     if (!activeRoomId) return null;
 
-    let displayName: string | null = null;
-    let subjectUserId: number | null = null;
+    if (roomStatus !== "READY") return null;
+
+    const displayName = formatChatroomDisplayNameFromMembers(Object.values(members));
+    const subjectUserId = roomMeta.type === "DIRECT"
+        ? Object.values(members)[0].userId
+        : roomMeta.groupCreatorId;
+
+    const subjectInContacts = subjectUserId in contacts;
+    const blockedByOtherUser = roomMeta.type === "DIRECT" && roomMeta.blockedByOtherUser;
 
     return (
         <div className="relative z-10 border-b border-white/10 bg-[#0f0f18]/70 backdrop-blur-xl">
@@ -30,10 +36,10 @@ const ChatHeader: React.FC = () => {
                     <h2 className="truncate text-lg font-semibold tracking-tight text-slate-100">
                         {displayName}
 
-                        {subjectUserId != null && !subjectInContacts && (
+                        {!blockedByOtherUser && !subjectInContacts && (
                             <div className="mt-1 flex items-center gap-2 text-xs text-amber-400/90">
                                 <span className="truncate">
-                                    This user isn't in your contact list.
+                                    This user isn't in your contacts.
                                 </span>
 
                                 <button

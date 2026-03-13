@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.jason7599.cocatalk.message.EventMessageType;
 import com.jason7599.cocatalk.message.MessageDto;
 import com.jason7599.cocatalk.message.MessageKind;
-import com.jason7599.cocatalk.user.UserInfo;
 
 import java.time.Instant;
 import java.util.List;
@@ -19,7 +18,7 @@ import java.util.List;
 public record ChatroomSummary(
     Long roomId,
     ChatroomType roomType,
-    List<UserInfo> membersPreview,
+    List<String> memberNamesPreview,
     int totalMemberCount,
     Long myLastAck,
     MessageDto lastMessage
