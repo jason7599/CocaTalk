@@ -2,8 +2,10 @@ import React, { useMemo } from "react";
 import { ChatBubbleLeftRightIcon, PlusCircleIcon } from "@heroicons/react/24/solid";
 import type { ChatroomSummary } from "../../shared/types";
 import { useModal } from "../../shared/ModalContext";
-import { useRequiredAuth } from "../auth/AuthProvider";
 import AddGroupChatModal from "./AddGroupChatModal";
+import { useChatroomsStore } from "./chatroomsStore";
+import { useActiveChatroomStore } from "./activeChatroomStore";
+import { getChatroomDisplayName, formatLastMessage } from "./utils/format";
 
 function formatTime(ts: string | number | Date) {
     const d = new Date(ts);
@@ -24,10 +26,10 @@ function getUnreadCount(room: ChatroomSummary) {
 const ChatroomsTab: React.FC = () => {
     const { showModal } = useModal();
 
-    let chatrooms: ChatroomSummary[] = [];
+    const chatrooms = useChatroomsStore((s) => s.chatrooms);
+    const activeChatroomId = useActiveChatroomStore((s) => s.activeRoomId);
+    const setActiveChatroom = useActiveChatroomStore((s) => s.setActiveChatroom);
 
-    const { user } = useRequiredAuth();
-    
     const sorted = useMemo(() => {
         return [...chatrooms].sort((a, b) => {
             const ta = new Date(a.lastMessage?.createdAt ?? 0).getTime();
@@ -35,6 +37,10 @@ const ChatroomsTab: React.FC = () => {
             return tb - ta;
         });
     }, [chatrooms]);
+
+    const handleClick = (roomId: number) => {
+        setActiveChatroom(roomId);
+    };
 
     return (
         <>
@@ -60,7 +66,7 @@ const ChatroomsTab: React.FC = () => {
                                 "
                                 onClick={() => showModal(<AddGroupChatModal />)}
                             >
-                                <PlusCircleIcon className="h-5 w-5"/>
+                                <PlusCircleIcon className="h-5 w-5" />
                                 Add Groupchat
                             </button>
                         </div>
@@ -88,26 +94,27 @@ const ChatroomsTab: React.FC = () => {
                         {/* List */}
                         <div className="flex flex-col gap-2">
                             {sorted.map((chatroom) => {
-                                const lastText = chatroom.lastMessage ?? "No messages yet";
+                                const lastTextPreview = chatroom.lastMessage == null ? "No messages yet" : formatLastMessage(chatroom.lastMessage);
                                 const lastAt = chatroom.lastMessage?.createdAt ?? 0;
                                 const unreadCount = getUnreadCount(chatroom);
+                                const isActive = chatroom.roomId === activeChatroomId;
 
                                 return (
                                     <button
                                         key={chatroom.roomId}
                                         type="button"
-                                        // onClick={() => handleClick(chatroom)}
+                                        onClick={() => handleClick(chatroom.roomId)}
                                         className={[
                                             "group relative w-full text-left",
                                             "rounded-2xl border backdrop-blur-xl",
                                             "px-4 py-3 transition",
                                             "focus:outline-none focus:ring-2 focus:ring-rose-300/25",
-                                            // isActive
-                                            //     ? "border-rose-500/30 bg-white/8"
-                                            //     : "border-white/10 bg-white/5 hover:bg-white/8",
+                                            isActive
+                                                ? "border-rose-500/30 bg-white/8"
+                                                : "border-white/10 bg-white/5 hover:bg-white/8",
                                         ].join(" ")}
                                     >
-                                        {/* Active neon rail
+                                        {/* Active neon rail */}
                                         <div
                                             className={[
                                                 "absolute left-0 top-2 bottom-2 w-[3px] rounded-full transition-opacity",
@@ -116,7 +123,7 @@ const ChatroomsTab: React.FC = () => {
                                                     : "opacity-0 group-hover:opacity-60 bg-white/20",
                                             ].join(" ")}
                                             aria-hidden="true"
-                                        /> */}
+                                        />
 
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="min-w-0">
@@ -126,29 +133,29 @@ const ChatroomsTab: React.FC = () => {
                                                             "h-9 w-9 flex-none rounded-full",
                                                             "bg-gradient-to-br from-pink-500/20 to-red-500/20",
                                                             "ring-1 ring-white/10",
-                                                            // isActive
-                                                            //     ? "shadow-[0_0_18px_rgba(244,63,94,0.16)]"
-                                                            //     : "shadow-none",
+                                                            isActive
+                                                                ? "shadow-[0_0_18px_rgba(244,63,94,0.16)]"
+                                                                : "shadow-none",
                                                         ].join(" ")}
                                                         aria-hidden="true"
                                                     />
                                                     <div className="min-w-0">
                                                         <div
                                                             className={[
-                                                                "truncate font-semibold",
-                                                                // isActive ? "text-slate-100" : "text-slate-100/90",
+                                                                "truncate font-semibold text-sm",
+                                                                isActive ? "text-slate-100" : "text-slate-100/90",
                                                             ].join(" ")}
                                                         >
-                                                            {/* {getChatroomDisplayName(user.id, chatroom)} */}
+                                                            {getChatroomDisplayName(chatroom)}
                                                         </div>
 
                                                         <div
                                                             className={[
                                                                 "truncate text-sm",
-                                                                // isActive ? "text-slate-300" : "text-slate-400",
+                                                                isActive ? "text-slate-300" : "text-slate-400",
                                                             ].join(" ")}
                                                         >
-                                                            {/* {lastText} */}
+                                                            {lastTextPreview}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -180,7 +187,7 @@ const ChatroomsTab: React.FC = () => {
                                             </div>
                                         </div>
 
-                                        {/* {isActive && (
+                                        {isActive && (
                                             <div
                                                 className="pointer-events-none absolute inset-0 rounded-2xl"
                                                 style={{
@@ -189,7 +196,7 @@ const ChatroomsTab: React.FC = () => {
                                                 }}
                                                 aria-hidden="true"
                                             />
-                                        )} */}
+                                        )}
                                     </button>
                                 );
                             })}
