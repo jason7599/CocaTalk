@@ -4,6 +4,8 @@ import com.jason7599.cocatalk.exception.ApiError;
 import com.jason7599.cocatalk.message.MessageDto;
 import com.jason7599.cocatalk.message.MessagePage;
 import com.jason7599.cocatalk.message.MessageService;
+import com.jason7599.cocatalk.message.SendMessageRequest;
+import com.jason7599.cocatalk.security.CustomUserDetails;
 import com.jason7599.cocatalk.user.UserInfo;
 import com.jason7599.cocatalk.user.relation.UserRelationService;
 import jakarta.transaction.Transactional;
@@ -155,13 +157,38 @@ public class ChatroomService {
         );
     }
 
-    public MessagePage loadMessagesBefore(Long roomId, long cursor, Long viewerId) {
+    public MessagePage loadMessages(Long roomId, Long viewerId, Long before, Long after) {
         assertMembership(roomId, viewerId);
+
+        boolean hasBefore = before != null;
+        boolean hasAfter = after != null;
+
+        if (hasBefore == hasAfter) {
+            throw new ApiError(HttpStatus.BAD_REQUEST,
+                    "Exactly one of 'before' or 'after' must be provided");
+        }
+
+        if (hasBefore) {
+            return loadMessagesBefore(roomId, before);
+        }
+
+        return loadMessagesAfter(roomId, after);
+    }
+
+    private MessagePage loadMessagesBefore(Long roomId, long cursor) {
         return messageService.fetchMessagesBefore(roomId, cursor);
     }
 
-    public MessagePage loadMessagesAfter(Long roomId, long cursor, Long viewerId) {
-        assertMembership(roomId, viewerId);
+    private MessagePage loadMessagesAfter(Long roomId, long cursor) {
         return messageService.fetchMessagesAfter(roomId, cursor);
+    }
+
+    public MessageDto sendMessage(Long roomId, CustomUserDetails userDetails, SendMessageRequest request) {
+        assertMembership(roomId, userDetails.getId());
+        return new MessageDto(messageService.insertUserMessage(
+                roomId,
+                userDetails.getId(),
+                userDetails.getUsername(),
+                request.content()));
     }
 }

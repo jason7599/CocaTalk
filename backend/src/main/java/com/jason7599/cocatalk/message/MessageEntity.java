@@ -18,6 +18,8 @@ import java.time.Instant;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MessageEntity {
 
+    public static final int MAX_CONTENT_LENGTH = 1000;
+
     @EmbeddedId
     private MessageId id;
 

@@ -112,8 +112,8 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
             @Param("roomId") Long roomId,
             @Param("actorId") Long actorId,
             @Param("actorName") String actorName,
-            @Param("kind") String kind,
-            @Param("eventType") String eventType,
+            @Param("kind") MessageKind kind,
+            @Param("eventType") EventMessageType eventType,
             @Param("content") String content,
             @Param("eventData") String eventData
     );

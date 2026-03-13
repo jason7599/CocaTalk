@@ -1,8 +1,10 @@
 package com.jason7599.cocatalk.chatroom;
 
-import com.jason7599.cocatalk.exception.ApiError;
+import com.jason7599.cocatalk.message.MessageDto;
 import com.jason7599.cocatalk.message.MessagePage;
+import com.jason7599.cocatalk.message.SendMessageRequest;
 import com.jason7599.cocatalk.security.CustomUserDetails;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -32,7 +34,7 @@ public class ChatroomController {
     }
 
     @GetMapping("/{roomId}/bootstrap")
-    public ChatroomBootstrapDto getMetadata(
+    public ChatroomBootstrapDto bootstrap(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long roomId
     ) {
@@ -46,20 +48,16 @@ public class ChatroomController {
             @RequestParam(required = false) Long before,
             @RequestParam(required = false) Long after
     ) {
-        boolean nullBefore = before == null;
-        boolean nullAfter = after == null;
+        return chatroomService.loadMessages(roomId, userDetails.getId(), before, after);
+    }
 
-        if (nullBefore == nullAfter) {
-            throw new ApiError(HttpStatus.BAD_REQUEST,
-                    "Exactly one of 'before' or 'after' must be provided");
-        }
-
-        Long userId = userDetails.getId();
-
-        if (!nullBefore) {
-            return chatroomService.loadMessagesBefore(roomId, before, userId);
-        }
-
-        return chatroomService.loadMessagesAfter(roomId, after, userId);
+    @PostMapping("/{roomId}/messages")
+    @ResponseStatus(HttpStatus.CREATED)
+    public MessageDto sendMessage(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long roomId,
+            @RequestBody @Valid SendMessageRequest request
+    ) {
+        return chatroomService.sendMessage(roomId, userDetails, request);
     }
 }

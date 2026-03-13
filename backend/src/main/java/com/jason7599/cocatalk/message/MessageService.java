@@ -90,4 +90,21 @@ public class MessageService {
                 true // hasOlder is irrelevant for forward pagination
         );
     }
+
+    public MessageEntity insertUserMessage(
+            Long roomId,
+            Long userId,
+            String username,
+            String content
+    ) {
+        return messageRepository.insertMessage(
+                roomId,
+                userId,
+                username,
+                MessageKind.USER,
+                null,
+                content,
+                null
+        );
+    }
 }

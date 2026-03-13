@@ -15,4 +15,17 @@ public record MessageDto(
         JsonNode eventData,
         Instant createdAt
 ) {
+    public MessageDto(MessageEntity e) {
+        this(
+                e.getId().roomId(),
+                e.getId().seq(),
+                e.getKind(),
+                e.getEventType(),
+                e.getActorId(),
+                e.getActorName(),
+                e.getContent(),
+                e.getEventData(),
+                e.getCreatedAt()
+        );
+    }
 }
