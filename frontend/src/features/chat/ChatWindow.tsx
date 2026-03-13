@@ -202,7 +202,9 @@ const ChatWindow: React.FC = () => {
                 )}
 
                 {/* BOTTOM sentinel (for jump-to-latest + auto-scroll) */}
-                <div ref={bottomSentinelRef} className="h-6 shrink-0" />
+                {messages.length > 0 && (
+                    <div ref={bottomSentinelRef} className="h-6 shrink-0" />
+                )}
 
             </div>
 
