@@ -34,10 +34,10 @@ public class ChatroomService {
     private final MessageService messageService;
 
     public List<ChatroomSummary> getChatroomSummaries(Long userId) {
-        List<ChatroomSummaryQueryRow> chatroomSummaryRows = chatroomRepository.getChatroomSummaries(userId);
+        List<ChatroomSummary.Projection> chatroomSummaryRows = chatroomRepository.getChatroomSummaries(userId);
 
         List<ChatroomMemberRow> memberRows = chatroomRepository.batchFetchMemberRows(
-                chatroomSummaryRows.stream().map(ChatroomSummaryQueryRow::getRoomId).toList(),
+                chatroomSummaryRows.stream().map(ChatroomSummary.Projection::getRoomId).toList(),
                 userId,
                 MEMBER_NAMES_PREVIEW_PER_ROOM
         );
@@ -85,23 +85,23 @@ public class ChatroomService {
     public ChatroomSummary getChatroomSummary(Long roomId, Long viewerId) {
         assertMembership(roomId, viewerId);
 
-        ChatroomSummaryQueryRow row = chatroomRepository.getChatroomSummary(roomId, viewerId);
+        ChatroomSummary.Projection proj = chatroomRepository.getChatroomSummary(roomId, viewerId);
         return new ChatroomSummary(
-                row.getRoomId(),
-                row.getRoomType(),
+                proj.getRoomId(),
+                proj.getRoomType(),
                 chatroomRepository.fetchMembersPreview(roomId, viewerId, MEMBER_NAMES_PREVIEW_PER_ROOM),
-                row.getTotalMemberCount(),
-                row.getMyLastAck(),
+                proj.getTotalMemberCount(),
+                proj.getMyLastAck(),
                 new MessageDto(
-                        row.getRoomId(),
-                        row.getLastSeq(),
-                        row.getLastMessageKind(),
-                        row.getLastMessageEventType(),
-                        row.getLastActorId(),
-                        row.getLastActorName(),
-                        row.getLastMessage(),
-                        row.getLastEventData(),
-                        row.getLastMessageAt()
+                        proj.getRoomId(),
+                        proj.getLastSeq(),
+                        proj.getLastMessageKind(),
+                        proj.getLastMessageEventType(),
+                        proj.getLastActorId(),
+                        proj.getLastActorName(),
+                        proj.getLastMessage(),
+                        proj.getLastEventData(),
+                        proj.getLastMessageAt()
                 )
         );
     }

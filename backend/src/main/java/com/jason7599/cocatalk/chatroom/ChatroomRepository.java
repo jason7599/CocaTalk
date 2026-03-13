@@ -40,7 +40,7 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
                 rm_me.user_id = :viewerId
                 AND r.last_seq > 0
             """, nativeQuery = true)
-    List<ChatroomSummaryQueryRow> getChatroomSummaries(@Param("viewerId") Long viewerId);
+    List<ChatroomSummary.Projection> getChatroomSummaries(@Param("viewerId") Long viewerId);
 
     @Query(value = """
             SELECT
@@ -70,7 +70,8 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
                 rm_me.user_id = :viewerId
                 AND r.id = :roomId
             """, nativeQuery = true)
-    ChatroomSummaryQueryRow getChatroomSummary(@Param("roomId") Long roomId, @Param("viewerId") Long viewerId);
+    ChatroomSummary.Projection getChatroomSummary(@Param("roomId") Long roomId,
+                                                 @Param("viewerId") Long viewerId);
 
     /**
      * Batch-fetch top limitPerRoom members for each chatroom
@@ -87,7 +88,7 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
                         ORDER BY rm.joined_at
                     ) AS rn
                 FROM room_members rm
-                WHERE rm.room_id = ANY(:roomIds)
+                WHERE rm.room_id IN (:roomIds)
                     AND rm.user_id <> :viewerId
             )
             SELECT
@@ -112,7 +113,9 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             ORDER BY rm.joined_at
             LIMIT :limit
             """, nativeQuery = true)
-    List<UserInfo> fetchMembersPreview(@Param("roomId") Long roomId, @Param("viewerId") Long viewerId, @Param("limit") int limit);
+    List<UserInfo> fetchMembersPreview(@Param("roomId") Long roomId,
+                                       @Param("viewerId") Long viewerId,
+                                       @Param("limit") int limit);
 
     // No @Modifying since this query returns a row value instead of number of rows affected
     @Query(value = """

@@ -11,7 +11,7 @@ const ChatWindow: React.FC = () => {
     const activeRoomId = useActiveChatroomStore((s) => s.activeRoomId);
     const roomStatus = useActiveChatroomStore((s) => s.status);
     const messages = useActiveChatroomStore((s) => s.messages);
-    const hasMoreMessages = useActiveChatroomStore((s) => s.hasMoreMessages);
+    const hasOlderMessages = useActiveChatroomStore((s) => s.hasOlderMessages);
     const loadingOlderMessages = useActiveChatroomStore((s) => s.loadingOlderMessages);
     const isNearBottom = useActiveChatroomStore((s) => s.isNearBottom);
     const setNearBottom = useActiveChatroomStore((s) => s.setNearBottom);
@@ -80,7 +80,7 @@ const ChatWindow: React.FC = () => {
         const sentinel = topSentinelRef.current;
         if (!el || !sentinel) return;
 
-        if (!hasMoreMessages) return;
+        if (!hasOlderMessages) return;
 
         const io = new IntersectionObserver(
             async ([entry]) => {
@@ -112,7 +112,7 @@ const ChatWindow: React.FC = () => {
     }, [
         activeRoomId,
         roomStatus,
-        hasMoreMessages,
+        hasOlderMessages,
         loadingOlderMessages,
         loadOlderMessages,
     ]);

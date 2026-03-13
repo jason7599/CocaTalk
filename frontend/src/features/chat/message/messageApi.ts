@@ -1,5 +1,5 @@
 import api from "../../../services/api";
-import type { MessagePage } from "../../../shared/types";
+import type { MessageDto, MessagePage } from "../../../shared/types";
 
 type LoadMessagesParams = {
     before?: number;
@@ -27,4 +27,8 @@ export async function loadMessages(
         `/chats/${roomId}/messages?${qs.toString()}`,
         { signal }
     )).data
-}
+};
+
+export async function sendMessage(roomId: number, content: string): Promise<MessageDto> {
+    return (await api.post(`/chats/${roomId}/messages`, { content })).data;
+};

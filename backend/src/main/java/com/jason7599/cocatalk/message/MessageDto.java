@@ -15,6 +15,18 @@ public record MessageDto(
         JsonNode eventData,
         Instant createdAt
 ) {
+    public interface Projection {
+        Long getRoomId();
+        Long getSeq();
+        String getKind();
+        String getEventType();
+        Long getActorId();
+        String getActorName();
+        String getContent();
+        JsonNode getEventData();
+        Instant getCreatedAt();
+    }
+
     public MessageDto(MessageEntity e) {
         this(
                 e.getId().roomId(),
@@ -26,6 +38,20 @@ public record MessageDto(
                 e.getContent(),
                 e.getEventData(),
                 e.getCreatedAt()
+        );
+    }
+
+    public MessageDto(Projection p) {
+        this(
+                p.getRoomId(),
+                p.getSeq(),
+                p.getKind() == null ? null : MessageKind.valueOf(p.getKind()),
+                p.getEventType() == null ? null : EventMessageType.valueOf(p.getEventType()),
+                p.getActorId(),
+                p.getActorName(),
+                p.getContent(),
+                p.getEventData(),
+                p.getCreatedAt()
         );
     }
 }

@@ -1,7 +1,6 @@
 package com.jason7599.cocatalk.message;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -34,7 +33,7 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
             )
             ORDER BY seq ASC
             """, nativeQuery = true)
-    List<MessageDto> fetchMessagesBefore(@Param("roomId") Long roomId,
+    List<MessageDto.Projection> fetchMessagesBefore(@Param("roomId") Long roomId,
                                          @Param("cursor") long cursor,
                                          @Param("limit") int limit);
 
@@ -62,7 +61,7 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
                 )
             )
             """, nativeQuery = true)
-    List<MessageDto> fetchMessagesAround(@Param("roomId") Long roomId,
+    List<MessageDto.Projection> fetchMessagesAround(@Param("roomId") Long roomId,
                                          @Param("cursor") long cursor,
                                          @Param("limitBefore") int limitBefore,
                                          @Param("limitAfter") int limitAfter);
@@ -74,11 +73,10 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
             ORDER BY m.seq ASC
             LIMIT :limit
             """, nativeQuery = true)
-    List<MessageDto> fetchMessagesAfter(@Param("roomId") Long roomId,
+    List<MessageDto.Projection> fetchMessagesAfter(@Param("roomId") Long roomId,
                                         @Param("cursor") long cursor,
                                         @Param("limit") int limit);
 
-    @Modifying
     @Query(value = """
             WITH next_seq AS (
                 UPDATE rooms
@@ -112,8 +110,8 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
             @Param("roomId") Long roomId,
             @Param("actorId") Long actorId,
             @Param("actorName") String actorName,
-            @Param("kind") MessageKind kind,
-            @Param("eventType") EventMessageType eventType,
+            @Param("kind") String kind,
+            @Param("eventType") String eventType,
             @Param("content") String content,
             @Param("eventData") String eventData
     );

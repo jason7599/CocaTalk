@@ -1,8 +1,12 @@
 package com.jason7599.cocatalk.chatroom;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.jason7599.cocatalk.message.EventMessageType;
 import com.jason7599.cocatalk.message.MessageDto;
+import com.jason7599.cocatalk.message.MessageKind;
 import com.jason7599.cocatalk.user.UserInfo;
 
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -20,4 +24,18 @@ public record ChatroomSummary(
     Long myLastAck,
     MessageDto lastMessage
 ) {
+    public interface Projection {
+        Long getRoomId();
+        ChatroomType getRoomType();
+        int getTotalMemberCount();
+        Long getMyLastAck();
+        Long getLastSeq();
+        MessageKind getLastMessageKind();
+        EventMessageType getLastMessageEventType();
+        Long getLastActorId();
+        String getLastActorName();
+        String getLastMessage();
+        JsonNode getLastEventData();
+        Instant getLastMessageAt();
+    }
 }

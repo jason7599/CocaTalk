@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { EMPTY_META, type ChatroomMeta, type MessageDto, type UserInfo } from "../../shared/types";
 import { bootstrap } from "./chatroomApi";
 import { useChatroomsStore } from "./chatroomsStore";
-import { loadMessages } from "./message/messageApi";
+import { loadMessages, sendMessage as apiSendMessage } from "./message/messageApi";
 import { errorMessage } from "../../shared/utils/errors";
 
 const ACK_DEBOUNCE_MS = 400;
@@ -242,11 +242,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
 
             console.log("Send", body);
 
-            // todo
-            // stompClient.publish({
-            //     destination: "/app/chat.send",
-            //     body: JSON.stringify(body)
-            // });
+            apiSendMessage(roomId, content);
         },
 
         receiveMessage: (msg) => {

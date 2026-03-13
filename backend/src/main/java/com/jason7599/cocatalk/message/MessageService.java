@@ -25,7 +25,7 @@ public class MessageService {
      */
     public MessagePage fetchMessagesBefore(Long roomId, long cursor) {
         // ordered by seq asc
-        List<MessageDto> messages = messageRepository.fetchMessagesBefore(roomId, cursor, MESSAGE_PAGE_SIZE + 1);
+        List<MessageDto.Projection> messages = messageRepository.fetchMessagesBefore(roomId, cursor, MESSAGE_PAGE_SIZE + 1);
 
         if (messages.isEmpty()) {
             return MessagePage.empty();
@@ -37,9 +37,9 @@ public class MessageService {
         }
 
         return new MessagePage(
-                messages,
-                messages.getFirst().seq(),
-                messages.getLast().seq(),
+                messages.stream().map(MessageDto::new).toList(),
+                messages.getFirst().getSeq(),
+                messages.getLast().getSeq(),
                 hasOlder
         );
     }
@@ -48,7 +48,7 @@ public class MessageService {
      * Initial load, fetch messages around the user's last ack.
      */
     public MessagePage fetchMessagesAround(Long roomId, long cursor) {
-        List<MessageDto> messages
+        List<MessageDto.Projection> messages
                 = messageRepository.fetchMessagesAround(roomId, cursor, AROUND_BEFORE_LIMIT + 1, AROUND_AFTER_LIMIT);
 
         if (messages.isEmpty()) {
@@ -57,7 +57,7 @@ public class MessageService {
 
         int olderCount = 0;
         for (; olderCount <= Math.min(messages.size() - 1, AROUND_BEFORE_LIMIT)
-                && messages.get(olderCount).seq() < cursor;
+                && messages.get(olderCount).getSeq() < cursor;
              olderCount++);
 
         boolean hasOlder = olderCount == AROUND_BEFORE_LIMIT + 1;
@@ -66,9 +66,9 @@ public class MessageService {
         }
 
         return new MessagePage(
-                messages,
-                messages.getFirst().seq(),
-                messages.getLast().seq(),
+                messages.stream().map(MessageDto::new).toList(),
+                messages.getFirst().getSeq(),
+                messages.getLast().getSeq(),
                 hasOlder
         );
     }
@@ -77,16 +77,16 @@ public class MessageService {
      * User scrolls down
      */
     public MessagePage fetchMessagesAfter(Long roomId, long cursor) {
-        List<MessageDto> messages = messageRepository.fetchMessagesAfter(roomId, cursor, MESSAGE_PAGE_SIZE);
+        List<MessageDto.Projection> messages = messageRepository.fetchMessagesAfter(roomId, cursor, MESSAGE_PAGE_SIZE);
 
         if (messages.isEmpty()) {
             return MessagePage.empty();
         }
 
         return new MessagePage(
-                messages,
-                messages.getFirst().seq(),
-                messages.getLast().seq(),
+                messages.stream().map(MessageDto::new).toList(),
+                messages.getFirst().getSeq(),
+                messages.getLast().getSeq(),
                 true // hasOlder is irrelevant for forward pagination
         );
     }
@@ -101,7 +101,7 @@ public class MessageService {
                 roomId,
                 userId,
                 username,
-                MessageKind.USER,
+                MessageKind.USER.name(),
                 null,
                 content,
                 null
