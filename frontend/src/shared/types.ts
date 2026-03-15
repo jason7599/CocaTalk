@@ -10,18 +10,34 @@ export interface UserBootstrapDto {
 };
 
 
-interface BaseMessage {
+// Common fields for all message types 
+type MessageBase = {
     roomId: number;
-    seq: number;
     actorId: number;
     actorName: string;
-    createdAt: string;
 };
 
-export type UserMessage = BaseMessage & {
+// For both pending & persisted user message
+// Only user messages, not event messages
+type UserMessageBase = MessageBase & {
     kind: "USER";
     content: string;
 };
+
+type PendingUserMessage = UserMessageBase & {
+    status: "SENDING" | "FAILED";
+    clientId: string; // TODO
+};
+
+type PersistedMessageBase = MessageBase & {
+    status: "SENT";
+    seq: number;
+    createdAt: string;
+};
+
+export type UserMessage = PendingUserMessage 
+    | (PersistedMessageBase & UserMessageBase)
+;
 
 export type EventMessageType =
     | "GROUP_CREATED"
@@ -30,12 +46,13 @@ export type EventMessageType =
     | "MEMBER_REMOVED"
 ;
 
-export type EventMessage = BaseMessage & {
+export type EventMessage = PersistedMessageBase & {
     kind: "EVENT";
-    eventType: EventMessageType;
+    eventType: EventMessageType; 
     eventData: Record<string, unknown>;
 };
 
+// distinguish using kind
 export type MessageDto = UserMessage | EventMessage;
 
 export interface MessagePage {
@@ -75,7 +92,7 @@ export const EMPTY_META: ChatroomMeta = {
 
 export interface ChatroomBootstrapDto {
     meta: ChatroomMeta;
-    members: UserInfo[]; // includes self
+    members: UserInfo[]; // excludes self
     initialPage: MessagePage;
     lastReadSeq: number;
     lastSeq: number;
