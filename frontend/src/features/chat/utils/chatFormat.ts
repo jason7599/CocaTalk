@@ -77,3 +77,8 @@ function formatEventMessage(message: EventMessage): string {
             return "System event";
     }
 };
+
+export function formatTime(time: string): string {
+    const d = new Date(time);
+    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+};

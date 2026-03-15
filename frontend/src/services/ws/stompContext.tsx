@@ -43,9 +43,9 @@ export const StompProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 // defensive
                 notificationSubRef.current?.unsubscribe();
                 notificationSubRef.current = c.subscribe(
-                    "/user/queue/messages", // This handles all messages
+                    "/user/queue/messages",
                     (frame: IMessage) => {
-                        
+                        console.log(frame);
                     }
                 );
             },

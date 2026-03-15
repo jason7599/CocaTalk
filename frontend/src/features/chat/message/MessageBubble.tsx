@@ -1,22 +1,27 @@
 import type React from "react";
 import { useRequiredAuth } from "../../auth/AuthProvider";
-import type { MessageDto } from "../../../shared/types";
-import { useActiveChatroomStore } from "../activeChatroomStore";
+import type { UserMessage } from "../../../shared/types";
+import { formatTime } from "../utils/chatFormat";
 
-const MessageBubble: React.FC<{ message: MessageDto }> = ({ message }) => {
+const MessageBubble: React.FC<{ message: UserMessage }> = ({ message }) => {
     const { user } = useRequiredAuth();
     const isMe = message.actorId === user.userId;
 
-    const senderUsername = useActiveChatroomStore(
-        (s) => s.data?.members[message.actorId]?.username ?? ""
-    );
-
     return (
-        <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-            <div className="max-w-[76%]">
-                {!isMe && senderUsername && (
-                    <div className="mb-1 px-1 text-xs font-semibold text-slate-400">
-                        {senderUsername}
+        <div className={[
+            "group flex w-full",
+            isMe ? "justify-end" : "justify-start"
+        ].join(" ")}>
+            <div className="max-w-[76%] flex flex-col">
+                {/* sender + timestamp */}
+                {!isMe && (
+                    <div className="mb-1 flex items-center gap-2 px-1 text-xs text-slate-400">
+                        <span className="font-semibold text-slate-300">
+                            {message.actorName}
+                        </span>
+                        <span className="opacity-60">
+                            {formatTime(message.createdAt)}
+                        </span>
                     </div>
                 )}
 
@@ -44,6 +49,13 @@ const MessageBubble: React.FC<{ message: MessageDto }> = ({ message }) => {
                 >
                     {message.content}
                 </div>
+
+                {isMe && (
+                    <div className="mt-1 px-1 text-xs text-right text-slate-500">
+                        {formatTime(message.createdAt)}
+                    </div>
+                )}
+
             </div>
         </div>
     );
