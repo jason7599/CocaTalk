@@ -69,7 +69,7 @@ export type ChatroomMeta =
 
 export const EMPTY_META: ChatroomMeta = {
     type: "DIRECT",
-    blockedByOtherUser: true
+    blockedByOtherUser: false
 };
 
 export interface ChatroomBootstrapDto {
