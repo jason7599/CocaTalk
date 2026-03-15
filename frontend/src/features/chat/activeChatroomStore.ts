@@ -193,6 +193,8 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
         _lastSentAck: 0,
 
         setActiveChatroom: (roomId) => {
+            if (get().activeRoomId === roomId) return;
+
             const prevAbort = get()._abort;
             prevAbort?.abort();
 

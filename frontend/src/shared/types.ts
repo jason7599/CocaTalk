@@ -27,8 +27,9 @@ export type EventMessageType =
     | "GROUP_CREATED"
     | "MEMBER_JOINED"
     | "MEMBER_LEFT"
-    | "MEMBER_REMOVED";
-    
+    | "MEMBER_REMOVED"
+;
+
 export type EventMessage = BaseMessage & {
     kind: "EVENT";
     eventType: EventMessageType;

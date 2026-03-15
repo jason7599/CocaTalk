@@ -195,9 +195,10 @@ const ChatWindow: React.FC = () => {
                 ) : (
                     <div className="flex flex-col gap-2">
                         {messages.map((m) => (
-                            <MessageBubble message={m} key={m.seq} />
+                            m.kind === "USER" 
+                                ? <MessageBubble message={m} key={m.seq} />
+                                : <></> // todo: event messages
                         ))}
-
                     </div>
                 )}
 
