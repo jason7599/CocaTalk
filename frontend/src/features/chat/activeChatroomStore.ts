@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { EMPTY_META, type ChatroomMeta, type MessageDto, type MessageInfo, type PendingUserMessage, type UserInfo } from "../../shared/types";
+import { EMPTY_META, type ChatroomMeta, type MessageDto, type PendingUserMessage, type UserInfo } from "../../shared/types";
 import { bootstrap } from "./chatroomApi";
 import { useChatroomsStore } from "./chatroomsStore";
 import { loadOlderMessages as apiLoadOlderMessages, sendMessage as apiSendMessage } from "./message/messageApi";
@@ -18,7 +18,9 @@ type ActiveChatroomState = {
     // room session contents
     meta: ChatroomMeta;
     members: Record<number, UserInfo>; // Todo: convert to list, as now MessageDto holds the actor_name
-    messages: MessageInfo[];
+    
+    messages: MessageDto[];
+    pendingMessages: PendingUserMessage[];
 
     // pagination stuff 
     nextCursor: number; // 0 if not loaded or no messages
@@ -60,13 +62,6 @@ type ActiveChatroomState = {
     _maybeAckLatestVisible: () => void;
 };
 
-function messageFromDto(dto: MessageDto): MessageInfo {
-    return {
-        ...dto,
-        status: "PERSISTED"
-    };
-};
-
 /**
  * Active Chatroom Store
  * 
@@ -97,7 +92,9 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
 
             meta: EMPTY_META,
             members: {},
+
             messages: [],
+            pendingMessages: [],
 
             nextCursor: 0,
 
@@ -142,8 +139,10 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             set({
                 status: "READY",
                 meta: bootstrapData.meta,
+                
                 members,
-                messages: page.messages.map(messageFromDto),
+
+                messages: page.messages,
 
                 nextCursor: page.nextCursor,
 
@@ -176,7 +175,9 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
 
         meta: EMPTY_META,
         members: {},
+
         messages: [],
+        pendingMessages: [],
 
         nextCursor: 0,
 
@@ -233,44 +234,43 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             });
         },
 
-        sendMessage: (content, actor) => {
+        // the user param is just for the optimistic UI upsert.
+        // since a zustand store cannot access a context value.
+        // No need to worry about malformed api requests, BE does its own auth thing
+        sendMessage: (content, user) => {
             const roomId = get().activeRoomId;
             if (roomId == null) return;
 
             const clientId = crypto.randomUUID();
 
-            const pending: PendingUserMessage = {
+            const pending = {
                 roomId,
-                actorId: actor.userId,
-                actorName: actor.username,
+                actorId: user.userId,
+                actorName: user.username,
                 kind: "USER",
                 status: "SENDING",
                 content,
                 clientId
-            };
-
-            // optimistic UI insert
+            } satisfies PendingUserMessage;
+            
             set((s) => ({
-                messages: [...s.messages, pending]
+                pendingMessages: [...s.pendingMessages, pending]
             }));
 
             apiSendMessage(roomId, content, clientId);
         },
 
-        receiveMessage: (dto) => {
+        receiveMessage: (msg) => {
             set((s) => {
-                const lastKnownSeq = Math.max(s.lastKnownSeq, dto.seq);
+                const lastKnownSeq = Math.max(s.lastKnownSeq, msg.seq);
 
-                // Only append if user is near bottom
-                if (s.isNearBottom) {
-                    return {
-                        messages: [...s.messages, messageFromDto(dto)],
-                        lastKnownSeq,
-                    };
-                }
+                // TODO: remove from pendingMessages
+                // Let's work on this after making authStore
 
-                // Otherwise, just advance the known seq
-                return { lastKnownSeq };
+                return {
+                    lastKnownSeq,
+                    messages: [...s.messages, msg]
+                };
             });
         },
 
@@ -385,7 +385,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
                     if (cur.status !== "READY") return {};
 
                     return {
-                        messages: [...page.messages.map(messageFromDto), ...cur.messages],
+                        messages: [...page.messages, ...cur.messages],
                         nextCursor: page.nextCursor,
                         hasOlderMessages: page.hasOlder,
                         loadingOlderMessages: false

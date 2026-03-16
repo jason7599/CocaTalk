@@ -62,8 +62,6 @@ export type PendingUserMessage = MessageBase & {
     clientId: string;
 };
 
-export type MessageInfo = (MessageDto & { status: "PERSISTED" }) | PendingUserMessage;
-
 export interface MessagePage {
     messages: MessageDto[];
     nextCursor: number;
