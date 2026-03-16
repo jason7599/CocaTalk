@@ -1,33 +1,23 @@
 import api from "../../../services/api";
 import type { MessageDto, MessagePage } from "../../../shared/types";
 
-type LoadMessagesParams = {
-    before?: number;
-    after?: number;
+type LoadOlderMessagesParams = {
+    cursor: number;
     signal?: AbortSignal;
 };
 
-export async function loadMessages(
+export async function loadOlderMessages(
     roomId: number,
-    params: LoadMessagesParams
+    { cursor, signal }: LoadOlderMessagesParams
 ): Promise<MessagePage> {
+    const qs = new URLSearchParams({
+        cursor: String(cursor)
+    });
 
-    const { before, after, signal } = params;
-
-    if ((before == null) === (after == null)) {
-        throw new Error("Exactly one of 'before' or 'after' must be provided");
-    }
-
-    const qs = new URLSearchParams();
-
-    if (before != null) qs.set("before", String(before));
-    if (after != null) qs.set("after", String(after));
-
-    return (await api.get(
-        `/chats/${roomId}/messages?${qs.toString()}`,
-        { signal }
-    )).data
-};
+    return (
+        await api.get(`/chats/${roomId}/messages?${qs.toString()}`, { signal })
+    ).data;
+}
 
 export async function sendMessage(roomId: number, content: string, clientId: string): Promise<MessageDto> {
     return (await api.post(`/chats/${roomId}/messages`, { content, clientId })).data;

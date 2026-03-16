@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { EMPTY_META, type ChatroomMeta, type MessageDto, type MessageInfo, type PendingUserMessage, type UserInfo } from "../../shared/types";
 import { bootstrap } from "./chatroomApi";
 import { useChatroomsStore } from "./chatroomsStore";
-import { loadMessages, sendMessage as apiSendMessage } from "./message/messageApi";
+import { loadOlderMessages as apiLoadOlderMessages, sendMessage as apiSendMessage } from "./message/messageApi";
 import { errorMessage } from "../../shared/utils/errors";
 
 const ACK_DEBOUNCE_MS = 400;
@@ -21,8 +21,7 @@ type ActiveChatroomState = {
     messages: MessageInfo[];
 
     // pagination stuff 
-    beforeCursor: number; // 0 if not loaded or no messages
-    afterCursor: number;
+    nextCursor: number; // 0 if not loaded or no messages
 
     hasOlderMessages: boolean;
 
@@ -100,8 +99,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             members: {},
             messages: [],
 
-            beforeCursor: 0,
-            afterCursor: 0,
+            nextCursor: 0,
 
             hasOlderMessages: false,
 
@@ -147,8 +145,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
                 members,
                 messages: page.messages.map(messageFromDto),
 
-                beforeCursor: page.startSeq,
-                afterCursor: page.endSeq,
+                nextCursor: page.nextCursor,
 
                 hasOlderMessages: page.hasOlder,
 
@@ -181,8 +178,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
         members: {},
         messages: [],
 
-        beforeCursor: 0,
-        afterCursor: 0,
+        nextCursor: 0,
 
         hasOlderMessages: false,
 
@@ -224,8 +220,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
                 members: {},
                 messages: [],
 
-                beforeCursor: 0,
-                afterCursor: 0,
+                nextCursor: 0,
 
                 hasOlderMessages: false,
 
@@ -255,7 +250,6 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             };
 
             // optimistic UI insert
-            // TODO: shit. what if user is not in live mode???????
             set((s) => ({
                 messages: [...s.messages, pending]
             }));
@@ -272,7 +266,6 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
                     return {
                         messages: [...s.messages, messageFromDto(dto)],
                         lastKnownSeq,
-                        afterCursor: dto.seq
                     };
                 }
 
@@ -372,7 +365,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             if (roomId == null) return;
             if (s.loadingOlderMessages) return;
             if (!s.hasOlderMessages) return;
-            if (s.beforeCursor === 0) return;
+            if (s.nextCursor === 0) return;
 
             const epoch = s._epoch;
             const abort = s._abort;
@@ -381,8 +374,8 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             set({ loadingOlderMessages: true });
 
             try {
-                const page = await loadMessages(roomId, {
-                    before: s.beforeCursor,
+                const page = await apiLoadOlderMessages(roomId, {
+                    cursor: s.nextCursor,
                     signal: abort.signal
                 });
 
@@ -393,7 +386,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
 
                     return {
                         messages: [...page.messages.map(messageFromDto), ...cur.messages],
-                        beforeCursor: page.startSeq,
+                        nextCursor: page.nextCursor,
                         hasOlderMessages: page.hasOlder,
                         loadingOlderMessages: false
                     };

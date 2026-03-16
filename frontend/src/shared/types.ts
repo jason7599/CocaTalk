@@ -66,8 +66,7 @@ export type MessageInfo = (MessageDto & { status: "PERSISTED" }) | PendingUserMe
 
 export interface MessagePage {
     messages: MessageDto[];
-    startSeq: number;
-    endSeq: number;
+    nextCursor: number;
     hasOlder: boolean;
 };
 
