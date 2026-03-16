@@ -7,8 +7,8 @@ import { useAuthStore } from '../features/auth/authStore.tsx';
 
 export default function App() {
     const { bootstrapping } = useSessionLifecycle();
-    const isLoading = useAuthStore((s) => s.isLoading);
     const user = useAuthStore((s) => s.user);
+    const isLoading = useAuthStore((s) => s.isLoading);
     const isLoggedIn = !!user;
 
     if (isLoading || bootstrapping) return <SessionLoadingScreen />;
