@@ -1,13 +1,15 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import AuthPage from '../features/auth/AuthPage.tsx'
 import AppLayout from './AppLayout.tsx';
-import { useAuth } from '../features/auth/AuthProvider.tsx';
 import { useSessionLifecycle } from '../features/session/useSessionLifecycle.ts';
 import SessionLoadingScreen from '../features/session/SessionLoadingScreen.tsx';
+import { useAuthStore } from '../features/auth/authStore.tsx';
 
 export default function App() {
-    const { isLoggedIn, isLoading } = useAuth();
     const { bootstrapping } = useSessionLifecycle();
+    const isLoading = useAuthStore((s) => s.isLoading);
+    const user = useAuthStore((s) => s.user);
+    const isLoggedIn = !!user;
 
     if (isLoading || bootstrapping) return <SessionLoadingScreen />;
 

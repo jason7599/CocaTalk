@@ -3,11 +3,7 @@ package com.jason7599.cocatalk.security;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
@@ -17,12 +13,13 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<Long> register(@RequestBody @Valid UserRegisterRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request));
+    @ResponseStatus(HttpStatus.CREATED)
+    public Long register(@RequestBody @Valid UserRegisterRequest request) {
+        return authService.register(request);
     }
 
     @PostMapping("/login")
-    public String login(@RequestBody UserLoginRequest request) {
+    public UserLoginResponse login(@RequestBody UserLoginRequest request) {
         return authService.login(request);
     }
 }

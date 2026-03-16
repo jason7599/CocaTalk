@@ -2,6 +2,7 @@ package com.jason7599.cocatalk.security;
 
 import com.jason7599.cocatalk.exception.ApiError;
 import com.jason7599.cocatalk.user.UserEntity;
+import com.jason7599.cocatalk.user.UserInfo;
 import com.jason7599.cocatalk.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -30,8 +31,7 @@ public class AuthService {
         )).getId();
     }
 
-    // returns jwt token
-    public String login(UserLoginRequest request) {
+    public UserLoginResponse login(UserLoginRequest request) {
         UserEntity user = userRepository.findByUsername(request.username())
                 .orElseThrow(() -> new ApiError(HttpStatus.BAD_REQUEST, "Bad Credentials"));
 
@@ -39,6 +39,9 @@ public class AuthService {
             throw new ApiError(HttpStatus.BAD_REQUEST, "Bad Credentials");
         }
 
-        return jwtService.generateToken(user.getId());
+        return new UserLoginResponse(
+                jwtService.generateToken(user.getId()),
+                new UserInfo(user)
+        );
     }
 }

@@ -1,8 +1,8 @@
 import { create } from "zustand";
 import { EMPTY_META, type ChatroomMeta, type MessageDto, type PendingUserMessage, type UserInfo } from "../../shared/types";
-import { bootstrap } from "./chatroomApi";
+import { apiChatroomBootstrap } from "./chatroomApi";
 import { useChatroomsStore } from "./chatroomsStore";
-import { loadOlderMessages as apiLoadOlderMessages, sendMessage as apiSendMessage } from "./message/messageApi";
+import { apiLoadOlderMessages, apiSendMessage } from "./message/messageApi";
 import { errorMessage } from "../../shared/utils/errors";
 
 const ACK_DEBOUNCE_MS = 400;
@@ -126,7 +126,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
 
     const loadInitialRoomData = async (roomId: number, epoch: number, abort: AbortController) => {
         try {
-            const bootstrapData = await bootstrap(roomId);
+            const bootstrapData = await apiChatroomBootstrap(roomId);
 
             if (!isStillCurrent(roomId, epoch, abort)) return;
 

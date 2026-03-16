@@ -1,4 +1,4 @@
-import api from "../../services/api";
+import api from "../../services/apiClient";
 import type { UserBootstrapDto } from "../../shared/types";
 import { useChatroomsStore } from "../chat/chatroomsStore";
 import { useContactsStore } from "../contacts/contactsStore";

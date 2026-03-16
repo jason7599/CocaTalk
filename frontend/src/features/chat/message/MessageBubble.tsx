@@ -1,10 +1,10 @@
 import type React from "react";
-import { useRequiredAuth } from "../../auth/AuthProvider";
 import type { UserMessage } from "../../../shared/types";
 import { formatTime } from "../utils/chatFormat";
+import { useAuthStore } from "../../auth/authStore";
 
 const MessageBubble: React.FC<{ message: UserMessage }> = ({ message }) => {
-    const { user } = useRequiredAuth();
+    const user = useAuthStore.getState().requireUser();
     const isMe = message.actorId === user.userId;
 
     return (

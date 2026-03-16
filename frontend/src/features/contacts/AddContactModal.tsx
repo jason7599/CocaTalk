@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { UserPlusIcon, XMarkIcon } from "@heroicons/react/24/solid";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { useModal } from "../../shared/ModalContext";
-import { searchUsers } from "./contactsApi";
+import { apiSearchUsers } from "./contactsApi";
 import type { UserInfo } from "../../shared/types";
 import { useContactsStore } from "./contactsStore";
 import { useBlockedUsersStore } from "../userblock/blockedUsersStore";
@@ -89,7 +89,7 @@ const AddContactModal: React.FC = () => {
             setError(null);
 
             try {
-                const users = await searchUsers(trimmed);
+                const users = await apiSearchUsers(trimmed);
                 setResults(users);
             } catch {
                 setError("Failed to search users");

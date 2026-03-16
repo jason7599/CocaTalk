@@ -4,11 +4,11 @@ import ChatHeader from "./ChatHeader";
 import { useStomp } from "../../services/ws/stompContext";
 import { useActiveChatroomStore } from "./activeChatroomStore";
 import MessageBubble from "./message/MessageBubble";
-import { useRequiredAuth } from "../auth/AuthProvider";
+import { useAuthStore } from "../auth/authStore";
 
 const ChatWindow: React.FC = () => {
     const { connected } = useStomp();
-    const { user } = useRequiredAuth();
+    const user = useAuthStore.getState().requireUser();
 
     const activeRoomId = useActiveChatroomStore((s) => s.activeRoomId);
     const roomStatus = useActiveChatroomStore((s) => s.status);
@@ -198,13 +198,7 @@ const ChatWindow: React.FC = () => {
                     <div className="flex flex-col gap-2">
                         {messages.map((m) => (
                             m.kind === "USER"
-                                ? <MessageBubble
-                                    message={m}
-                                    key={m.status === "PERSISTED"
-                                        ? `m${m.seq}`
-                                        : `p${m.clientId}`
-                                    }
-                                />
+                                ? <MessageBubble message={m} key={m.seq}/>
                                 : null // todo: event messages
                         ))}
                     </div>

@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../auth/AuthProvider";
 import { sessionManager } from "./sessionManager";
+import { useAuthStore } from "../auth/authStore";
 
 export const useSessionLifecycle = () => {
-    const { isLoggedIn } = useAuth();
+    const user = useAuthStore((s) => s.user);
+    const isLoggedIn = !!user;
+
     const [bootstrapping, setBootstrapping] = useState(false);
 
     useEffect(() => {

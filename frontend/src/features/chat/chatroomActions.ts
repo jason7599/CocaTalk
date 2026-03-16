@@ -1,11 +1,15 @@
 import { useActiveChatroomStore } from "./activeChatroomStore";
-import { resolveDirectChatroom } from "./chatroomApi";
+import { apiResolveDirectChatroom } from "./chatroomApi";
 import { useChatroomsStore } from "./chatroomsStore";
 
 export async function openDirectChatroom(targetUserId: number) {
     const chatrooms = useChatroomsStore.getState();
     const active = useActiveChatroomStore.getState();
 
+    // TODO: shit. So this was why I shipped the whole UserInfo
+    // TODO: when fetching member previews. Forgot about this.
+    // TODO: let's fix this later
+    
     // first, search locally
     const existing = chatrooms.chatrooms.find(
         r =>
@@ -16,6 +20,6 @@ export async function openDirectChatroom(targetUserId: number) {
     if (existing) {
         active.setActiveChatroom(existing.roomId);
     } else {
-        active.setActiveChatroom(await resolveDirectChatroom(targetUserId));
+        active.setActiveChatroom(await apiResolveDirectChatroom(targetUserId));
     }
 };

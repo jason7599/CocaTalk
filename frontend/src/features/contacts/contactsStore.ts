@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { UserInfo } from "../../shared/types";
-import { addContact as apiAddContact, removeContact as apiRemoveContact } from "./contactsApi";
+import { apiAddContact, apiRemoveContact } from "./contactsApi";
 
 type ContactsState = {
     contacts: Record<number, UserInfo>;

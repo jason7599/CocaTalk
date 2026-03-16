@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { UserInfo } from "../../shared/types";
-import { addBlock as apiAddBlock, removeBlock as apiRemoveBlock } from "./blockUserApi";
+import { apiAddBlock, apiRemoveBlock } from "./blockUserApi";
 import { useContactsStore } from "../contacts/contactsStore";
 
 type BlockedUsersState = {

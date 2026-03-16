@@ -5,14 +5,14 @@ import {
     UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useModal } from "../shared/ModalContext";
-import { useRequiredAuth } from "../features/auth/AuthProvider";
 import ContactsTab from "../features/contacts/ContactsTab";
 import ChatroomsTab from "../features/chat/ChatroomsTab";
 import SettingsModal from "../features/session/SettingsModal";
+import { useAuthStore } from "../features/auth/authStore";
 
 const Sidebar: React.FC = () => {
     const { showModal } = useModal();
-    const { user } = useRequiredAuth();
+    const user = useAuthStore.getState().requireUser();
     
     const [activeTab, setActiveTab] = useState<"contacts" | "chats">("chats");
 

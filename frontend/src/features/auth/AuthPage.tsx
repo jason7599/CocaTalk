@@ -5,7 +5,7 @@ import {
     EyeIcon,
     EyeSlashIcon,
 } from "@heroicons/react/24/outline";
-import { useAuth } from "./AuthProvider";
+import { useAuthStore } from "./authStore";
 
 const AuthPage: React.FC = () => {
     const [username, setUsername] = useState("");
@@ -16,7 +16,8 @@ const AuthPage: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [showPw, setShowPw] = useState(false);
 
-    const { login, register } = useAuth();
+    const login = useAuthStore((s) => s.login);
+    const register = useAuthStore((s) => s.register);
 
     const title = useMemo(
         () => (isLogin ? "Welcome back" : "Create account"),

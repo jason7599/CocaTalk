@@ -3,6 +3,11 @@ export interface UserInfo {
     username: string;
 };
 
+export interface UserLoginResponse {
+    token: string;
+    user: UserInfo;  
+};
+
 export interface UserBootstrapDto {
     chatroomSummaries: ChatroomSummary[];
     contacts: UserInfo[];

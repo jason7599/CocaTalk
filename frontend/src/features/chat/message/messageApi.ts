@@ -1,4 +1,4 @@
-import api from "../../../services/api";
+import api from "../../../services/apiClient";
 import type { MessageDto, MessagePage } from "../../../shared/types";
 
 type LoadOlderMessagesParams = {
@@ -6,7 +6,7 @@ type LoadOlderMessagesParams = {
     signal?: AbortSignal;
 };
 
-export async function loadOlderMessages(
+export async function apiLoadOlderMessages(
     roomId: number,
     { cursor, signal }: LoadOlderMessagesParams
 ): Promise<MessagePage> {
@@ -19,6 +19,6 @@ export async function loadOlderMessages(
     ).data;
 }
 
-export async function sendMessage(roomId: number, content: string, clientId: string): Promise<MessageDto> {
+export async function apiSendMessage(roomId: number, content: string, clientId: string): Promise<MessageDto> {
     return (await api.post(`/chats/${roomId}/messages`, { content, clientId })).data;
 };

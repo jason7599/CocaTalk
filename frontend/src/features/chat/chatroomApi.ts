@@ -1,11 +1,11 @@
-import api from "../../services/api";
+import api from "../../services/apiClient";
 import type { ChatroomBootstrapDto } from "../../shared/types";
 
-export async function resolveDirectChatroom(targetUserId: number): Promise<number> {
+export async function apiResolveDirectChatroom(targetUserId: number): Promise<number> {
     return (await api.post("/chats/direct", { targetUserId })).data;
 };
 
-export async function bootstrap(roomId: number): Promise<ChatroomBootstrapDto> {
+export async function apiChatroomBootstrap(roomId: number): Promise<ChatroomBootstrapDto> {
     return (await api.get(`/chats/${roomId}/bootstrap`)).data;
 }
 
