@@ -1,14 +1,13 @@
 import { create } from "zustand";
-import { EMPTY_META, type ChatroomMeta, type MessageDto, type PendingUserMessage, type UserInfo } from "../../shared/types";
-import { apiChatroomBootstrap } from "./chatroomApi";
-import { useChatroomsStore } from "./chatroomsStore";
-import { apiLoadOlderMessages, apiSendMessage } from "./message/messageApi";
-import { errorMessage } from "../../shared/utils/errors";
-import { useAuthStore } from "../auth/authStore";
+import { EMPTY_META, type ChatroomMeta, type MessageDto, type PendingUserMessage, type UserInfo } from "../../../shared/types";
+import { apiChatroomBootstrap } from "../chatroomApi";
+import { apiLoadOlderMessages, apiSendMessage } from "../message/messageApi";
+import { errorMessage } from "../../../shared/utils/errors";
+import { useAuthStore } from "../../auth/authStore";
+import { createAckActions, type AckActions } from "./activeChatroomAck";
 
-const ACK_DEBOUNCE_MS = 400;
 
-type ActiveChatroomState = {
+export type ActiveChatroomState = AckActions & {
     // currently opened chatroom
     activeRoomId: number | null;
 
@@ -34,7 +33,7 @@ type ActiveChatroomState = {
     // for reconnection
     lastKnownSeq: number;
 
-    // UI behavior for ACK
+    // UI behavior for ACK, public
     isNearBottom: boolean; // whether user is currently near the bottom of the message list in the UI
 
     // ACK state
@@ -55,12 +54,6 @@ type ActiveChatroomState = {
     loadOlderMessages: () => Promise<void>;
 
     setNearBottom: (near: boolean) => void;
-    ackUpTo: (seq: number) => void;
-
-    _scheduleAckFlush: () => void;
-    _flushAckNow: () => void;
-
-    _maybeAckLatestVisible: () => void;
 };
 
 /**
@@ -198,6 +191,8 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
         _pendingAck: 0,
         _lastSentAck: 0,
 
+        ...createAckActions(set, get),
+
         setActiveChatroom: (roomId) => {
             if (get().activeRoomId === roomId) return;
 
@@ -290,76 +285,6 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             }
         },
 
-        ackUpTo: (seq) => {
-            // monotonic
-            const s = get();
-            if (s.activeRoomId == null) return;
-            if (seq <= s._pendingAck) return;
-
-            set({ _pendingAck: seq });
-
-            // schedule a debounce flush
-            s._scheduleAckFlush();
-
-            useChatroomsStore.getState().setMyLastAck(s.activeRoomId, seq);
-        },
-
-        _maybeAckLatestVisible: () => {
-            const s = get();
-
-            if (!s.isNearBottom) return;
-            if (s.status !== "READY") return;
-            if (s.lastKnownSeq === 0) return;
-
-            s.ackUpTo(s.lastKnownSeq);
-        },
-
-        _scheduleAckFlush: () => {
-            const s = get();
-
-            // only when no scheduled task
-            if (s._ackTimer != null) return;
-
-            const roomId = s.activeRoomId;
-
-            const timer = window.setTimeout(() => {
-                if (get().activeRoomId !== roomId) return;
-                get()._flushAckNow();
-            }, ACK_DEBOUNCE_MS);
-
-            set({ _ackTimer: timer });
-        },
-
-        _flushAckNow: () => {
-            const s = get();
-
-            if (s._ackTimer != null) {
-                window.clearTimeout(s._ackTimer);
-            }
-
-            const roomId = s.activeRoomId;
-
-            if (roomId == null) {
-                set({ _ackTimer: null });
-                return;
-            }
-
-            const pending = s._pendingAck;
-            const lastSent = s._lastSentAck;
-
-            if (pending <= lastSent) {
-                set({ _ackTimer: null });
-                return;
-            }
-
-            // TODO: send ack
-
-            set({
-                _lastSentAck: pending,
-                _ackTimer: null
-            });
-        },
-
         loadOlderMessages: async () => {
             const s = get();
 
@@ -407,7 +332,5 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
                 }
             }
         }
-
-
     };
 });

@@ -4,7 +4,7 @@ import type { ChatroomSummary } from "../../shared/types";
 import { useModal } from "../../shared/ModalContext";
 import AddGroupChatModal from "./AddGroupChatModal";
 import { useChatroomsStore } from "./chatroomsStore";
-import { useActiveChatroomStore } from "./activeChatroomStore";
+import { useActiveChatroomStore } from "./active/activeChatroomStore";
 import { formatLastMessage, formatChatroomDisplayNameFromSummary } from "./utils/chatFormat";
 
 function formatTime(ts: string | number | Date) {

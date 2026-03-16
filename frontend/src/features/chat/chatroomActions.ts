@@ -1,4 +1,4 @@
-import { useActiveChatroomStore } from "./activeChatroomStore";
+import { useActiveChatroomStore } from "./active/activeChatroomStore";
 import { apiResolveDirectChatroom } from "./chatroomApi";
 import { useChatroomsStore } from "./chatroomsStore";
 

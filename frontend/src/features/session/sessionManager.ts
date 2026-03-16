@@ -1,6 +1,6 @@
 import api from "../../services/apiClient";
 import type { UserBootstrapDto } from "../../shared/types";
-import { useActiveChatroomStore } from "../chat/activeChatroomStore";
+import { useActiveChatroomStore } from "../chat/active/activeChatroomStore";
 import { useChatroomsStore } from "../chat/chatroomsStore";
 import { useContactsStore } from "../contacts/contactsStore";
 import { useBlockedUsersStore } from "../userblock/blockedUsersStore";

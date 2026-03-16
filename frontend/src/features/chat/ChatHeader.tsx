@@ -1,6 +1,6 @@
 import type React from "react";
 import { EllipsisVerticalIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { useActiveChatroomStore } from "./activeChatroomStore";
+import { useActiveChatroomStore } from "./active/activeChatroomStore";
 import { useContactsStore } from "../contacts/contactsStore";
 import { useStomp } from "../../services/ws/stompContext";
 import { formatChatroomDisplayNameFromMembers } from "./utils/chatFormat";
