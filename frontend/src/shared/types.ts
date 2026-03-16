@@ -10,50 +10,58 @@ export interface UserBootstrapDto {
 };
 
 
-// Common fields for all message types 
+/**
+ * Common base for ALL messages.
+ * Regardless of kind or persistence
+ */
 type MessageBase = {
     roomId: number;
     actorId: number;
     actorName: string;
 };
 
-// For both pending & persisted user message
-// Only user messages, not event messages
-type UserMessageBase = MessageBase & {
-    kind: "USER";
-    content: string;
-};
-
-type PendingUserMessage = UserMessageBase & {
-    status: "SENDING" | "FAILED";
-    clientId: string; // TODO
-};
-
-type PersistedMessageBase = MessageBase & {
-    status: "SENT";
+/**
+ * "Dto" refers to the fact that it comes straight from the DB
+ * Meaning it is persisted
+ */
+type MessageDtoBase = MessageBase & {
     seq: number;
     createdAt: string;
 };
 
-export type UserMessage = PendingUserMessage 
-    | (PersistedMessageBase & UserMessageBase)
-;
+type UserMessageDto = MessageDtoBase & {
+    kind: "USER";
+    content: string;
+};
 
 export type EventMessageType =
     | "GROUP_CREATED"
     | "MEMBER_JOINED"
     | "MEMBER_LEFT"
     | "MEMBER_REMOVED"
-;
+    ;
 
-export type EventMessage = PersistedMessageBase & {
+type EventMessageDto = MessageDtoBase & {
     kind: "EVENT";
-    eventType: EventMessageType; 
+    eventType: EventMessageType;
     eventData: Record<string, unknown>;
 };
 
-// distinguish using kind
-export type MessageDto = UserMessage | EventMessage;
+/**
+ * This is an exact match of the BE shape.
+ * The expected shape from the message loading APIs
+ */
+export type MessageDto = UserMessageDto | EventMessageDto;
+
+// UI state
+type PendingUserMessage = MessageBase & {
+    kind: "USER";
+    status: "SENDING" | "FAILED";
+    clientId: string; // TODO
+    content: string;
+};
+
+export type MessageInfo = (MessageDto & { status: "PERSISTED" }) | PendingUserMessage;
 
 export interface MessagePage {
     messages: MessageDto[];
@@ -83,7 +91,7 @@ export type ChatroomMeta =
         type: "GROUP";
         groupCreatorId: number;
     }
-;
+    ;
 
 export const EMPTY_META: ChatroomMeta = {
     type: "DIRECT",

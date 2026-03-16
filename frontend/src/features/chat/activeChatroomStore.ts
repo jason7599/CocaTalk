@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { EMPTY_META, type ChatroomMeta, type MessageDto, type UserInfo } from "../../shared/types";
+import { EMPTY_META, type ChatroomMeta, type MessageDto, type MessageInfo, type UserInfo } from "../../shared/types";
 import { bootstrap } from "./chatroomApi";
 import { useChatroomsStore } from "./chatroomsStore";
 import { loadMessages, sendMessage as apiSendMessage } from "./message/messageApi";
@@ -18,7 +18,7 @@ type ActiveChatroomState = {
     // room session contents
     meta: ChatroomMeta;
     members: Record<number, UserInfo>; // Todo: convert to list, as now MessageDto holds the actor_name
-    messages: MessageDto[];
+    messages: MessageInfo[];
 
     // pagination stuff 
     beforeCursor: number; // 0 if not loaded or no messages
@@ -59,6 +59,13 @@ type ActiveChatroomState = {
     _flushAckNow: () => void;
 
     _maybeAckLatestVisible: () => void;
+};
+
+function messageFromDto(dto: MessageDto): MessageInfo {
+    return {
+        ...dto,
+        status: "PERSISTED"
+    };
 };
 
 /**
@@ -138,7 +145,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
                 status: "READY",
                 meta: bootstrapData.meta,
                 members,
-                messages: page.messages,
+                messages: page.messages.map(messageFromDto),
 
                 beforeCursor: page.startSeq,
                 afterCursor: page.endSeq,
@@ -236,20 +243,25 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
         sendMessage: (content) => {
             const roomId = get().activeRoomId;
             if (roomId == null) return;
-
-            const body = {
-                roomId,
-                content
-            };
-
-            console.log("Send", body);
-
             apiSendMessage(roomId, content);
         },
 
-        receiveMessage: (msg) => {
-            console.log("receive", msg);
-            // todo: update lastKnownSeq
+        receiveMessage: (dto) => {
+            set((s) => {
+                const lastKnownSeq = Math.max(s.lastKnownSeq, dto.seq);
+
+                // Only append if user is near bottom
+                if (s.isNearBottom) {
+                    return {
+                        messages: [...s.messages, messageFromDto(dto)],
+                        lastKnownSeq,
+                        afterCursor: dto.seq
+                    };
+                }
+
+                // Otherwise, just advance the known seq
+                return { lastKnownSeq };
+            });
         },
 
         // ack public api
@@ -282,11 +294,9 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
 
             if (!s.isNearBottom) return;
             if (s.status !== "READY") return;
+            if (s.lastKnownSeq === 0) return;
 
-            const messages = s.messages;
-            if (messages.length === 0) return;
-
-            s.ackUpTo(messages.at(-1)!.seq);
+            s.ackUpTo(s.lastKnownSeq);
         },
 
         _scheduleAckFlush: () => {
@@ -365,8 +375,8 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
                     if (cur.status !== "READY") return {};
 
                     return {
-                        messages: [...page.messages, ...cur.messages],
-                        nextCursor: page.startSeq,
+                        messages: [...page.messages.map(messageFromDto), ...cur.messages],
+                        beforeCursor: page.startSeq,
                         hasOlderMessages: page.hasOlder,
                         loadingOlderMessages: false
                     };

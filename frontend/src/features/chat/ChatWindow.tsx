@@ -198,7 +198,7 @@ const ChatWindow: React.FC = () => {
                             m.kind === "USER" 
                                 ? <MessageBubble 
                                     message={m} 
-                                    key={m.status === "SENT"
+                                    key={m.status === "PERSISTED"
                                             ? `m${m.seq}`
                                             : `p${m.clientId}`
                                     }
