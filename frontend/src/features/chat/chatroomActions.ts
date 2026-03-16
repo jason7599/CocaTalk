@@ -6,9 +6,7 @@ export async function openDirectChatroom(targetUserId: number) {
     const chatrooms = useChatroomsStore.getState();
     const active = useActiveChatroomStore.getState();
 
-    // TODO: shit. So this was why I shipped the whole UserInfo
-    // TODO: when fetching member previews. Forgot about this.
-    // TODO: let's fix this later
+    // TODO: shit. So this was why I shipped the whole UserInfo when fetching member previews
     
     // first, search locally
     const existing = chatrooms.chatrooms.find(

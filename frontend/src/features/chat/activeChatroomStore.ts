@@ -4,6 +4,7 @@ import { apiChatroomBootstrap } from "./chatroomApi";
 import { useChatroomsStore } from "./chatroomsStore";
 import { apiLoadOlderMessages, apiSendMessage } from "./message/messageApi";
 import { errorMessage } from "../../shared/utils/errors";
+import { useAuthStore } from "../auth/authStore";
 
 const ACK_DEBOUNCE_MS = 400;
 
@@ -18,7 +19,7 @@ type ActiveChatroomState = {
     // room session contents
     meta: ChatroomMeta;
     members: Record<number, UserInfo>; // Todo: convert to list, as now MessageDto holds the actor_name
-    
+
     messages: MessageDto[];
     pendingMessages: PendingUserMessage[];
 
@@ -48,7 +49,7 @@ type ActiveChatroomState = {
     setActiveChatroom: (roomId: number) => void;
     clearActiveChatroom: () => void;
 
-    sendMessage: (content: string, actor: UserInfo) => void;
+    sendMessage: (content: string) => void;
     receiveMessage: (msg: MessageDto) => void;
 
     loadOlderMessages: () => Promise<void>;
@@ -139,7 +140,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             set({
                 status: "READY",
                 meta: bootstrapData.meta,
-                
+
                 members,
 
                 messages: page.messages,
@@ -164,6 +165,10 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
                 error: errorMessage(err)
             });
         }
+    };
+
+    function insertMessage(messages: MessageDto[], msg: MessageDto): MessageDto[] {
+        // TODO
     };
 
     return {
@@ -234,25 +239,23 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             });
         },
 
-        // the user param is just for the optimistic UI upsert.
-        // since a zustand store cannot access a context value.
-        // No need to worry about malformed api requests, BE does its own auth thing
-        sendMessage: (content, user) => {
+        sendMessage: (content) => {
             const roomId = get().activeRoomId;
             if (roomId == null) return;
 
             const clientId = crypto.randomUUID();
+            const me = useAuthStore.getState().requireUser();
 
             const pending = {
                 roomId,
-                actorId: user.userId,
-                actorName: user.username,
+                actorId: me.userId,
+                actorName: me.username,
                 kind: "USER",
                 status: "SENDING",
                 content,
                 clientId
             } satisfies PendingUserMessage;
-            
+
             set((s) => ({
                 pendingMessages: [...s.pendingMessages, pending]
             }));
@@ -261,14 +264,19 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
         },
 
         receiveMessage: (msg) => {
+            const me = useAuthStore.getState().requireUser();
+
             set((s) => {
                 const lastKnownSeq = Math.max(s.lastKnownSeq, msg.seq);
 
-                // TODO: remove from pendingMessages
-                // Let's work on this after making authStore
+                const pendingMessages =
+                    msg.kind === "USER" && msg.actorId === me.userId
+                        ? s.pendingMessages.filter(p => p.clientId !== msg.clientId)
+                        : s.pendingMessages;
 
                 return {
                     lastKnownSeq,
+                    pendingMessages,
                     messages: [...s.messages, msg]
                 };
             });

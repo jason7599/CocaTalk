@@ -4,11 +4,9 @@ import ChatHeader from "./ChatHeader";
 import { useStomp } from "../../services/ws/stompContext";
 import { useActiveChatroomStore } from "./activeChatroomStore";
 import MessageBubble from "./message/MessageBubble";
-import { useAuthStore } from "../auth/authStore";
 
 const ChatWindow: React.FC = () => {
     const { connected } = useStomp();
-    const user = useAuthStore.getState().requireUser();
 
     const activeRoomId = useActiveChatroomStore((s) => s.activeRoomId);
     const roomStatus = useActiveChatroomStore((s) => s.status);
@@ -38,7 +36,7 @@ const ChatWindow: React.FC = () => {
     const handleSend = () => {
         if (!canSend) return;
 
-        sendMessage(trimmed, user);
+        sendMessage(trimmed);
 
         setMessage("");
         inputRef.current?.focus();
