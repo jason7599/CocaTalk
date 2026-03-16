@@ -1,7 +1,7 @@
 package com.jason7599.cocatalk.user;
 
 public record UserInfo(
-        Long userId,
+        long userId,
         String username
 ) {
     public UserInfo(UserEntity e) {

@@ -19,15 +19,15 @@ public class UserRelationService {
     private final UserRepository userRepository;
     private final UserRelationRepository userRelationRepository;
 
-    public List<UserInfo> getContacts(Long userId) {
+    public List<UserInfo> getContacts(long userId) {
         return userRelationRepository.getContacts(userId);
     }
 
     @Transactional
-    public UserInfo addContact(Long userId, Long targetId) {
+    public UserInfo addContact(long userId, long targetId) {
         // TODO: target user is blocked?
 
-        if (userId.equals(targetId)) {
+        if (userId == targetId) {
             throw new ApiError(HttpStatus.BAD_REQUEST, "Cannot add self to contacts");
         }
 
@@ -44,18 +44,18 @@ public class UserRelationService {
     }
 
     @Transactional
-    public void removeContact(Long userId, Long targetId) {
+    public void removeContact(long userId, long targetId) {
         userRelationRepository.removeContact(userId, targetId);
     }
 
-    public List<UserInfo> getBlockedUsers(Long userId) {
+    public List<UserInfo> getBlockedUsers(long userId) {
         return userRelationRepository.getBlockedUsers(userId);
     }
 
     // TODO: websocket event
     @Transactional
-    public UserInfo addBlock(Long userId, Long targetId) {
-        if (userId.equals(targetId)) {
+    public UserInfo addBlock(long userId, long targetId) {
+        if (userId == targetId) {
             throw new ApiError(HttpStatus.BAD_REQUEST, "Cannot block self");
         }
 
@@ -70,11 +70,11 @@ public class UserRelationService {
 
     // TODO: websocket event
     @Transactional
-    public void removeBlock(Long userId, Long targetId) {
+    public void removeBlock(long userId, long targetId) {
         userRelationRepository.removeBlock(userId, targetId);
     }
 
-    public boolean hasBlocked(Long blockerId, Long blockeeId) {
+    public boolean hasBlocked(long blockerId, long blockeeId) {
         return userRelationRepository.hasBlocked(blockerId, blockeeId);
     }
 }

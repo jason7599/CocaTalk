@@ -24,7 +24,7 @@ public class MessageEntity {
     @EmbeddedId
     private MessageId id;
 
-    private Long actorId;
+    private long actorId;
 
     private String actorName;
 

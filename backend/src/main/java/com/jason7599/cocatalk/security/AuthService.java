@@ -20,7 +20,7 @@ public class AuthService {
 
     // returns created user id
     @Transactional
-    public Long register(UserRegisterRequest request) {
+    public long register(UserRegisterRequest request) {
         if (userRepository.findByUsername(request.username()).isPresent()) {
             throw new ApiError(HttpStatus.CONFLICT, "Username taken");
         }

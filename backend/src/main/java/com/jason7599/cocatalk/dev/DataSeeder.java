@@ -47,13 +47,13 @@ public class DataSeeder {
                     username = FakeUsernameGenerator.generate();
                 } while (!usedUsernames.add(username));
 
-                Long userId = authService.register(new UserRegisterRequest(username,USER_PASSWORD));
+                long userId = authService.register(new UserRegisterRequest(username,USER_PASSWORD));
                 createdUserIds.add(userId);
             }
 
-            for (Long userId : createdUserIds) {
+            for (long userId : createdUserIds) {
                 for (int idIdx = 0, created = 0; idIdx < createdUserIds.size() && created < maxContactsPerUser;) {
-                    if (userId.equals(createdUserIds.get(idIdx)) || random.nextFloat() > ADD_CONTACT_CHANCE) {
+                    if (userId == createdUserIds.get(idIdx) || random.nextFloat() > ADD_CONTACT_CHANCE) {
                         idIdx++;
                         continue;
                     }

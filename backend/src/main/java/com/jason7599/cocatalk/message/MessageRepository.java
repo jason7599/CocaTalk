@@ -27,7 +27,7 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
             ORDER BY m.seq ASC
             """, nativeQuery = true)
     List<MessageDto.Projection> fetchMessagesRange(
-            @Param("roomId") Long roomId,
+            @Param("roomId") long roomId,
             @Param("startSeq") long startSeq,
             @Param("endSeq") long endSeq
     );
@@ -79,8 +79,8 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
             SELECT * FROM existing
             """, nativeQuery = true)
     MessageEntity insertMessage(
-            @Param("roomId") Long roomId,
-            @Param("actorId") Long actorId,
+            @Param("roomId") long roomId,
+            @Param("actorId") long actorId,
             @Param("actorName") String actorName,
             @Param("kind") String kind,
             @Param("eventType") String eventType,

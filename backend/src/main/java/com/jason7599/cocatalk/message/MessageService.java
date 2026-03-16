@@ -27,7 +27,7 @@ public class MessageService {
     /**
      * User scrolls up
      */
-    public MessagePage fetchOlderMessages(Long roomId, long cursor) {
+    public MessagePage fetchOlderMessages(long roomId, long cursor) {
         if (cursor <= 1) {
             return MessagePage.empty();
         }
@@ -54,7 +54,7 @@ public class MessageService {
     /**
      * Initial bootstrap
      */
-    public MessagePage fetchInitialMessages(Long roomId, long myLastAck, long lastSeq) {
+    public MessagePage fetchInitialMessages(long roomId, long myLastAck, long lastSeq) {
         if (lastSeq == 0) {
             return MessagePage.empty();
         }
@@ -82,8 +82,8 @@ public class MessageService {
     }
 
     public MessageEntity insertUserMessage(
-            Long roomId,
-            Long userId,
+            long roomId,
+            long userId,
             String username,
             SendMessageRequest request
     ) {

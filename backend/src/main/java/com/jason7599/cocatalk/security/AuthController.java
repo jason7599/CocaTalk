@@ -14,7 +14,7 @@ public class AuthController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public Long register(@RequestBody @Valid UserRegisterRequest request) {
+    public long register(@RequestBody @Valid UserRegisterRequest request) {
         return authService.register(request);
     }
 

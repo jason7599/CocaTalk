@@ -32,7 +32,7 @@ public class ChatroomService {
     private final UserRelationService userRelationService;
     private final MessageService messageService;
 
-    public List<ChatroomSummary> getChatroomSummaries(Long userId) {
+    public List<ChatroomSummary> getChatroomSummaries(long userId) {
         List<ChatroomSummary.Projection> chatroomSummaryProjections = chatroomRepository.getChatroomSummaries(userId);
 
         List<ChatroomMemberNameRow> memberNameRows = chatroomRepository.batchFetchMemberRows(
@@ -73,13 +73,13 @@ public class ChatroomService {
                 )).toList();
     }
 
-    public void assertMembership(Long roomId, Long userId) {
+    public void assertMembership(long roomId, long userId) {
         if (!chatroomRepository.isChatroomMember(roomId, userId)) {
             throw new ApiError(HttpStatus.FORBIDDEN, "Not a member of this room");
         }
     }
 
-    public ChatroomSummary getChatroomSummary(Long roomId, Long viewerId) {
+    public ChatroomSummary getChatroomSummary(long roomId, long viewerId) {
         assertMembership(roomId, viewerId);
 
         ChatroomSummary.Projection proj = chatroomRepository.getChatroomSummary(roomId, viewerId);
@@ -109,18 +109,18 @@ public class ChatroomService {
      * @param targetId The target user of this direct chatroom
      */
     @Transactional
-    public Long resolveDirectChatroom(Long requesterId, Long targetId) {
-        if (requesterId.equals(targetId)) {
+    public long resolveDirectChatroom(long requesterId, long targetId) {
+        if (requesterId == targetId) {
             throw new ApiError(HttpStatus.BAD_REQUEST, "Cannot create direct chatroom with self");
         }
 
-        Long roomId = chatroomRepository.getOrCreateDirectChatroom(requesterId, targetId);
+        long roomId = chatroomRepository.getOrCreateDirectChatroom(requesterId, targetId);
         chatroomRepository.ensureDirectChatroomMembers(roomId, requesterId, targetId);
 
         return roomId;
     }
 
-    public ChatroomBootstrapDto bootstrap(Long roomId, Long userId) {
+    public ChatroomBootstrapDto bootstrap(long roomId, long userId) {
         assertMembership(roomId, userId);
 
         ChatroomEntity room = chatroomRepository.findById(roomId)
@@ -128,7 +128,7 @@ public class ChatroomService {
 
         ChatroomMeta meta;
         if (room.getType() == ChatroomType.DIRECT) {
-            Long otherUserId = room.getDirectUserId1().equals(userId)
+            long otherUserId = room.getDirectUserId1().equals(userId)
                     ? room.getDirectUserId2()
                     : room.getDirectUserId1();
             meta = new ChatroomMeta(
@@ -144,7 +144,7 @@ public class ChatroomService {
             );
         }
 
-        Long myLastAck = chatroomRepository.getMyLastAck(roomId, userId);
+        long myLastAck = chatroomRepository.getMyLastAck(roomId, userId);
 
         return new ChatroomBootstrapDto(
                 meta,
@@ -155,13 +155,13 @@ public class ChatroomService {
         );
     }
 
-    public MessagePage loadOlderMessages(Long roomId, Long viewerId, long cursor) {
+    public MessagePage loadOlderMessages(long roomId, long viewerId, long cursor) {
         assertMembership(roomId, viewerId);
         return messageService.fetchOlderMessages(roomId, cursor);
     }
 
 
-    public MessageDto sendMessage(Long roomId, CustomUserDetails userDetails, SendMessageRequest request) {
+    public MessageDto sendMessage(long roomId, CustomUserDetails userDetails, SendMessageRequest request) {
         assertMembership(roomId, userDetails.getId());
         return new MessageDto(messageService.insertUserMessage(
                 roomId,

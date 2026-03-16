@@ -40,7 +40,7 @@ public class UserController {
     @ResponseStatus(HttpStatus.CREATED)
     public UserInfo addContact(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable("targetId") Long targetId
+            @PathVariable("targetId") long targetId
     ) {
         return userRelationService.addContact(userDetails.getId(), targetId);
     }
@@ -49,7 +49,7 @@ public class UserController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeContact(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable("targetId") Long targetId
+            @PathVariable("targetId") long targetId
     ) {
         userRelationService.removeContact(userDetails.getId(), targetId);
     }
@@ -58,7 +58,7 @@ public class UserController {
     @ResponseStatus(HttpStatus.CREATED)
     public UserInfo addBlock(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable("targetId") Long targetId
+            @PathVariable("targetId") long targetId
     ) {
         return userRelationService.addBlock(userDetails.getId(), targetId);
     }
@@ -67,7 +67,7 @@ public class UserController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeBlock(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable("targetId") Long targetId
+            @PathVariable("targetId") long targetId
     ) {
         userRelationService.removeBlock(userDetails.getId(), targetId);
     }

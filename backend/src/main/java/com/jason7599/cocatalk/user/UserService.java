@@ -16,14 +16,14 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    public UserInfo getUserInfo(Long userId) {
+    public UserInfo getUserInfo(long userId) {
         return new UserInfo(
                 userRepository.findById(userId)
                         .orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND, "Invalid userId"))
         );
     }
 
-    public List<UserInfo> searchUsers(String query, Long viewerId) {
+    public List<UserInfo> searchUsers(String query, long viewerId) {
         // defensive
         if (query.length() < USER_QUERY_STRING_MIN_LENGTH) {
             return List.of();

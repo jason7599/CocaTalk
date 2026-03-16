@@ -12,7 +12,7 @@ public class SessionBootstrapService {
     private final ChatroomService chatroomService;
     private final UserRelationService userRelationService;
 
-    public UserBootstrapDto bootstrap(Long userId) {
+    public UserBootstrapDto bootstrap(long userId) {
         return new UserBootstrapDto(
                 chatroomService.getChatroomSummaries(userId),
                 userRelationService.getContacts(userId),

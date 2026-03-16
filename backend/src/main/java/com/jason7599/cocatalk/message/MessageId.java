@@ -6,7 +6,7 @@ import java.io.Serializable;
 
 @Embeddable
 public record MessageId(
-        Long roomId,
-        Long seq
+        long roomId,
+        long seq
 ) implements Serializable {
 }

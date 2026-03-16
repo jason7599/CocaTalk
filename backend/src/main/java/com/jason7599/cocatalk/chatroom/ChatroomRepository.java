@@ -11,7 +11,7 @@ import java.util.List;
 public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> {
 
     /**
-     * @param viewerId Id of the user to view these summaries
+     * @param viewerId ID of the user to view these summaries
      * @return List of chatroom summary rows (without member name previews)
      */
     @Query(value = """
@@ -41,7 +41,7 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
                 rm_me.user_id = :viewerId
                 AND r.last_seq > 0 -- empty chatrooms are not shown
             """, nativeQuery = true)
-    List<ChatroomSummary.Projection> getChatroomSummaries(@Param("viewerId") Long viewerId);
+    List<ChatroomSummary.Projection> getChatroomSummaries(@Param("viewerId") long viewerId);
 
     @Query(value = """
             SELECT
@@ -72,8 +72,8 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
                 rm_me.user_id = :viewerId
                 AND r.id = :roomId
             """, nativeQuery = true)
-    ChatroomSummary.Projection getChatroomSummary(@Param("roomId") Long roomId,
-                                                  @Param("viewerId") Long viewerId);
+    ChatroomSummary.Projection getChatroomSummary(@Param("roomId") long roomId,
+                                                  @Param("viewerId") long viewerId);
 
     /**
      * Batch-fetch top limitPerRoom members for each chatroom
@@ -101,7 +101,7 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             """, nativeQuery = true)
     List<ChatroomMemberNameRow> batchFetchMemberRows(
             @Param("roomIds") List<Long> roomIds,
-            @Param("viewerId") Long viewerId,
+            @Param("viewerId") long viewerId,
             @Param("limitPerRoom") int limitPerRoom);
 
     @Query(value = """
@@ -112,8 +112,8 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             ORDER BY rm.joined_at
             LIMIT :limit
             """, nativeQuery = true)
-    List<String> fetchMemberNamesPreview(@Param("roomId") Long roomId,
-                                         @Param("viewerId") Long viewerId,
+    List<String> fetchMemberNamesPreview(@Param("roomId") long roomId,
+                                         @Param("viewerId") long viewerId,
                                          @Param("limit") int limit);
 
     // No @Modifying since this query returns a row value instead of number of rows affected
@@ -124,7 +124,7 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             DO UPDATE SET id = rooms.id -- This is just a harmless no-op update so that it returns this existing row
             RETURNING id
             """, nativeQuery = true)
-    Long getOrCreateDirectChatroom(@Param("u1") Long u1, @Param("u2") Long u2);
+    long getOrCreateDirectChatroom(@Param("u1") long u1, @Param("u2") long u2);
 
     /**
      * Ensures that the 2 users participating in a DIRECT chatroom are present in room_members.
@@ -137,7 +137,7 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             VALUES (:roomId, :u1), (:roomId, :u2)
             ON CONFLICT DO NOTHING
             """, nativeQuery = true)
-    void ensureDirectChatroomMembers(@Param("roomId") Long roomId, @Param("u1") Long u1, @Param("u2") Long u2);
+    void ensureDirectChatroomMembers(@Param("roomId") long roomId, @Param("u1") long u1, @Param("u2") long u2);
 
     @Query(value = """
             SELECT
@@ -147,19 +147,21 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             WHERE rm.room_id = :roomId
                 AND rm.user_id <> :viewerId
             """, nativeQuery = true)
-    List<UserInfo> fetchMembers(@Param("roomId") Long roomId, @Param("viewerId") Long viewerId);
+    List<UserInfo> fetchMembers(@Param("roomId") long roomId, @Param("viewerId") long viewerId);
 
     @Query(value = """
             SELECT COUNT(*) > 0
             FROM room_members
             WHERE room_id = :roomId AND user_id = :userId
             """, nativeQuery = true)
-    boolean isChatroomMember(@Param("roomId") Long roomId, @Param("userId") Long userId);
+    boolean isChatroomMember(@Param("roomId") long roomId, @Param("userId") long userId);
 
     @Query(value = """
             SELECT last_ack
             FROM room_members
             WHERE room_id = :roomId AND user_id = :userId
             """, nativeQuery = true)
-    Long getMyLastAck(@Param("roomId") Long roomId, @Param("userId") Long userId);
+    long getMyLastAck(@Param("roomId") long roomId, @Param("userId") long userId);
+
+//    void setMyLastAck(@Param("roomId") Long roomId, @Param("userId") Long userId, @Param())
 }

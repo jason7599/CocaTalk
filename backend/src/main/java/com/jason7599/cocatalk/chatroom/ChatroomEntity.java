@@ -27,7 +27,7 @@ public class ChatroomEntity {
     private Long directUserId1;
     private Long directUserId2;
 
-    private Long lastSeq;
+    private long lastSeq;
     private Instant lastMessageAt;
 
     private Instant createdAt;

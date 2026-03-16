@@ -20,13 +20,13 @@ public class ChatroomController {
     @GetMapping("/{roomId}")
     public ChatroomSummary getChatroomSummary(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long roomId
+            @PathVariable long roomId
     ) {
         return chatroomService.getChatroomSummary(roomId, userDetails.getId());
     }
 
     @PostMapping("/direct")
-    public Long resolveDirectChatroom(
+    public long resolveDirectChatroom(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody DirectChatRequest request
     ) {
@@ -36,7 +36,7 @@ public class ChatroomController {
     @GetMapping("/{roomId}/bootstrap")
     public ChatroomBootstrapDto bootstrap(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long roomId
+            @PathVariable long roomId
     ) {
         return chatroomService.bootstrap(roomId, userDetails.getId());
     }
@@ -44,7 +44,7 @@ public class ChatroomController {
     @GetMapping("/{roomId}/messages")
     public MessagePage loadOlderMessages(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long roomId,
+            @PathVariable long roomId,
             @RequestParam long cursor
     ) {
         return chatroomService.loadOlderMessages(roomId, userDetails.getId(), cursor);
@@ -54,7 +54,7 @@ public class ChatroomController {
     @ResponseStatus(HttpStatus.CREATED)
     public MessageDto sendMessage(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long roomId,
+            @PathVariable long roomId,
             @RequestBody @Valid SendMessageRequest request
     ) {
         return chatroomService.sendMessage(roomId, userDetails, request);

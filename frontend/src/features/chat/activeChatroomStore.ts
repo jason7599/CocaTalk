@@ -352,7 +352,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
                 return;
             }
 
-            // todo: send ack
+            // TODO: send ack
 
             set({
                 _lastSentAck: pending,

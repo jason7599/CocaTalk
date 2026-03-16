@@ -13,7 +13,7 @@ public class UserRelationRepository {
 
     private final EntityManager em;
 
-    public List<UserInfo> getContacts(Long userId) {
+    public List<UserInfo> getContacts(long userId) {
         // All this because I refuse to make contacts an entity
         @SuppressWarnings("unchecked")
         List<Object[]> rows = em.createNativeQuery("""
@@ -37,7 +37,7 @@ public class UserRelationRepository {
     /**
      * @throws DataIntegrityViolationException When already contacts
      */
-    public void addContact(Long userId, Long targetId) {
+    public void addContact(long userId, long targetId) {
         em.createNativeQuery("""
                 INSERT INTO contacts (user_id, contact_id)
                 VALUES (:userId, :targetId)
@@ -47,7 +47,7 @@ public class UserRelationRepository {
                 .executeUpdate();
     }
 
-    public void removeContact(Long userId, Long targetId) {
+    public void removeContact(long userId, long targetId) {
         em.createNativeQuery("""
                 DELETE FROM contacts
                 WHERE user_id = :userId AND contact_id = :targetId
@@ -57,7 +57,7 @@ public class UserRelationRepository {
                 .executeUpdate();
     }
 
-    public List<UserInfo> getBlockedUsers(Long userId) {
+    public List<UserInfo> getBlockedUsers(long userId) {
         @SuppressWarnings("unchecked")
         List<Object[]> rows = em.createNativeQuery("""
                 SELECT
@@ -78,7 +78,7 @@ public class UserRelationRepository {
                 .toList();
     }
 
-    public void addBlock(Long userId, Long targetId) {
+    public void addBlock(long userId, long targetId) {
         em.createNativeQuery("""
                 INSERT INTO blocks (user_id, blocked_id)
                 VALUES (:userId, :targetId)
@@ -88,7 +88,7 @@ public class UserRelationRepository {
                 .executeUpdate();
     }
 
-    public void removeBlock(Long userId, Long targetId) {
+    public void removeBlock(long userId, long targetId) {
         em.createNativeQuery("""
                 DELETE FROM blocks
                 WHERE user_id = :userId AND blocked_id = :targetId
@@ -98,7 +98,7 @@ public class UserRelationRepository {
                 .executeUpdate();
     }
 
-    public boolean hasBlocked(Long blockerId, Long blockeeId) {
+    public boolean hasBlocked(long blockerId, long blockeeId) {
         return (Boolean) em.createNativeQuery("""
                 SELECT EXISTS (
                     SELECT 1

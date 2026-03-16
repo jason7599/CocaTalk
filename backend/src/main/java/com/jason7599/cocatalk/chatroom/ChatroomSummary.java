@@ -17,22 +17,22 @@ import java.util.UUID;
  *  (e.g., direct chat created, group created, invited to group)
  */
 public record ChatroomSummary(
-    Long roomId,
+    long roomId,
     ChatroomType roomType,
     List<String> memberNamesPreview,
     int totalMemberCount,
-    Long myLastAck,
+    long myLastAck,
     MessageDto lastMessage
 ) {
     public interface Projection {
-        Long getRoomId();
+        long getRoomId();
         ChatroomType getRoomType();
         int getTotalMemberCount();
-        Long getMyLastAck();
-        Long getLastSeq();
+        long getMyLastAck();
+        long getLastSeq();
         MessageKind getLastMessageKind();
         EventMessageType getLastMessageEventType();
-        Long getLastActorId();
+        long getLastActorId();
         String getLastActorName();
         String getLastMessage();
         JsonNode getLastEventData();

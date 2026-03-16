@@ -22,7 +22,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
             ORDER BY u.username
             LIMIT :limit
             """, nativeQuery = true)
-    List<UserInfo> searchUsers(String query, Long viewerId, int limit);
+    List<UserInfo> searchUsers(String query, long viewerId, int limit);
 
     // TODO: for dev only
     @Query("select u.username from UserEntity u")

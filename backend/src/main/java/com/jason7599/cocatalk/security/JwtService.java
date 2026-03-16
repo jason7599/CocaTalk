@@ -47,7 +47,7 @@ public class JwtService {
                 .build();
     }
 
-    public String generateToken(Long userId) {
+    public String generateToken(long userId) {
         Instant now = Instant.now();
         return Jwts.builder()
                 .subject(String.valueOf(userId))
@@ -71,7 +71,7 @@ public class JwtService {
     }
 
     public Authentication buildAuthentication(String token) {
-        Long id = extractUserId(token);
+        long id = extractUserId(token);
 
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new ApiError(HttpStatus.FORBIDDEN, "user id not found"));
@@ -81,13 +81,13 @@ public class JwtService {
         return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()) {
             @Override
             public String getName() {
-                return id.toString();
+                return String.valueOf(id);
             }
         };
     }
 
-    public Long extractUserId(String token) {
-        return Long.valueOf(parseClaims(token).getSubject());
+    public long extractUserId(String token) {
+        return Long.parseLong(parseClaims(token).getSubject());
     }
 
     public String extractTokenFromRequest(HttpServletRequest request) {

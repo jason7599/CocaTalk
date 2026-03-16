@@ -6,11 +6,11 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record MessageDto(
-        Long roomId,
-        Long seq,
+        long roomId,
+        long seq,
         MessageKind kind,
         EventMessageType eventType,
-        Long actorId,
+        long actorId,
         String actorName,
         String content,
         JsonNode eventData,
@@ -19,11 +19,11 @@ public record MessageDto(
 ) {
     // Projection exists because of enum -> string mapping
     public interface Projection {
-        Long getRoomId();
-        Long getSeq();
+        long getRoomId();
+        long getSeq();
         String getKind();
         String getEventType();
-        Long getActorId();
+        long getActorId();
         String getActorName();
         String getContent();
         JsonNode getEventData();
