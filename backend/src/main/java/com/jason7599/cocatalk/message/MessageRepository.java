@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface MessageRepository extends JpaRepository<MessageEntity, MessageId> {
 
@@ -19,6 +20,7 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
                 m.content,
                 m.event_data AS eventData,
                 m.created_at AS createdAt
+                m.client_id AS clientId
             FROM messages m
             """;
 
@@ -78,33 +80,50 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
                                         @Param("limit") int limit);
 
     @Query(value = """
-            WITH next_seq AS (
+            WITH existing AS (
+                SELECT *
+                FROM messages
+                WHERE room_id = :roomId
+                  AND client_id = :clientId
+            ),
+            
+            next_seq AS (
                 UPDATE rooms
                 SET last_seq = last_seq + 1
                 WHERE id = :roomId
+                  AND NOT EXISTS (SELECT 1 FROM existing)
                 RETURNING last_seq
+            ),
+            
+            inserted AS (
+                INSERT INTO messages (
+                    room_id,
+                    seq,
+                    actor_id,
+                    actor_name,
+                    kind,
+                    event_type,
+                    content,
+                    event_data,
+                    client_id
+                )
+                SELECT
+                    :roomId,
+                    last_seq,
+                    :actorId,
+                    :actorName,
+                    :kind,
+                    :eventType,
+                    :content,
+                    CAST(:eventData AS jsonb),
+                    :clientId
+                FROM next_seq
+                RETURNING *
             )
-            INSERT INTO messages (
-                room_id,
-                seq,
-                actor_id,
-                actor_name,
-                kind,
-                event_type,
-                content,
-                event_data
-            )
-            SELECT
-                :roomId,
-                last_seq,
-                :actorId,
-                :actorName,
-                :kind,
-                :eventType,
-                :content,
-                CAST(:eventData AS jsonb)
-            FROM next_seq
-            RETURNING *
+         
+            SELECT * FROM inserted
+            UNION ALL
+            SELECT * FROM existing
             """, nativeQuery = true)
     MessageEntity insertMessage(
             @Param("roomId") Long roomId,
@@ -113,6 +132,7 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
             @Param("kind") String kind,
             @Param("eventType") String eventType,
             @Param("content") String content,
-            @Param("eventData") String eventData
+            @Param("eventData") String eventData,
+            @Param("clientId") UUID clientId
     );
 }

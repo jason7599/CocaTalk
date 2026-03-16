@@ -95,7 +95,7 @@ public class MessageService {
             Long roomId,
             Long userId,
             String username,
-            String content
+            SendMessageRequest request
     ) {
         return messageRepository.insertMessage(
                 roomId,
@@ -103,8 +103,9 @@ public class MessageService {
                 username,
                 MessageKind.USER.name(),
                 null,
-                content,
-                null
+                request.content(),
+                null,
+                request.clientId()
         );
     }
 }

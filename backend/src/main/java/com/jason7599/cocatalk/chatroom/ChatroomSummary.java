@@ -7,6 +7,7 @@ import com.jason7599.cocatalk.message.MessageKind;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Lightweight representation of a chatroom used for rendering the chatroom list in the sidebar panel.
@@ -36,5 +37,6 @@ public record ChatroomSummary(
         String getLastMessage();
         JsonNode getLastEventData();
         Instant getLastMessageAt();
+        UUID getLastMessageClientId();
     }
 }

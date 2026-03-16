@@ -33,10 +33,10 @@ public class ChatroomService {
     private final MessageService messageService;
 
     public List<ChatroomSummary> getChatroomSummaries(Long userId) {
-        List<ChatroomSummary.Projection> chatroomSummaryRows = chatroomRepository.getChatroomSummaries(userId);
+        List<ChatroomSummary.Projection> chatroomSummaryProjections = chatroomRepository.getChatroomSummaries(userId);
 
         List<ChatroomMemberNameRow> memberNameRows = chatroomRepository.batchFetchMemberRows(
-                chatroomSummaryRows.stream().map(ChatroomSummary.Projection::getRoomId).toList(),
+                chatroomSummaryProjections.stream().map(ChatroomSummary.Projection::getRoomId).toList(),
                 userId,
                 MEMBER_NAMES_PREVIEW_PER_ROOM
         );
@@ -51,23 +51,24 @@ public class ChatroomService {
                                 )
                         ));
 
-        return chatroomSummaryRows.stream()
-                .map(row -> new ChatroomSummary(
-                        row.getRoomId(),
-                        row.getRoomType(),
-                        memberNamesMap.getOrDefault(row.getRoomId(), List.of()),
-                        row.getTotalMemberCount(),
-                        row.getMyLastAck(),
+        return chatroomSummaryProjections.stream()
+                .map(proj -> new ChatroomSummary(
+                        proj.getRoomId(),
+                        proj.getRoomType(),
+                        memberNamesMap.getOrDefault(proj.getRoomId(), List.of()),
+                        proj.getTotalMemberCount(),
+                        proj.getMyLastAck(),
                         new MessageDto(
-                                row.getRoomId(),
-                                row.getLastSeq(),
-                                row.getLastMessageKind(),
-                                row.getLastMessageEventType(),
-                                row.getLastActorId(),
-                                row.getLastActorName(),
-                                row.getLastMessage(),
-                                row.getLastEventData(),
-                                row.getLastMessageAt()
+                                proj.getRoomId(),
+                                proj.getLastSeq(),
+                                proj.getLastMessageKind(),
+                                proj.getLastMessageEventType(),
+                                proj.getLastActorId(),
+                                proj.getLastActorName(),
+                                proj.getLastMessage(),
+                                proj.getLastEventData(),
+                                proj.getLastMessageAt(),
+                                proj.getLastMessageClientId()
                         )
                 )).toList();
     }
@@ -97,7 +98,8 @@ public class ChatroomService {
                         proj.getLastActorName(),
                         proj.getLastMessage(),
                         proj.getLastEventData(),
-                        proj.getLastMessageAt()
+                        proj.getLastMessageAt(),
+                        proj.getLastMessageClientId()
                 )
         );
     }
@@ -185,6 +187,6 @@ public class ChatroomService {
                 roomId,
                 userDetails.getId(),
                 userDetails.getUsername(),
-                request.content()));
+                request));
     }
 }

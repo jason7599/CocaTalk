@@ -3,6 +3,7 @@ package com.jason7599.cocatalk.message;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.time.Instant;
+import java.util.UUID;
 
 public record MessageDto(
         Long roomId,
@@ -13,8 +14,10 @@ public record MessageDto(
         String actorName,
         String content,
         JsonNode eventData,
-        Instant createdAt
+        Instant createdAt,
+        UUID clientId
 ) {
+    // Projection exists because of enum -> string mapping
     public interface Projection {
         Long getRoomId();
         Long getSeq();
@@ -25,6 +28,7 @@ public record MessageDto(
         String getContent();
         JsonNode getEventData();
         Instant getCreatedAt();
+        UUID getClientId();
     }
 
     public MessageDto(MessageEntity e) {
@@ -37,7 +41,8 @@ public record MessageDto(
                 e.getActorName(),
                 e.getContent(),
                 e.getEventData(),
-                e.getCreatedAt()
+                e.getCreatedAt(),
+                e.getClientId()
         );
     }
 
@@ -51,7 +56,8 @@ public record MessageDto(
                 p.getActorName(),
                 p.getContent(),
                 p.getEventData(),
-                p.getCreatedAt()
+                p.getCreatedAt(),
+                p.getClientId()
         );
     }
 }

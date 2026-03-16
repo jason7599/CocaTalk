@@ -10,6 +10,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @Table(name = "messages")
@@ -39,4 +40,6 @@ public class MessageEntity {
     private JsonNode eventData;
 
     private Instant createdAt;
+
+    private UUID clientId;
 }
