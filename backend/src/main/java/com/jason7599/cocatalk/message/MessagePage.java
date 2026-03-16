@@ -4,15 +4,13 @@ import java.util.List;
 
 public record MessagePage(
         List<MessageDto> messages,
-        long startSeq, // first in this window
-        long endSeq, // last in this window
+        long nextCursor, // 0 if there are no more older messages
         boolean hasOlder
 ) {
 
     public static MessagePage empty() {
         return new MessagePage(
                 List.of(),
-                0,
                 0,
                 false
         );

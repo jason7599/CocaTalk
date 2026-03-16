@@ -14,80 +14,70 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MessageService {
 
-    private static final int MESSAGE_PAGE_SIZE = 50;
-    private static final int AROUND_BEFORE_LIMIT = 10;
-    private static final int AROUND_AFTER_LIMIT = 40;
+    private static final int OLDER_MESSAGE_PAGE_SIZE = 50;
+
+    // How many messages before the unread boundary should we load?
+    private static final int INITIAL_CONTEXT_SIZE = 50;
+
+    // Maximum messages loaded during initial load
+    private static final int INITIAL_LOAD_CAP = 5000;
 
     private final MessageRepository messageRepository;
 
     /**
      * User scrolls up
      */
-    public MessagePage fetchMessagesBefore(Long roomId, long cursor) {
-        // ordered by seq asc
-        List<MessageDto.Projection> messages = messageRepository.fetchMessagesBefore(roomId, cursor, MESSAGE_PAGE_SIZE + 1);
-
-        if (messages.isEmpty()) {
+    public MessagePage fetchOlderMessages(Long roomId, long cursor) {
+        if (cursor <= 1) {
             return MessagePage.empty();
         }
 
-        boolean hasOlder = messages.size() == MESSAGE_PAGE_SIZE + 1;
-        if (hasOlder) {
-            messages.removeFirst();
+        long start = Math.max(cursor - OLDER_MESSAGE_PAGE_SIZE, 1);
+        long end = cursor - 1;
+
+        List<MessageDto.Projection> projections = messageRepository.fetchMessagesRange(roomId, start, end);
+
+        if (projections.isEmpty()) {
+            return MessagePage.empty();
         }
 
+        boolean hasOlder = start > 1;
+        long nextCursor = hasOlder ? start : 0;
+
         return new MessagePage(
-                messages.stream().map(MessageDto::new).toList(),
-                messages.getFirst().getSeq(),
-                messages.getLast().getSeq(),
+                projections.stream().map(MessageDto::new).toList(),
+                nextCursor,
                 hasOlder
         );
     }
 
     /**
-     * Initial load, fetch messages around the user's last ack.
+     * Initial bootstrap
      */
-    public MessagePage fetchMessagesAround(Long roomId, long cursor) {
-        List<MessageDto.Projection> messages
-                = messageRepository.fetchMessagesAround(roomId, cursor, AROUND_BEFORE_LIMIT + 1, AROUND_AFTER_LIMIT);
-
-        if (messages.isEmpty()) {
+    public MessagePage fetchInitialMessages(Long roomId, long myLastAck, long lastSeq) {
+        if (lastSeq == 0) {
             return MessagePage.empty();
         }
 
-        int olderCount = 0;
-        for (; olderCount <= Math.min(messages.size() - 1, AROUND_BEFORE_LIMIT)
-                && messages.get(olderCount).getSeq() < cursor;
-             olderCount++);
-
-        boolean hasOlder = olderCount == AROUND_BEFORE_LIMIT + 1;
-        if (hasOlder) {
-            messages.removeFirst();
-        }
-
-        return new MessagePage(
-                messages.stream().map(MessageDto::new).toList(),
-                messages.getFirst().getSeq(),
-                messages.getLast().getSeq(),
-                hasOlder
+        long start = Math.max(
+                Math.max(myLastAck - INITIAL_CONTEXT_SIZE, lastSeq - INITIAL_LOAD_CAP),
+                1 // seq starts at 1
         );
-    }
 
-    /**
-     * User scrolls down
-     */
-    public MessagePage fetchMessagesAfter(Long roomId, long cursor) {
-        List<MessageDto.Projection> messages = messageRepository.fetchMessagesAfter(roomId, cursor, MESSAGE_PAGE_SIZE);
+        List<MessageDto.Projection> projections = messageRepository.fetchMessagesRange(roomId, start, lastSeq);
 
-        if (messages.isEmpty()) {
+        if (projections.isEmpty()) {
             return MessagePage.empty();
         }
 
+        long firstSeq = projections.getFirst().getSeq();
+        boolean hasOlder = firstSeq > 1;
+        long nextCursor = hasOlder ? firstSeq : 0;
+
         return new MessagePage(
-                messages.stream().map(MessageDto::new).toList(),
-                messages.getFirst().getSeq(),
-                messages.getLast().getSeq(),
-                true // hasOlder is irrelevant for forward pagination
+                projections.stream().map(MessageDto::new).toList(),
+                nextCursor,
+                hasOlder
         );
     }
 

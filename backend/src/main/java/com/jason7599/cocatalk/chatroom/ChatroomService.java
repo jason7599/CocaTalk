@@ -120,21 +120,21 @@ public class ChatroomService {
         return roomId;
     }
 
-    public ChatroomBootstrapDto bootstrap(Long roomId, Long viewerId) {
-        assertMembership(roomId, viewerId);
+    public ChatroomBootstrapDto bootstrap(Long roomId, Long userId) {
+        assertMembership(roomId, userId);
 
         ChatroomEntity room = chatroomRepository.findById(roomId)
                 .orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND, "Room not found"));
 
         ChatroomMeta meta;
         if (room.getType() == ChatroomType.DIRECT) {
-            Long otherUserId = room.getDirectUserId1().equals(viewerId)
+            Long otherUserId = room.getDirectUserId1().equals(userId)
                     ? room.getDirectUserId2()
                     : room.getDirectUserId1();
             meta = new ChatroomMeta(
                     ChatroomType.DIRECT,
                     null,
-                    userRelationService.hasBlocked(otherUserId, viewerId)
+                    userRelationService.hasBlocked(otherUserId, userId)
             );
         } else {
             meta = new ChatroomMeta(
@@ -144,42 +144,22 @@ public class ChatroomService {
             );
         }
 
-        Long lastReadSeq = chatroomRepository.getMyLastAck(roomId, viewerId);
+        Long myLastAck = chatroomRepository.getMyLastAck(roomId, userId);
 
         return new ChatroomBootstrapDto(
                 meta,
-                chatroomRepository.fetchMembers(roomId, viewerId),
-                messageService.fetchMessagesAround(roomId, lastReadSeq),
-                lastReadSeq,
+                chatroomRepository.fetchMembers(roomId, userId),
+                messageService.fetchInitialMessages(roomId, myLastAck, room.getLastSeq()),
+                myLastAck,
                 room.getLastSeq()
         );
     }
 
-    public MessagePage loadMessages(Long roomId, Long viewerId, Long before, Long after) {
+    public MessagePage loadOlderMessages(Long roomId, Long viewerId, long cursor) {
         assertMembership(roomId, viewerId);
-
-        boolean hasBefore = before != null;
-        boolean hasAfter = after != null;
-
-        if (hasBefore == hasAfter) {
-            throw new ApiError(HttpStatus.BAD_REQUEST,
-                    "Exactly one of 'before' or 'after' must be provided");
-        }
-
-        if (hasBefore) {
-            return loadMessagesBefore(roomId, before);
-        }
-
-        return loadMessagesAfter(roomId, after);
+        return messageService.fetchOlderMessages(roomId, cursor);
     }
 
-    private MessagePage loadMessagesBefore(Long roomId, long cursor) {
-        return messageService.fetchMessagesBefore(roomId, cursor);
-    }
-
-    private MessagePage loadMessagesAfter(Long roomId, long cursor) {
-        return messageService.fetchMessagesAfter(roomId, cursor);
-    }
 
     public MessageDto sendMessage(Long roomId, CustomUserDetails userDetails, SendMessageRequest request) {
         assertMembership(roomId, userDetails.getId());

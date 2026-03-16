@@ -42,13 +42,12 @@ public class ChatroomController {
     }
 
     @GetMapping("/{roomId}/messages")
-    public MessagePage loadMessages(
+    public MessagePage loadOlderMessages(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long roomId,
-            @RequestParam(required = false) Long before,
-            @RequestParam(required = false) Long after
+            @RequestParam long cursor
     ) {
-        return chatroomService.loadMessages(roomId, userDetails.getId(), before, after);
+        return chatroomService.loadOlderMessages(roomId, userDetails.getId(), cursor);
     }
 
     @PostMapping("/{roomId}/messages")
