@@ -1,5 +1,6 @@
 import api from "../../services/apiClient";
 import type { UserBootstrapDto } from "../../shared/types";
+import { useActiveChatroomStore } from "../chat/activeChatroomStore";
 import { useChatroomsStore } from "../chat/chatroomsStore";
 import { useContactsStore } from "../contacts/contactsStore";
 import { useBlockedUsersStore } from "../userblock/blockedUsersStore";
@@ -26,5 +27,6 @@ export const sessionManager = {
         useChatroomsStore.getState().reset();
         useContactsStore.getState().reset();
         useBlockedUsersStore.getState().reset();
+        useActiveChatroomStore.getState().clearActiveChatroom();
     },
 };

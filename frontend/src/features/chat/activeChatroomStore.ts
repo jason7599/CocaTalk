@@ -167,10 +167,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
         }
     };
 
-    function insertMessage(messages: MessageDto[], msg: MessageDto): MessageDto[] {
-        // TODO
-    };
-
+    
     return {
 
         activeRoomId: null,
