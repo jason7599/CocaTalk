@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { EMPTY_META, type ChatroomMeta, type MessageDto, type MessageInfo, type UserInfo } from "../../shared/types";
+import { EMPTY_META, type ChatroomMeta, type MessageDto, type MessageInfo, type PendingUserMessage, type UserInfo } from "../../shared/types";
 import { bootstrap } from "./chatroomApi";
 import { useChatroomsStore } from "./chatroomsStore";
 import { loadMessages, sendMessage as apiSendMessage } from "./message/messageApi";
@@ -47,7 +47,7 @@ type ActiveChatroomState = {
     setActiveChatroom: (roomId: number) => void;
     clearActiveChatroom: () => void;
 
-    sendMessage: (content: string) => void;
+    sendMessage: (content: string, actor: UserInfo) => void;
     receiveMessage: (msg: MessageDto) => void;
 
     loadOlderMessages: () => Promise<void>;
@@ -202,9 +202,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
         setActiveChatroom: (roomId) => {
             if (get().activeRoomId === roomId) return;
 
-            const prevAbort = get()._abort;
-            prevAbort?.abort();
-
+            get()._abort?.abort();
             get()._flushAckNow(); // acks are forced when changing rooms
 
             const { epoch, abort } = beginRoomTransaction(roomId);
@@ -240,10 +238,29 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             });
         },
 
-        sendMessage: (content) => {
+        sendMessage: (content, actor) => {
             const roomId = get().activeRoomId;
             if (roomId == null) return;
-            apiSendMessage(roomId, content);
+
+            const clientId = crypto.randomUUID();
+
+            const pending: PendingUserMessage = {
+                roomId,
+                actorId: actor.userId,
+                actorName: actor.username,
+                kind: "USER",
+                status: "SENDING",
+                content,
+                clientId
+            };
+
+            // optimistic UI insert
+            // TODO: shit. what if user is not in live mode???????
+            set((s) => ({
+                messages: [...s.messages, pending]
+            }));
+
+            apiSendMessage(roomId, content, clientId);
         },
 
         receiveMessage: (dto) => {
@@ -337,7 +354,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
                 return;
             }
 
-            // todo: send ack via STOMP
+            // todo: send ack
 
             set({
                 _lastSentAck: pending,

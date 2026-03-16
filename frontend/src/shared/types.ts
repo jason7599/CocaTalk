@@ -32,6 +32,7 @@ type MessageDtoBase = MessageBase & {
 type UserMessageDto = MessageDtoBase & {
     kind: "USER";
     content: string;
+    clientId: string;
 };
 
 export type EventMessageType =
@@ -39,7 +40,7 @@ export type EventMessageType =
     | "MEMBER_JOINED"
     | "MEMBER_LEFT"
     | "MEMBER_REMOVED"
-    ;
+;
 
 type EventMessageDto = MessageDtoBase & {
     kind: "EVENT";
@@ -54,11 +55,11 @@ type EventMessageDto = MessageDtoBase & {
 export type MessageDto = UserMessageDto | EventMessageDto;
 
 // UI state
-type PendingUserMessage = MessageBase & {
+export type PendingUserMessage = MessageBase & {
     kind: "USER";
     status: "SENDING" | "FAILED";
-    clientId: string; // TODO
     content: string;
+    clientId: string;
 };
 
 export type MessageInfo = (MessageDto & { status: "PERSISTED" }) | PendingUserMessage;

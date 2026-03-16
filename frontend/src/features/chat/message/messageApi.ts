@@ -29,6 +29,6 @@ export async function loadMessages(
     )).data
 };
 
-export async function sendMessage(roomId: number, content: string): Promise<MessageDto> {
-    return (await api.post(`/chats/${roomId}/messages`, { content })).data;
+export async function sendMessage(roomId: number, content: string, clientId: string): Promise<MessageDto> {
+    return (await api.post(`/chats/${roomId}/messages`, { content, clientId })).data;
 };
