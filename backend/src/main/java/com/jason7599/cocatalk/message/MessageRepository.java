@@ -19,7 +19,7 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
                 m.actor_name AS actorName,
                 m.content,
                 m.event_data AS eventData,
-                m.created_at AS createdAt
+                m.created_at AS createdAt,
                 m.client_id AS clientId
             FROM messages m
             """;
