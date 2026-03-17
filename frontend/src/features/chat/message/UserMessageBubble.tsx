@@ -42,6 +42,8 @@ const UserMessageBubble: React.FC<{ message: UserMessageBubbleProps }> = ({ mess
                             "border backdrop-blur-xl transition-all duration-200",
                             "will-change-transform",
 
+                            "break-words overflow-hidden",
+
                             // Hover lift
                             "group-hover:scale-[1.015] group-hover:-translate-y-[1px]",
 

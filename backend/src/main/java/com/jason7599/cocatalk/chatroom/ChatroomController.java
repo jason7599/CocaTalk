@@ -57,6 +57,6 @@ public class ChatroomController {
             @PathVariable long roomId,
             @RequestBody @Valid SendMessageRequest request
     ) {
-        return chatroomService.sendMessage(roomId, userDetails, request);
+        return chatroomService.sendMessage(roomId, userDetails.getId(), userDetails.getUsername(), request);
     }
 }

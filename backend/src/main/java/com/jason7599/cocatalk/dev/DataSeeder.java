@@ -1,18 +1,20 @@
 package com.jason7599.cocatalk.dev;
 
+import com.jason7599.cocatalk.chatroom.ChatroomRepository;
+import com.jason7599.cocatalk.chatroom.ChatroomService;
+import com.jason7599.cocatalk.message.SendMessageRequest;
 import com.jason7599.cocatalk.security.AuthService;
 import com.jason7599.cocatalk.security.UserRegisterRequest;
+import com.jason7599.cocatalk.user.UserInfo;
 import com.jason7599.cocatalk.user.UserRepository;
 import com.jason7599.cocatalk.user.relation.UserRelationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.datafaker.Faker;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -24,13 +26,17 @@ public class DataSeeder {
 
     private static final float ADD_CONTACT_CHANCE = 0.25f;
 
+    private static final Faker faker = new Faker(Locale.US);
     private static final Random random = new Random();
 
     private final UserRepository userRepository;
     private final AuthService authService;
     private final UserRelationService userRelationService;
 
-    public void seed(int numUsers, int maxContactsPerUser, boolean reset) {
+    private final ChatroomService chatroomService;
+    private final ChatroomRepository chatroomRepository;
+
+    public void seedUsers(int numUsers, int maxContactsPerUser, boolean reset) {
         try {
             log.debug("Starting dev data seeder...");
 
@@ -68,6 +74,30 @@ public class DataSeeder {
             log.error("Something went wrong", e);
         } finally {
             log.debug("Terminating dev data seeder");
+        }
+    }
+
+    private static final int MESSAGE_MAX_LENGTH = 300;
+
+    public void seedChatroom(long roomId, int numMessages) {
+        List<UserInfo> members = chatroomRepository.getMembers(roomId);
+
+        if (members.isEmpty()) {
+            throw new RuntimeException("room does not seem to exist, bitch");
+        }
+
+        while (numMessages-- > 0) {
+            UserInfo member = members.get(random.nextInt(members.size()));
+
+            chatroomService.sendMessage(
+                    roomId,
+                    member.userId(),
+                    member.username(),
+                    new SendMessageRequest(
+                            faker.lorem().fixedString(random.nextInt(1, MESSAGE_MAX_LENGTH + 1)),
+                            UUID.randomUUID()
+                    )
+            );
         }
     }
 }

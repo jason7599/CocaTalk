@@ -5,7 +5,6 @@ import com.jason7599.cocatalk.message.MessageDto;
 import com.jason7599.cocatalk.message.MessagePage;
 import com.jason7599.cocatalk.message.MessageService;
 import com.jason7599.cocatalk.message.SendMessageRequest;
-import com.jason7599.cocatalk.security.CustomUserDetails;
 import com.jason7599.cocatalk.user.relation.UserRelationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -161,12 +160,12 @@ public class ChatroomService {
     }
 
 
-    public MessageDto sendMessage(long roomId, CustomUserDetails userDetails, SendMessageRequest request) {
-        assertMembership(roomId, userDetails.getId());
+    public MessageDto sendMessage(long roomId, long userId, String username, SendMessageRequest request) {
+        assertMembership(roomId, userId);
         return new MessageDto(messageService.insertUserMessage(
                 roomId,
-                userDetails.getId(),
-                userDetails.getUsername(),
+                userId,
+                username,
                 request));
     }
 }
