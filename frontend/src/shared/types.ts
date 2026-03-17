@@ -34,7 +34,7 @@ type MessageDtoBase = MessageBase & {
     createdAt: string;
 };
 
-type UserMessageDto = MessageDtoBase & {
+export type UserMessageDto = MessageDtoBase & {
     kind: "USER";
     content: string;
     clientId: string;
@@ -47,7 +47,7 @@ export type EventMessageType =
     | "MEMBER_REMOVED"
 ;
 
-type EventMessageDto = MessageDtoBase & {
+export type EventMessageDto = MessageDtoBase & {
     kind: "EVENT";
     eventType: EventMessageType;
     eventData: Record<string, unknown>;

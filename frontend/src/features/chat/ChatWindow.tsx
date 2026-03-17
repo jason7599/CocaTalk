@@ -3,21 +3,26 @@ import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
 import ChatHeader from "./ChatHeader";
 import { useStomp } from "../../services/ws/stompContext";
 import { useActiveChatroomStore } from "./active/activeChatroomStore";
-import MessageBubble from "./message/MessageBubble";
+import UserMessageBubble from "./message/UserMessageBubble";
 
 const ChatWindow: React.FC = () => {
     const { connected } = useStomp();
 
     const activeRoomId = useActiveChatroomStore((s) => s.activeRoomId);
     const roomStatus = useActiveChatroomStore((s) => s.status);
+    const roomMeta = useActiveChatroomStore((s) => s.meta);
+    
     const messages = useActiveChatroomStore((s) => s.messages);
+    const pendingMessages = useActiveChatroomStore((s) => s.pendingMessages);
+
     const hasOlderMessages = useActiveChatroomStore((s) => s.hasOlderMessages);
     const loadingOlderMessages = useActiveChatroomStore((s) => s.loadingOlderMessages);
+
     const isNearBottom = useActiveChatroomStore((s) => s.isNearBottom);
     const setNearBottom = useActiveChatroomStore((s) => s.setNearBottom);
+
     const loadOlderMessages = useActiveChatroomStore((s) => s.loadOlderMessages);
     const sendMessage = useActiveChatroomStore((s) => s.sendMessage);
-    const roomMeta = useActiveChatroomStore((s) => s.meta);
 
     const [message, setMessage] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
@@ -143,7 +148,7 @@ const ChatWindow: React.FC = () => {
         if (!isNearBottom) return;
 
         scrollToBottom("smooth");
-    }, [messages.length, isNearBottom]);
+    }, [messages.length, pendingMessages.length, isNearBottom]);
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter") {
@@ -196,8 +201,29 @@ const ChatWindow: React.FC = () => {
                     <div className="flex flex-col gap-2">
                         {messages.map((m) => (
                             m.kind === "USER"
-                                ? <MessageBubble message={m} key={m.seq}/>
+                                ? <UserMessageBubble 
+                                    message={{
+                                        userId: m.actorId,
+                                        username: m.actorName,
+                                        content: m.content,
+                                        status: "PERSISTED",
+                                        createdAt: m.createdAt
+                                    }}
+                                    key={m.seq}
+                                />
+
                                 : null // todo: event messages
+                        ))}
+                        {pendingMessages.map((m) => (
+                            <UserMessageBubble 
+                                message={{
+                                    userId: m.actorId,
+                                    username: m.actorName,
+                                    content: m.content,
+                                    status: m.status
+                                }}
+                                key={m.clientId} 
+                            />
                         ))}
                     </div>
                 )}

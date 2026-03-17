@@ -6,8 +6,9 @@ import { errorMessage } from "../../../shared/utils/errors";
 import { useAuthStore } from "../../auth/authStore";
 import { createAckActions, type AckActions } from "./activeChatroomAck";
 
-
-export type ActiveChatroomState = AckActions & {
+export type ActiveChatroomState = 
+    AckActions & 
+{
     // currently opened chatroom
     activeRoomId: number | null;
 
@@ -17,7 +18,7 @@ export type ActiveChatroomState = AckActions & {
 
     // room session contents
     meta: ChatroomMeta;
-    members: Record<number, UserInfo>; // Todo: convert to list, as now MessageDto holds the actor_name
+    members: UserInfo[];
 
     messages: MessageDto[];
     pendingMessages: PendingUserMessage[];
@@ -85,7 +86,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             error: null,
 
             meta: EMPTY_META,
-            members: {},
+            members: [],
 
             messages: [],
             pendingMessages: [],
@@ -124,17 +125,13 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
 
             if (!isStillCurrent(roomId, epoch, abort)) return;
 
-            const members = Object.fromEntries(
-                bootstrapData.members.map((m) => [m.userId, m])
-            );
-
             const page = bootstrapData.initialPage;
 
             set({
                 status: "READY",
                 meta: bootstrapData.meta,
 
-                members,
+                members: bootstrapData.members,
 
                 messages: page.messages,
 
@@ -169,7 +166,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
         error: null,
 
         meta: EMPTY_META,
-        members: {},
+        members: [],
 
         messages: [],
         pendingMessages: [],
@@ -215,7 +212,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
                 error: null,
 
                 meta: EMPTY_META,
-                members: {},
+                members: [],
                 messages: [],
 
                 nextCursor: 0,

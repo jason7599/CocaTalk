@@ -1,4 +1,4 @@
-import type { ChatroomSummary, EventMessage, MessageDto, UserInfo } from "../../../shared/types";
+import type { ChatroomSummary, EventMessageDto, MessageDto, UserInfo } from "../../../shared/types";
 
 export function formatChatroomDisplayNameFromSummary(chatroom: ChatroomSummary): string {
     return formatChatroomDisplayName(
@@ -47,7 +47,7 @@ export function formatLastMessage(message: MessageDto): string {
     }
 };
 
-function formatEventMessage(message: EventMessage): string {
+function formatEventMessage(message: EventMessageDto): string {
     switch (message.eventType) {
         case "GROUP_CREATED":
             return `${message.actorName} created the group`;
