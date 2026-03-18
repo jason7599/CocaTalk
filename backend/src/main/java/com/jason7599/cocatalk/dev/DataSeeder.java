@@ -1,6 +1,5 @@
 package com.jason7599.cocatalk.dev;
 
-import com.jason7599.cocatalk.chatroom.ChatroomRepository;
 import com.jason7599.cocatalk.chatroom.ChatroomService;
 import com.jason7599.cocatalk.message.SendMessageRequest;
 import com.jason7599.cocatalk.security.AuthService;
@@ -8,6 +7,7 @@ import com.jason7599.cocatalk.security.UserRegisterRequest;
 import com.jason7599.cocatalk.user.UserInfo;
 import com.jason7599.cocatalk.user.UserRepository;
 import com.jason7599.cocatalk.user.relation.UserRelationService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.datafaker.Faker;
@@ -34,8 +34,9 @@ public class DataSeeder {
     private final UserRelationService userRelationService;
 
     private final ChatroomService chatroomService;
-    private final ChatroomRepository chatroomRepository;
+    private final DevQueries devQueries;
 
+    @Transactional
     public void seedUsers(int numUsers, int maxContactsPerUser, boolean reset) {
         try {
             log.debug("Starting dev data seeder...");
@@ -79,12 +80,16 @@ public class DataSeeder {
 
     private static final int MESSAGE_MAX_LENGTH = 300;
 
+    @Transactional
     public void seedChatroom(long roomId, int numMessages) {
-        List<UserInfo> members = chatroomRepository.getMembers(roomId);
+        List<UserInfo> members = devQueries.getMembers(roomId);
 
         if (members.isEmpty()) {
-            throw new RuntimeException("room does not seem to exist, bitch");
+            throw new RuntimeException("room does not seem to exist");
         }
+
+        devQueries.deleteRoomMessages(roomId);
+        devQueries.resetLastSeq(roomId);
 
         while (numMessages-- > 0) {
             UserInfo member = members.get(random.nextInt(members.size()));
