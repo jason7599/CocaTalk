@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Client, type IMessage, type StompSubscription } from "@stomp/stompjs";
+import { useChatroomsStore } from "../../features/chat/chatroomsStore";
 
 const WS_URL = import.meta.env.VITE_WS_URL;
 
@@ -12,16 +13,72 @@ const StompContext = createContext<StompContextValue>({ client: null, connected:
 
 export const StompProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [connected, setConnected] = useState(false);
-    const notificationSubRef = useRef<StompSubscription | null>(null);
 
-    const closeConnection = () => {
+    const clientRef = useRef<Client | null>(null);
+    const notificationSubRef = useRef<StompSubscription | null>(null);
+    const roomSubsRef = useRef<Map<number, StompSubscription>>(new Map());
+
+    const subscribeToRoom = useCallback((roomId: number) => {
+        const client = clientRef.current;
+        if (!client || !connected) return;
+        if (roomSubsRef.current.has(roomId)) return;
+
+        const sub = client.subscribe(
+            `/topic/chatroom.${roomId}`,
+            (frame: IMessage) => {
+                // TODO: route message into store
+                console.log("room msg", roomId, frame.body);
+            }
+        );
+
+        roomSubsRef.current.set(roomId, sub);
+    }, [connected]);
+
+    const unsubscribeFromRoom = useCallback((roomId: number) => {
+        const sub = roomSubsRef.current.get(roomId);
+        if (!sub) return;
+
+        sub.unsubscribe();
+        roomSubsRef.current.delete(roomId);
+    }, []);
+
+    /**
+     * Sync subscriptions with current chatrooms in chatroomsStore
+    */
+    const syncRoomSubscriptions = useCallback(() => {
+        const client = clientRef.current;
+        if (!client || !connected) return;
+
+        const rooms = useChatroomsStore.getState().chatrooms;
+        const currentRoomIds = new Set(rooms.map(r => r.roomId));
+
+        // Subscribe to new rooms
+        currentRoomIds.forEach(roomId => {
+            if (!roomSubsRef.current.has(roomId)) {
+                subscribeToRoom(roomId);
+            }
+        });
+
+        // Unsubscribe from removed rooms
+        roomSubsRef.current.forEach((_, roomId) => {
+            if (!currentRoomIds.has(roomId)) {
+                unsubscribeFromRoom(roomId);
+            }
+        });
+    }, [connected, subscribeToRoom, unsubscribeFromRoom]);
+
+    const closeConnection = useCallback(() => {
         notificationSubRef.current?.unsubscribe();
         notificationSubRef.current = null;
-        setConnected(false);
-    };
 
-    const client = useMemo(() => {
-        const c = new Client({
+        roomSubsRef.current.forEach(s => s.unsubscribe());
+        roomSubsRef.current.clear();
+
+        setConnected(false);
+    }, []);
+
+    useEffect(() => {
+        const client = new Client({
             brokerURL: WS_URL,
             reconnectDelay: 3000,
             heartbeatIncoming: 10000,
@@ -32,7 +89,7 @@ export const StompProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
             // Ensure latest token is used on every connect/reconnect
             beforeConnect: async () => {
-                c.connectHeaders = {
+                client.connectHeaders = {
                     Authorization: `Bearer ${localStorage.getItem("token")}`
                 };
             },
@@ -42,12 +99,17 @@ export const StompProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
                 // defensive
                 notificationSubRef.current?.unsubscribe();
-                notificationSubRef.current = c.subscribe(
-                    "/user/queue/messages",
+                notificationSubRef.current = client.subscribe(
+                    "/user/queue/notifications",
                     (frame: IMessage) => {
-                        console.log(frame);
+                        console.log("notification", frame.body);
                     }
                 );
+                
+                // clear stale subs
+                roomSubsRef.current.clear();
+
+                syncRoomSubscriptions();
             },
             onDisconnect: closeConnection,
             onWebSocketClose: closeConnection,
@@ -55,18 +117,16 @@ export const StompProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             onStompError: closeConnection,
         });
 
-        return c;
-    }, []);
+        clientRef.current = client;
+        client.activate();
 
-    useEffect(() => {
-        if (!client.active) client.activate();
-        return () => { client.deactivate(); };
-    }, [client]);
+        return () => {
+            client.deactivate();
+            closeConnection();
+        };
+    }, [closeConnection, syncRoomSubscriptions]);
 
-    useEffect(() => {
-    }, [client, connected]);
-
-    return <StompContext.Provider value={{ client, connected }}>{children}</StompContext.Provider>;
+    return <StompContext.Provider value={{ client: clientRef.current, connected }}>{children}</StompContext.Provider>;
 };
 
 // eslint-disable-next-line react-refresh/only-export-components
