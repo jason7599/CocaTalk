@@ -1,13 +1,14 @@
 import { create } from "zustand";
 import { EMPTY_META, type ChatroomMeta, type MessageDto, type PendingUserMessage, type UserInfo } from "../../../shared/types";
-import { apiChatroomBootstrap } from "../chatroomApi";
 import { apiLoadOlderMessages, apiSendMessage } from "../message/messageApi";
 import { errorMessage } from "../../../shared/utils/errors";
 import { useAuthStore } from "../../auth/authStore";
 import { createAckActions, type AckActions } from "./activeChatroomAck";
+import { createSessionActions, type SessionActions } from "./activeChatroomSession";
 
 export type ActiveChatroomState = 
     AckActions & 
+    SessionActions &
 {
     // currently opened chatroom
     activeRoomId: number | null;
@@ -25,11 +26,9 @@ export type ActiveChatroomState =
 
     // pagination stuff 
     nextCursor: number; // 0 if not loaded or no messages
-
     hasOlderMessages: boolean;
 
     loadingOlderMessages: boolean;
-    loadingNewerMessages: boolean;
 
     // for reconnection
     lastKnownSeq: number;
@@ -45,9 +44,6 @@ export type ActiveChatroomState =
     // stale fetch guards
     _epoch: number; // increments every time the active room changes, used to invalidate async fetches from previous rooms
     _abort: AbortController | null; // for canceling ongoing fetches when switching rooms
-
-    setActiveChatroom: (roomId: number) => void;
-    clearActiveChatroom: () => void;
 
     sendMessage: (content: string) => void;
     receiveMessage: (msg: MessageDto) => void;
@@ -68,95 +64,6 @@ export type ActiveChatroomState =
  * - Track ACKs and send them with debounce
 */
 export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => {
-
-    /**
-     * Sets the activeRoomId, and starts a new room transaction by:
-     * 1. Incrementing the _epoch, invalidates previous requests
-     * 2. Create a new abort controller
-     * 3. Reset room related state
-    */
-    const beginRoomTransaction = (roomId: number) => {
-        const nextEpoch = get()._epoch + 1;
-        const abort = new AbortController();
-
-        set({
-            activeRoomId: roomId,
-
-            status: "LOADING",
-            error: null,
-
-            meta: EMPTY_META,
-            members: [],
-
-            messages: [],
-            pendingMessages: [],
-
-            nextCursor: 0,
-
-            hasOlderMessages: false,
-
-            loadingOlderMessages: false,
-            loadingNewerMessages: false,
-
-            lastKnownSeq: 0,
-
-            _abort: abort,
-            _epoch: nextEpoch,
-
-            isNearBottom: true,
-            _ackTimer: null,
-            _pendingAck: 0,
-            _lastSentAck: 0,
-        });
-
-        return { epoch: nextEpoch, abort };
-    };
-
-    /** Ensure a response still belongs to the current room */
-    const isStillCurrent = (roomId: number, epoch: number, abort: AbortController) => {
-        if (abort.signal.aborted) return false;
-        const s = get();
-        return s.activeRoomId === roomId && s._epoch === epoch;
-    };
-
-    const loadInitialRoomData = async (roomId: number, epoch: number, abort: AbortController) => {
-        try {
-            const bootstrapData = await apiChatroomBootstrap(roomId);
-
-            if (!isStillCurrent(roomId, epoch, abort)) return;
-
-            const page = bootstrapData.initialPage;
-
-            set({
-                status: "READY",
-                meta: bootstrapData.meta,
-
-                members: bootstrapData.members,
-
-                messages: page.messages,
-
-                nextCursor: page.nextCursor,
-
-                hasOlderMessages: page.hasOlder,
-
-                loadingOlderMessages: false,
-                loadingNewerMessages: false,
-
-                lastKnownSeq: 0,
-            });
-
-            // After initial load, if we're near bottom, typical, ack latest.
-            get()._maybeAckLatestVisible();
-
-        } catch (err: unknown) {
-            if (!isStillCurrent(roomId, epoch, abort)) return;
-            set({
-                status: "ERROR",
-                error: errorMessage(err)
-            });
-        }
-    };
-
     
     return {
 
@@ -189,6 +96,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
         _lastSentAck: 0,
 
         ...createAckActions(set, get),
+        ...createSessionActions(set, get),
 
         setActiveChatroom: (roomId) => {
             if (get().activeRoomId === roomId) return;
@@ -196,9 +104,9 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             get()._abort?.abort();
             get()._flushAckNow(); // acks are forced when changing rooms
 
-            const { epoch, abort } = beginRoomTransaction(roomId);
+            const { epoch, abort } = get()._beginSession(roomId);
 
-            loadInitialRoomData(roomId, epoch, abort);
+            get()._loadSessionData(roomId, epoch, abort);
         },
 
         clearActiveChatroom: () => {
@@ -220,7 +128,6 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
                 hasOlderMessages: false,
 
                 loadingOlderMessages: false,
-                loadingNewerMessages: false,
 
                 lastKnownSeq: 0,
 
@@ -306,7 +213,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
                     signal: abort.signal
                 });
 
-                if (!isStillCurrent(roomId, epoch, abort)) return;
+                if (!get()._isCurrentSession(roomId, epoch, abort)) return;
 
                 set((cur) => {
                     if (cur.status !== "READY") return {};
@@ -324,7 +231,7 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
                     set({ error: errorMessage(err) });
                 }
 
-                if (isStillCurrent(roomId, epoch, abort)) {
+                if (get()._isCurrentSession(roomId, epoch, abort)) {
                     set({ loadingOlderMessages: false });
                 }
             }
