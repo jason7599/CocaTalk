@@ -1,23 +1,16 @@
-import type React from "react";
+import React from "react";
 import { formatTime } from "../utils/chatFormat";
 import { useAuthStore } from "../../auth/authStore";
+import type { PendingUserMessage, UserMessageDto } from "../../../shared/types";
 
-type PropsBase = {
-    userId: number;
-    username: string;
-    content: string;
-};
+const UserMessageBubble: React.FC<{ message: UserMessageDto | PendingUserMessage }> = ({ message }) => {
+    const isMe = useAuthStore.getState().requireUser().userId === message.actorId;
+    
+    const isPersisted = !("status" in message);
+    const isSending = !isPersisted && message.status === "SENDING";
+    const isFailed = !isPersisted && message.status === "FAILED";
 
-export type UserMessageBubbleProps =
-    | (PropsBase & { status: "PERSISTED"; createdAt: string })
-    | (PropsBase & { status: "SENDING" | "FAILED" });
-
-const UserMessageBubble: React.FC<{ message: UserMessageBubbleProps }> = ({ message }) => {
-    const isMe = useAuthStore.getState().requireUser().userId === message.userId;
-
-    const isPersisted = message.status === "PERSISTED";
-    const isSending = message.status === "SENDING";
-    const isFailed = message.status === "FAILED";
+    console.log("render bubble");
 
     return (
         <div className={`flex ${isMe ? "justify-end" : "justify-start"} px-2 py-1`}>
@@ -25,7 +18,7 @@ const UserMessageBubble: React.FC<{ message: UserMessageBubbleProps }> = ({ mess
 
                 {!isMe && (
                     <div className="mb-1 px-1 text-xs font-medium text-slate-400 tracking-wide">
-                        {message.username}
+                        {message.actorName}
                     </div>
                 )}
 
@@ -92,4 +85,4 @@ const UserMessageBubble: React.FC<{ message: UserMessageBubbleProps }> = ({ mess
     );
 };
 
-export default UserMessageBubble;
+export default React.memo(UserMessageBubble);

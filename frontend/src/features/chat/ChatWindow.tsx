@@ -3,25 +3,13 @@ import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
 import ChatHeader from "./ChatHeader";
 import { useStomp } from "../../services/ws/stompContext";
 import { useActiveChatroomStore } from "./active/activeChatroomStore";
-import UserMessageBubble from "./message/UserMessageBubble";
+import MessageList from "./message/MessageList";
 
 const ChatWindow: React.FC = () => {
     const { connected } = useStomp();
 
     const activeRoomId = useActiveChatroomStore((s) => s.activeRoomId);
-    const roomStatus = useActiveChatroomStore((s) => s.status);
     const roomMeta = useActiveChatroomStore((s) => s.meta);
-    
-    const messages = useActiveChatroomStore((s) => s.messages);
-    const pendingMessages = useActiveChatroomStore((s) => s.pendingMessages);
-
-    const hasOlderMessages = useActiveChatroomStore((s) => s.hasOlderMessages);
-    const loadingOlderMessages = useActiveChatroomStore((s) => s.loadingOlderMessages);
-
-    const isNearBottom = useActiveChatroomStore((s) => s.isNearBottom);
-    const setNearBottom = useActiveChatroomStore((s) => s.setNearBottom);
-
-    const loadOlderMessages = useActiveChatroomStore((s) => s.loadOlderMessages);
     const sendMessage = useActiveChatroomStore((s) => s.sendMessage);
 
     const [message, setMessage] = useState("");
@@ -47,109 +35,6 @@ const ChatWindow: React.FC = () => {
         inputRef.current?.focus();
     };
 
-    // scroll behavior
-    const didInitialScrollRef = useRef(false);
-    const listRef = useRef<HTMLDivElement>(null);
-    const skipAutoScrollRef = useRef(false);
-
-    // Sentinel refs
-    const topSentinelRef = useRef<HTMLDivElement>(null);
-    const bottomSentinelRef = useRef<HTMLDivElement>(null);
-
-    const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
-        bottomSentinelRef.current?.scrollIntoView({ behavior, block: "end" });
-    };
-
-    // Near-bottom tracking via bottom sentinel
-    useEffect(() => {
-        const root = listRef.current;
-        const bottom = bottomSentinelRef.current;
-        if (!root || !bottom) return;
-
-        const io = new IntersectionObserver(
-            ([entry]) => {
-                const near = entry.isIntersecting;
-                setNearBottom(near);
-            },
-            {
-                root,
-                threshold: 0.01,
-                rootMargin: "0px 0px 140px 0px",
-            }
-        );
-
-        io.observe(bottom);
-        return () => io.disconnect();
-    }, [activeRoomId, setNearBottom]);
-
-    // Infinite scroll (load older messages when top sentinel appears)
-    useEffect(() => {
-        const el = listRef.current;
-        const sentinel = topSentinelRef.current;
-        if (!el || !sentinel) return;
-
-        if (!hasOlderMessages) return;
-
-        const io = new IntersectionObserver(
-            async ([entry]) => {
-                if (!entry.isIntersecting) return;
-                if (loadingOlderMessages) return;
-                if (roomStatus !== "READY") return;
-
-                // Preserve scroll position when older messages are prepended
-                const prevScrollHeight = el.scrollHeight;
-                const prevScrollTop = el.scrollTop;
-
-                skipAutoScrollRef.current = true;
-
-                await loadOlderMessages();
-
-                requestAnimationFrame(() => {
-                    const newScrollHeight = el.scrollHeight;
-                    el.scrollTop = prevScrollTop + (newScrollHeight - prevScrollHeight);
-
-                    // allow auto-scroll again after this prepend cycle
-                    skipAutoScrollRef.current = false;
-                });
-            },
-            { root: el, threshold: 0.01 }
-        );
-
-        io.observe(sentinel);
-        return () => io.disconnect();
-    }, [
-        activeRoomId,
-        roomStatus,
-        hasOlderMessages,
-        loadingOlderMessages,
-        loadOlderMessages,
-    ]);
-
-    // Reset scroll flags when switching rooms
-    useEffect(() => {
-        didInitialScrollRef.current = false;
-        skipAutoScrollRef.current = false;
-        setNearBottom(true);
-    }, [activeRoomId, setNearBottom]);
-
-    // Initial scroll to bottom once messages render
-    useEffect(() => {
-        if (roomStatus !== "READY") return;
-        if (didInitialScrollRef.current) return;
-        if (messages.length === 0) return;
-
-        scrollToBottom("auto");
-        didInitialScrollRef.current = true;
-    }, [roomStatus, messages.length]);
-
-    // Auto-scroll on new messages ONLY if user is near bottom and we aren't prepending
-    useEffect(() => {
-        if (skipAutoScrollRef.current) return;
-        if (!isNearBottom) return;
-
-        scrollToBottom("smooth");
-    }, [messages.length, pendingMessages.length, isNearBottom]);
-
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter") {
             e.preventDefault();
@@ -174,86 +59,7 @@ const ChatWindow: React.FC = () => {
             </div>
 
             <ChatHeader />
-
-            {/* LIST */}
-            <div ref={listRef} className="relative z-0 flex-1 overflow-y-auto px-4 py-4">
-                {/* list surface gradient */}
-                <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[#0b0b14] via-[#0c0c16] to-[#0a0a12]" />
-
-                {/* TOP sentinel (for infinite scroll up) */}
-                <div ref={topSentinelRef} className="h-px" />
-
-                {roomStatus === "READY" && loadingOlderMessages && (
-                    <div className="mb-3 flex justify-center text-xs text-slate-400">
-                        Loading older messages...
-                    </div>
-                )}
-
-                {roomStatus === "LOADING" ? (
-                    <div className="h-full flex items-center justify-center text-slate-400">
-                        Loading…
-                    </div>
-                ) : messages.length === 0 ? (
-                    <div className="h-full flex items-center justify-center text-slate-400">
-                        No messages yet
-                    </div>
-                ) : (
-                    <div className="flex flex-col gap-2">
-                        {messages.map((m) => (
-                            m.kind === "USER"
-                                ? <UserMessageBubble 
-                                    message={{
-                                        userId: m.actorId,
-                                        username: m.actorName,
-                                        content: m.content,
-                                        status: "PERSISTED",
-                                        createdAt: m.createdAt
-                                    }}
-                                    key={m.seq}
-                                />
-
-                                : null // todo: event messages
-                        ))}
-                        {pendingMessages.map((m) => (
-                            <UserMessageBubble 
-                                message={{
-                                    userId: m.actorId,
-                                    username: m.actorName,
-                                    content: m.content,
-                                    status: m.status
-                                }}
-                                key={m.clientId} 
-                            />
-                        ))}
-                    </div>
-                )}
-
-                {/* BOTTOM sentinel (for jump-to-latest + auto-scroll) */}
-                {messages.length > 0 && (
-                    <div ref={bottomSentinelRef} className="h-6 shrink-0" />
-                )}
-
-            </div>
-
-            {/* JUMP TO LATEST (overlay, does NOT affect scrollHeight) */}
-            {!isNearBottom && (
-                <div className="pointer-events-none absolute bottom-28 left-0 right-0 z-20 flex justify-center">
-                    <button
-                        onClick={() => scrollToBottom("smooth")}
-                        className="
-                            pointer-events-auto
-                            rounded-full px-4 py-2 text-xs font-semibold
-                            text-slate-100
-                            border border-white/10 bg-white/5 backdrop-blur-xl
-                            hover:bg-white/10 transition
-                            shadow-[0_12px_30px_rgba(0,0,0,0.35)]
-                            focus:outline-none focus:ring-2 focus:ring-rose-300/25
-                        "
-                    >
-                        Jump to latest
-                    </button>
-                </div>
-            )}
+            <MessageList />
 
             {/* INPUT / BLOCKED STATE */}
             <div className="relative z-10 border-t border-white/10 bg-[#0f0f18]/70 backdrop-blur-xl">
@@ -313,7 +119,6 @@ const ChatWindow: React.FC = () => {
                             </button>
                         </div>
                     )}
-
                 </div>
             </div>
         </div>
