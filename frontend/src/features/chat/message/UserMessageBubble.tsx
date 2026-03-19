@@ -10,8 +10,6 @@ const UserMessageBubble: React.FC<{ message: UserMessageDto | PendingUserMessage
     const isSending = !isPersisted && message.status === "SENDING";
     const isFailed = !isPersisted && message.status === "FAILED";
 
-    console.log("render bubble");
-
     return (
         <div className={`flex ${isMe ? "justify-end" : "justify-start"} px-2 py-1`}>
             <div className="max-w-[76%] flex flex-col">
