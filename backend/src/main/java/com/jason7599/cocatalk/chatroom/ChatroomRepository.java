@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Set;
 
 public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> {
 
@@ -167,4 +168,11 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
     long getMyLastAck(@Param("roomId") long roomId, @Param("userId") long userId);
 
 //    void setMyLastAck(@Param("roomId") Long roomId, @Param("userId") Long userId, @Param())
+
+    @Query(value = """
+            SELECT user_id
+            FROM room_members
+            WHERE room_id = :roomId
+            """, nativeQuery = true)
+    Set<Long> fetchChatroomMemberIds(@Param("roomId") long roomId);
 }
