@@ -6,7 +6,6 @@ import React, {
     useState,
 } from "react";
 import { Client, type IMessage, type StompSubscription } from "@stomp/stompjs";
-import { useChatroomsStore } from "../../features/chat/chatroomsStore";
 
 const WS_URL = import.meta.env.VITE_WS_URL;
 
@@ -24,66 +23,17 @@ export const StompProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const [connected, setConnected] = useState(false);
 
     const clientRef = useRef<Client | null>(null);
-    const notificationSubRef = useRef<StompSubscription | null>(null);
-    const roomSubsRef = useRef<Map<number, StompSubscription>>(new Map());
 
-    const rooms = useChatroomsStore((state) => state.chatrooms);
-
-
-    const subscribeToRoom = (roomId: number) => {
-        const client = clientRef.current;
-        if (!client || !client.connected) return;
-        if (roomSubsRef.current.has(roomId)) return;
-
-        const sub = client.subscribe(
-            `/topic/chatroom.${roomId}`,
-            (frame: IMessage) => {
-                console.log("room msg", roomId, frame.body);
-            }
-        );
-
-        roomSubsRef.current.set(roomId, sub);
-    };
-
-    const unsubscribeFromRoom = (roomId: number) => {
-        const sub = roomSubsRef.current.get(roomId);
-        if (!sub) return;
-
-        sub.unsubscribe();
-        roomSubsRef.current.delete(roomId);
-    };
-
-    const clearAllRoomSubs = () => {
-        roomSubsRef.current.forEach((sub) => sub.unsubscribe());
-        roomSubsRef.current.clear();
-    };
-
-    useEffect(() => {
-        const client = clientRef.current;
-        if (!client || !client.connected) return;
-
-        const currentIds = new Set(rooms.map((r) => r.roomId));
-
-        // subscribe new
-        currentIds.forEach((id) => {
-            if (!roomSubsRef.current.has(id)) {
-                subscribeToRoom(id);
-            }
-        });
-
-        // unsubscribe removed
-        roomSubsRef.current.forEach((_, id) => {
-            if (!currentIds.has(id)) {
-                unsubscribeFromRoom(id);
-            }
-        });
-    }, [rooms, connected]);
-
+    const messageSubRef = useRef<StompSubscription | null>(null);
+    const eventSubRef = useRef<StompSubscription | null>(null);
 
     const cleanup = () => {
-        notificationSubRef.current?.unsubscribe();
-        notificationSubRef.current = null;
-        clearAllRoomSubs();
+        messageSubRef.current?.unsubscribe();
+        eventSubRef.current?.unsubscribe();
+
+        messageSubRef.current = null;
+        eventSubRef.current = null;
+
         setConnected(false);
     };
 
@@ -94,6 +44,7 @@ export const StompProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             heartbeatIncoming: 10000,
             heartbeatOutgoing: 10000,
 
+            // TODO: remove on prod
             debug: (str) => console.log("[STOMP]", str),
 
             beforeConnect: async () => {
@@ -105,18 +56,23 @@ export const StompProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             onConnect: () => {
                 setConnected(true);
 
-                // clean previous just in case (defensive)
-                notificationSubRef.current?.unsubscribe();
+                // defensive 
+                messageSubRef.current?.unsubscribe();
+                eventSubRef.current?.unsubscribe();
 
-                notificationSubRef.current = client.subscribe(
-                    "/user/queue/notifications",
+                messageSubRef.current = client.subscribe(
+                    "/user/queue/messages",
                     (frame: IMessage) => {
-                        console.log("notification", frame.body);
+                        console.log("msg", frame.body);
                     }
                 );
-
-                // reset room subs before resync
-                clearAllRoomSubs();
+                
+                eventSubRef.current = client.subscribe(
+                    "/user/queue/events",
+                    (frame: IMessage) => {
+                        console.log("evt", frame.body);
+                    }
+                );
             },
 
             onDisconnect: cleanup,
@@ -135,9 +91,7 @@ export const StompProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, []);
 
     return (
-        <StompContext.Provider
-            value={{ client: clientRef.current, connected }}
-        >
+        <StompContext.Provider value={{ client: clientRef.current, connected }}>
             {children}
         </StompContext.Provider>
     );
