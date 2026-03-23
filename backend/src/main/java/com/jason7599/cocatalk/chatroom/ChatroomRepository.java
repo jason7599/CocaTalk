@@ -108,7 +108,7 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
 
     @Query(value = """
             SELECT
-                u.user_id as userId,
+                u.id as userId,
                 u.username
             FROM room_members rm JOIN users u on rm.user_id = u.id
             WHERE rm.room_id = :roomId
