@@ -5,7 +5,8 @@ import React, {
     useRef,
     useState,
 } from "react";
-import { Client, type IMessage, type StompSubscription } from "@stomp/stompjs";
+import { Client, type StompSubscription } from "@stomp/stompjs";
+import { wsHandleEvent, wsHandleMessage } from "./wsEventHandler";
 
 const WS_URL = import.meta.env.VITE_WS_URL;
 
@@ -62,16 +63,12 @@ export const StompProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
                 messageSubRef.current = client.subscribe(
                     "/user/queue/messages",
-                    (frame: IMessage) => {
-                        console.log("msg", frame.body);
-                    }
+                    wsHandleMessage
                 );
                 
                 eventSubRef.current = client.subscribe(
                     "/user/queue/events",
-                    (frame: IMessage) => {
-                        console.log("evt", frame.body);
-                    }
+                    wsHandleEvent
                 );
             },
 

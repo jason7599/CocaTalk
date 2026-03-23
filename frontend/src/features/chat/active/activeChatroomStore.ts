@@ -46,7 +46,7 @@ export type ActiveChatroomState =
     _abort: AbortController | null; // for canceling ongoing fetches when switching rooms
 
     sendMessage: (content: string) => void;
-    receiveMessage: (msg: MessageDto) => void;
+    onNewMessage: (msg: MessageDto) => void;
 
     loadOlderMessages: () => Promise<void>;
 
@@ -159,12 +159,13 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             apiSendMessage(roomId, content, clientId);
         },
 
-        receiveMessage: (msg) => {
+        onNewMessage: (msg) => {
             const me = useAuthStore.getState().requireUser();
 
             set((s) => {
                 const lastKnownSeq = Math.max(s.lastKnownSeq, msg.seq);
 
+                // remove from pending if this was confirmation on my pending message
                 const pendingMessages =
                     msg.kind === "USER" && msg.actorId === me.userId
                         ? s.pendingMessages.filter(p => p.clientId !== msg.clientId)

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ChatroomSummary } from "../../shared/types";
+import type { ChatroomSummary, MessageDto } from "../../shared/types";
 
 type ChatroomsState = {
     chatrooms: ChatroomSummary[];
@@ -10,11 +10,10 @@ type ChatroomsState = {
     removeLocal: (roomId: number) => void;
     reset: () => void;
 
-    // todo: updateLastMessage
+    onNewMessage: (msg: MessageDto) => void;
 
     setMyLastAck: (roomId: number, seq: number) => void;
 };
-
 
 export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
     chatrooms: [],
@@ -69,6 +68,39 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
         set({
             chatrooms: [],
             byId: {}
+        });
+    },
+
+    onNewMessage: (msg) => {
+        const s = get();
+        const room = s.byId[msg.roomId];
+        
+        if (!room) {
+            // TODO: This absolutely can happen in case of ws reconnects.
+            // Or just simply receiving a direct message from someone for the first time.
+            // Or group chat creation.
+            // FE should request a ChatroomSummary from the BE here
+            return;
+        }
+
+        const updated: ChatroomSummary = {
+            ...room,
+            lastMessage: msg
+        };
+
+        const newById = {
+            ...s.byId,
+            [msg.roomId]: updated
+        };
+
+        const newChatrooms = [
+            updated,
+            ...s.chatrooms.filter((r) => r.roomId !== msg.roomId)
+        ];
+
+        set({
+            byId: newById,
+            chatrooms: newChatrooms
         });
     },
 
