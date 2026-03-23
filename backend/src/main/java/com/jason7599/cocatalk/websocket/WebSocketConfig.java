@@ -1,4 +1,4 @@
-package com.jason7599.cocatalk.webconfig;
+package com.jason7599.cocatalk.websocket;
 
 import com.jason7599.cocatalk.security.StompAuthChannelInterceptor;
 import lombok.NonNull;

@@ -7,6 +7,7 @@ import com.jason7599.cocatalk.message.MessageService;
 import com.jason7599.cocatalk.message.SendMessageRequest;
 import com.jason7599.cocatalk.user.UserInfo;
 import com.jason7599.cocatalk.user.relation.UserRelationService;
+import com.jason7599.cocatalk.websocket.ChatEventPublisher;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -31,6 +32,7 @@ public class ChatroomService {
     private final ChatroomRepository chatroomRepository;
     private final UserRelationService userRelationService;
     private final MessageService messageService;
+    private final ChatEventPublisher chatEventPublisher;
 
     public List<ChatroomSummary> getChatroomSummaries(long userId) {
         List<ChatroomSummary.Projection> chatroomSummaryProjections = chatroomRepository.getChatroomSummaries(userId);
@@ -162,10 +164,14 @@ public class ChatroomService {
 
     public MessageDto sendMessage(long roomId, long userId, String username, SendMessageRequest request) {
         assertMembership(roomId, userId);
-        return new MessageDto(messageService.insertUserMessage(
-                roomId,
+
+        MessageDto message = new MessageDto(messageService.insertUserMessage(roomId,
                 userId,
                 username,
                 request));
+
+        chatEventPublisher.publishMessage(roomId, message);
+        
+        return message;
     }
 }

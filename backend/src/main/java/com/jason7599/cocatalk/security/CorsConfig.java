@@ -1,4 +1,4 @@
-package com.jason7599.cocatalk.webconfig;
+package com.jason7599.cocatalk.security;
 
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Value;
