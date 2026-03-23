@@ -5,6 +5,7 @@ import com.jason7599.cocatalk.message.MessageDto;
 import com.jason7599.cocatalk.message.MessagePage;
 import com.jason7599.cocatalk.message.MessageService;
 import com.jason7599.cocatalk.message.SendMessageRequest;
+import com.jason7599.cocatalk.user.UserInfo;
 import com.jason7599.cocatalk.user.relation.UserRelationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -34,18 +35,18 @@ public class ChatroomService {
     public List<ChatroomSummary> getChatroomSummaries(long userId) {
         List<ChatroomSummary.Projection> chatroomSummaryProjections = chatroomRepository.getChatroomSummaries(userId);
 
-        List<ChatroomMemberNameRow> memberNameRows = chatroomRepository.batchFetchMemberRows(
+        List<ChatroomMemberRow> memberRows = chatroomRepository.batchFetchMemberRows(
                 chatroomSummaryProjections.stream().map(ChatroomSummary.Projection::getRoomId).toList(),
                 userId,
                 MEMBER_NAMES_PREVIEW_PER_ROOM
         );
 
-        Map<Long, List<String>> memberNamesMap =
-                memberNameRows.stream()
+        Map<Long, List<UserInfo>> membersMap =
+                memberRows.stream()
                         .collect(Collectors.groupingBy(
-                                ChatroomMemberNameRow::roomId,
+                                ChatroomMemberRow::roomId,
                                 Collectors.mapping(
-                                        ChatroomMemberNameRow::username,
+                                        row -> new UserInfo(row.userId(), row.username()),
                                         Collectors.toList()
                                 )
                         ));
@@ -54,7 +55,7 @@ public class ChatroomService {
                 .map(proj -> new ChatroomSummary(
                         proj.getRoomId(),
                         proj.getRoomType(),
-                        memberNamesMap.getOrDefault(proj.getRoomId(), List.of()),
+                        membersMap.getOrDefault(proj.getRoomId(), List.of()),
                         proj.getTotalMemberCount(),
                         proj.getMyLastAck(),
                         new MessageDto(
@@ -85,7 +86,7 @@ public class ChatroomService {
         return new ChatroomSummary(
                 proj.getRoomId(),
                 proj.getRoomType(),
-                chatroomRepository.fetchMemberNamesPreview(roomId, viewerId, MEMBER_NAMES_PREVIEW_PER_ROOM),
+                chatroomRepository.fetchMembersPreview(roomId, viewerId, MEMBER_NAMES_PREVIEW_PER_ROOM),
                 proj.getTotalMemberCount(),
                 proj.getMyLastAck(),
                 new MessageDto(
@@ -158,7 +159,6 @@ public class ChatroomService {
         assertMembership(roomId, viewerId);
         return messageService.fetchOlderMessages(roomId, cursor);
     }
-
 
     public MessageDto sendMessage(long roomId, long userId, String username, SendMessageRequest request) {
         assertMembership(roomId, userId);

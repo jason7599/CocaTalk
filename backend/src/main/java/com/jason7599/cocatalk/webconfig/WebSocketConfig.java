@@ -36,7 +36,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         // where the server can BROADCAST messages to
         registry.enableSimpleBroker("/topic", "/queue");
 
-        // user-specific queues
+        // user-specific queues4
         registry.setUserDestinationPrefix("/user");
     }
 

@@ -2,7 +2,7 @@ import type { ChatroomSummary, EventMessageDto, MessageDto, UserInfo } from "../
 
 export function formatChatroomDisplayNameFromSummary(chatroom: ChatroomSummary): string {
     return formatChatroomDisplayName(
-        chatroom.memberNamesPreview,
+        chatroom.membersPreview.map(m => m.username),
         chatroom.totalMemberCount
     );
 }
