@@ -171,7 +171,7 @@ public class ChatroomService {
                 request));
 
         chatEventPublisher.publishMessage(roomId, message);
-        
+
         return message;
     }
 }

@@ -1,16 +1,19 @@
 import { create } from "zustand";
 import type { ChatroomSummary, MessageDto } from "../../shared/types";
+import { apiGetChatroomSummary } from "./chatroomApi";
 
 type ChatroomsState = {
     chatrooms: ChatroomSummary[];
     byId: Record<number, ChatroomSummary>;
+
+    _fetchingIds: Set<number>;
 
     hydrate: (rooms: ChatroomSummary[]) => void;
     upsert: (room: ChatroomSummary) => void;
     removeLocal: (roomId: number) => void;
     reset: () => void;
 
-    onNewMessage: (msg: MessageDto) => void;
+    onNewMessage: (msg: MessageDto) => Promise<void>;
 
     setMyLastAck: (roomId: number, seq: number) => void;
 };
@@ -18,6 +21,8 @@ type ChatroomsState = {
 export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
     chatrooms: [],
     byId: {},
+
+    _fetchingIds: new Set(),
 
     hydrate: (rooms) => {
         set({
@@ -71,36 +76,45 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
         });
     },
 
-    onNewMessage: (msg) => {
-        const s = get();
-        const room = s.byId[msg.roomId];
-        
+    onNewMessage: async (msg) => {
+        let room = get().byId[msg.roomId];
+
+        // This absolutely can happen in case of ws reconnects.
+        // Or just simply receiving a direct message from someone for the first time.
+        // Or group chat creation.
         if (!room) {
-            // TODO: This absolutely can happen in case of ws reconnects.
-            // Or just simply receiving a direct message from someone for the first time.
-            // Or group chat creation.
-            // FE should request a ChatroomSummary from the BE here
-            return;
+            if (!get()._fetchingIds.has(msg.roomId)) {
+                get()._fetchingIds.add(msg.roomId);
+                try {
+                    const fetched = await apiGetChatroomSummary(msg.roomId);
+                    get().upsert(fetched);
+                } finally {
+                    get()._fetchingIds.delete(msg.roomId);
+                }
+            }
         }
+
+        // re-read state after await
+        const s = get();
+        room = s.byId[msg.roomId];
+        if (!room) return;
+
+        if (room.lastMessage.seq >= msg.seq) return;
 
         const updated: ChatroomSummary = {
             ...room,
             lastMessage: msg
         };
 
-        const newById = {
-            ...s.byId,
-            [msg.roomId]: updated
-        };
-
-        const newChatrooms = [
-            updated,
-            ...s.chatrooms.filter((r) => r.roomId !== msg.roomId)
-        ];
-
         set({
-            byId: newById,
-            chatrooms: newChatrooms
+            byId: {
+                ...s.byId,
+                [msg.roomId]: updated
+            },
+            chatrooms: [
+                updated,
+                ...s.chatrooms.filter((r) => r.roomId !== msg.roomId)
+            ]
         });
     },
 
