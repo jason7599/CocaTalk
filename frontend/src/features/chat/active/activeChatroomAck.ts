@@ -1,6 +1,7 @@
 import type { StoreApi } from "zustand";
 import type { ActiveChatroomState } from "./activeChatroomStore";
 import { useChatroomsStore } from "../chatroomsStore";
+import { apiUpdateLastAck } from "../chatroomApi";
 
 const ACK_DEBOUNCE_MS = 400;
 
@@ -32,12 +33,12 @@ export function createAckActions(
 
         _maybeAckLatestVisible: () => {
             const s = get();
-
+            
             if (!s.isNearBottom) return;
             if (s.status !== "READY") return;
-            if (s.lastKnownSeq === 0) return;
+            if (s.messages.length === 0) return;
 
-            get().ackUpTo(s.lastKnownSeq);
+            get().ackUpTo(s.messages.at(-1)!.seq);
         },
 
         _scheduleAckFlush: () => {
@@ -58,31 +59,33 @@ export function createAckActions(
 
         _flushAckNow: () => {
             const s = get();
-
+            
             if (s._ackTimer != null) {
                 window.clearTimeout(s._ackTimer);
             }
-
+            
             const roomId = s.activeRoomId;
-
+            
             if (roomId == null) {
                 set({ _ackTimer: null });
                 return;
             }
-
+            
             const pending = s._pendingAck;
-
+            
             if (pending <= s._lastSentAck) {
                 set({ _ackTimer: null });
                 return;
             }
-
-            // TODO: send ack
-
+            
+            apiUpdateLastAck(roomId, pending);
+            
             set({
                 _lastSentAck: pending,
                 _ackTimer: null
             });
+
+            console.log("ACKed", pending);
         },
     }
 };

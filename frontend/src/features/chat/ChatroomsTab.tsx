@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
 import { ChatBubbleLeftRightIcon, PlusCircleIcon } from "@heroicons/react/24/solid";
-import type { ChatroomSummary } from "../../shared/types";
 import { useModal } from "../../shared/ModalContext";
 import AddGroupChatModal from "./AddGroupChatModal";
 import { useChatroomsStore } from "./chatroomsStore";
@@ -17,10 +16,6 @@ function formatDate(ts: string | number | Date) {
     const d = new Date(ts);
     if (Number.isNaN(d.getTime())) return "";
     return d.toLocaleDateString([], { month: "short", day: "numeric" });
-}
-
-function getUnreadCount(room: ChatroomSummary) {
-    return room.lastMessage?.seq ?? 0 - room.myLastAck;
 }
 
 const ChatroomsTab: React.FC = () => {
@@ -83,7 +78,7 @@ const ChatroomsTab: React.FC = () => {
                                 <div>
                                     <div className="font-semibold text-slate-100">No chatrooms yet</div>
                                     <div className="text-sm text-slate-400">
-                                        Start a DM or create a room to get chatting.
+                                        lil bro got no chatrooms 😭🥀💔💀
                                     </div>
                                 </div>
                             </div>
@@ -93,17 +88,17 @@ const ChatroomsTab: React.FC = () => {
                     <div className="flex-1 overflow-y-auto pb-2">
                         {/* List */}
                         <div className="flex flex-col gap-2">
-                            {sorted.map((chatroom) => {
-                                const lastTextPreview = chatroom.lastMessage == null ? "No messages yet" : formatLastMessage(chatroom.lastMessage);
-                                const lastAt = chatroom.lastMessage?.createdAt ?? 0;
-                                const unreadCount = getUnreadCount(chatroom);
-                                const isActive = chatroom.roomId === activeChatroomId;
+                            {sorted.map((room) => {
+                                const lastTextPreview = formatLastMessage(room.lastMessage);
+                                const lastAt = room.lastMessage.createdAt;
+                                const unreadCount = room.lastMessage.seq - room.myLastAck;
+                                const isActive = room.roomId === activeChatroomId;
 
                                 return (
                                     <button
-                                        key={chatroom.roomId}
+                                        key={room.roomId}
                                         type="button"
-                                        onClick={() => handleClick(chatroom.roomId)}
+                                        onClick={() => handleClick(room.roomId)}
                                         className={[
                                             "group relative w-full text-left",
                                             "rounded-2xl border backdrop-blur-xl",
@@ -146,7 +141,7 @@ const ChatroomsTab: React.FC = () => {
                                                                 isActive ? "text-slate-100" : "text-slate-100/90",
                                                             ].join(" ")}
                                                         >
-                                                            {formatChatroomDisplayNameFromSummary(chatroom)}
+                                                            {formatChatroomDisplayNameFromSummary(room)}
                                                         </div>
 
                                                         <div

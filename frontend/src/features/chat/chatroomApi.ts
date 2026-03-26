@@ -12,3 +12,7 @@ export async function apiChatroomBootstrap(roomId: number): Promise<ChatroomBoot
 export async function apiGetChatroomSummary(roomId: number): Promise<ChatroomSummary> {
     return (await api.get(`/chats/${roomId}`)).data;
 };
+
+export async function apiUpdateLastAck(roomId: number, seq: number): Promise<void> {
+    await api.put(`/chats/${roomId}/ack`, { seq });
+};

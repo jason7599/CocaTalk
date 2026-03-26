@@ -46,8 +46,6 @@ export function createSessionActions(
 
                 loadingOlderMessages: false,
 
-                lastKnownSeq: 0,
-
                 _abort: abort,
                 _epoch: nextEpoch,
 
@@ -85,12 +83,11 @@ export function createSessionActions(
 
                     loadingOlderMessages: false,
 
-                    lastKnownSeq: 0,
+                    _lastSentAck: bootstrapData.lastReadSeq
                 });
 
                 // same behavior as before
                 get()._maybeAckLatestVisible();
-
             } catch (err: unknown) {
                 if (!get()._isCurrentSession(roomId, epoch, abort)) return;
 
@@ -130,8 +127,6 @@ export function createSessionActions(
                 hasOlderMessages: false,
 
                 loadingOlderMessages: false,
-
-                lastKnownSeq: 0,
 
                 _epoch: get()._epoch + 1,
             });

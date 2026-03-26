@@ -45,7 +45,7 @@ const ChatWindow: React.FC = () => {
     if (activeRoomId == null) {
         return (
             <div className="flex-1 flex items-center justify-center text-slate-400 text-lg bg-[#0b0b14]">
-                Select a chatroom to start chatting
+                Select a chatroom to start chatting :))))))
             </div>
         );
     }

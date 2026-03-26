@@ -30,9 +30,6 @@ export type ActiveChatroomState =
 
     loadingOlderMessages: boolean;
 
-    // for reconnection
-    lastKnownSeq: number;
-
     // UI behavior for ACK, public
     isNearBottom: boolean; // whether user is currently near the bottom of the message list in the UI
 
@@ -85,8 +82,6 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
         loadingOlderMessages: false,
         loadingNewerMessages: false,
 
-        lastKnownSeq: 0,
-
         _epoch: 0,
         _abort: null,
 
@@ -97,43 +92,6 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
 
         ...createAckActions(set, get),
         ...createSessionActions(set, get),
-
-        setActiveChatroom: (roomId) => {
-            if (get().activeRoomId === roomId) return;
-
-            get()._abort?.abort();
-            get()._flushAckNow(); // acks are forced when changing rooms
-
-            const { epoch, abort } = get()._beginSession(roomId);
-
-            get()._loadSessionData(roomId, epoch, abort);
-        },
-
-        clearActiveChatroom: () => {
-            get()._abort?.abort();
-            get()._flushAckNow();
-
-            set({
-                activeRoomId: null,
-
-                status: "IDLE",
-                error: null,
-
-                meta: EMPTY_META,
-                members: [],
-                messages: [],
-
-                nextCursor: 0,
-
-                hasOlderMessages: false,
-
-                loadingOlderMessages: false,
-
-                lastKnownSeq: 0,
-
-                _epoch: get()._epoch + 1
-            });
-        },
 
         sendMessage: (content) => {
             const roomId = get().activeRoomId;
@@ -163,8 +121,6 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
             const me = useAuthStore.getState().requireUser();
 
             set((s) => {
-                const lastKnownSeq = Math.max(s.lastKnownSeq, msg.seq);
-
                 // remove from pending if this was confirmation on my pending message
                 const pendingMessages =
                     msg.kind === "USER" && msg.actorId === me.userId
@@ -172,11 +128,12 @@ export const useActiveChatroomStore = create<ActiveChatroomState>((set, get) => 
                         : s.pendingMessages;
 
                 return {
-                    lastKnownSeq,
                     pendingMessages,
                     messages: [...s.messages, msg]
                 };
             });
+
+            get()._maybeAckLatestVisible();
         },
 
         // ack public api
