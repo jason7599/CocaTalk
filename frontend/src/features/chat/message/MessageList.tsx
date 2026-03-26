@@ -114,7 +114,7 @@ const MessageList: React.FC = () => {
         if (isNearBottom || newestIsMine) {
             scrollToBottom(newestIsMine ? "smooth" : "auto");
         }
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [messages.length, pendingMessages.length, me]);
 
     return (<>
