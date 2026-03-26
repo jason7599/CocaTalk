@@ -71,9 +71,8 @@ export function createAckActions(
             }
 
             const pending = s._pendingAck;
-            const lastSent = s._lastSentAck;
 
-            if (pending <= lastSent) {
+            if (pending <= s._lastSentAck) {
                 set({ _ackTimer: null });
                 return;
             }

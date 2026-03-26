@@ -59,4 +59,13 @@ public class ChatroomController {
     ) {
         return chatroomService.sendMessage(roomId, userDetails.getId(), userDetails.getUsername(), request);
     }
+
+    @PutMapping("/{roomId}/ack")
+    public void updateLastAck(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable long roomId,
+            @RequestBody AckRequest request
+    ) {
+        chatroomService.updateLastAck(roomId, userDetails.getId(), request.seq());
+    }
 }

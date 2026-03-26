@@ -162,6 +162,7 @@ public class ChatroomService {
         return messageService.fetchOlderMessages(roomId, cursor);
     }
 
+    @Transactional
     public MessageDto sendMessage(long roomId, long userId, String username, SendMessageRequest request) {
         assertMembership(roomId, userId);
 
@@ -173,5 +174,11 @@ public class ChatroomService {
         eventPublisher.publishMessage(message);
 
         return message;
+    }
+
+    @Transactional
+    public void updateLastAck(long roomId, long userId, long seq) {
+        assertMembership(roomId, userId);
+        chatroomRepository.updateLastAck(roomId, userId, seq);
     }
 }
