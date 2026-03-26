@@ -6,7 +6,7 @@ type ChatroomsState = {
     chatrooms: ChatroomSummary[];
     byId: Record<number, ChatroomSummary>;
 
-    _fetchingIds: Set<number>;
+    _fetchingRooms: Set<number>;
 
     hydrate: (rooms: ChatroomSummary[]) => void;
     upsert: (room: ChatroomSummary) => void;
@@ -22,7 +22,7 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
     chatrooms: [],
     byId: {},
 
-    _fetchingIds: new Set(),
+    _fetchingRooms: new Set(),
 
     hydrate: (rooms) => {
         set({
@@ -83,13 +83,13 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
         // Or just simply receiving a direct message from someone for the first time.
         // Or group chat creation.
         if (!room) {
-            if (!get()._fetchingIds.has(msg.roomId)) {
-                get()._fetchingIds.add(msg.roomId);
+            if (!get()._fetchingRooms.has(msg.roomId)) {
+                get()._fetchingRooms.add(msg.roomId);
                 try {
                     const fetched = await apiGetChatroomSummary(msg.roomId);
                     get().upsert(fetched);
                 } finally {
-                    get()._fetchingIds.delete(msg.roomId);
+                    get()._fetchingRooms.delete(msg.roomId);
                 }
             }
         }

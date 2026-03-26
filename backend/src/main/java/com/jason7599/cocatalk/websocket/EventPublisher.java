@@ -8,13 +8,13 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class ChatEventPublisher {
+public class EventPublisher {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final ChatroomMembershipCache membershipCache;
 
-    public void publishMessage(long roomId, MessageDto message) {
-        for (long userId : membershipCache.fetch(roomId)) {
+    public void publishMessage(MessageDto message) {
+        for (long userId : membershipCache.fetch(message.roomId())) {
             messagingTemplate.convertAndSendToUser(
                     String.valueOf(userId),
                     "/queue/messages",

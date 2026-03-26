@@ -40,7 +40,7 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             JOIN messages lm ON lm.room_id = r.id AND lm.seq = r.last_seq
             WHERE
                 rm_me.user_id = :viewerId
-                AND r.last_seq > 0 -- empty chatrooms are not shown
+                AND r.last_seq > 0 -- empty chatrooms are not shown. This only applies to direct chatrooms, as group chatrooms always have a "room created" message
             """, nativeQuery = true)
     List<ChatroomSummary.Projection> getChatroomSummaries(@Param("viewerId") long viewerId);
 
