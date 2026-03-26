@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { useActiveChatroomStore } from "../active/activeChatroomStore";
 import UserMessageBubble from "./UserMessageBubble";
+import { useAuthStore } from "../../auth/authStore";
 
 const MessageList: React.FC = () => {
     const roomStatus = useActiveChatroomStore((s) => s.status);
@@ -24,29 +25,30 @@ const MessageList: React.FC = () => {
     const didInitialScrollRef = useRef(false);
     const skipAutoScrollRef = useRef(false);
 
+    const me = useAuthStore((s) => s.requireUser().userId);
+
     const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
         bottomSentinelRef.current?.scrollIntoView({ behavior, block: "end" });
     };
 
     // Near-bottom tracking
     useEffect(() => {
-        const root = listRef.current;
-        const bottom = bottomSentinelRef.current;
-        if (!root || !bottom) return;
+        const el = listRef.current;
+        if (!el) return;
 
-        const io = new IntersectionObserver(
-            ([entry]) => {
-                setNearBottom(entry.isIntersecting);
-            },
-            {
-                root,
-                threshold: 0.01,
-                rootMargin: "0px 0px 140px 0px",
-            }
-        );
+        const updateNearBottom = () => {
+            const distanceFromBottom =
+                el.scrollHeight - el.scrollTop - el.clientHeight;
 
-        io.observe(bottom);
-        return () => io.disconnect();
+            setNearBottom(distanceFromBottom <= 140);
+        };
+
+        updateNearBottom();
+        el.addEventListener("scroll", updateNearBottom, { passive: true });
+
+        return () => {
+            el.removeEventListener("scroll", updateNearBottom);
+        };
     }, [activeRoomId, setNearBottom]);
 
     // Infinite scroll (top)
@@ -101,10 +103,19 @@ const MessageList: React.FC = () => {
     // Auto-scroll
     useEffect(() => {
         if (skipAutoScrollRef.current) return;
-        if (!isNearBottom) return;
 
-        scrollToBottom("smooth");
-    }, [messages.length, pendingMessages.length, isNearBottom]);
+        const lastPending = pendingMessages.at(-1);
+        const lastMessage = messages.at(-1);
+
+        const newestIsMine =
+            (lastPending && lastPending.actorId === me) ||
+            (lastMessage && lastMessage.actorId === me);
+
+        if (isNearBottom || newestIsMine) {
+            scrollToBottom(newestIsMine ? "smooth" : "auto");
+        }
+
+    }, [messages.length, pendingMessages.length, me]);
 
     return (<>
         <div ref={listRef} className="flex-1 overflow-y-auto px-4 py-4">
@@ -132,7 +143,7 @@ const MessageList: React.FC = () => {
                                 message={m}
                                 key={m.seq}
                             />
-                            
+
                             : null // todo: event messages
                     ))}
                     {pendingMessages.map((m) => (
