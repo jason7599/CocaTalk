@@ -17,7 +17,9 @@ const ContactsTab: React.FC = () => {
 
     const contacts = useContactsStore((s) => s.contacts);
     const contactList = useMemo(
-        () => Object.values(contacts),
+        () => Object.values(contacts).sort((a, b) =>
+            a.username.localeCompare(b.username)
+        ),
         [contacts]
     );
 
@@ -110,7 +112,7 @@ const ContactsTab: React.FC = () => {
                             >
                                 <div className="min-w-0">
                                     <div className="flex items-center gap-3">
-                                        <UserCircleIcon className="h-7 w-7 text-rose-400 opacity-80" />
+                                        <UserCircleIcon className="h-7 w-7 shrink-0 text-rose-400 opacity-80" />
                                         <div className="min-w-0">
                                             <div className="truncate font-semibold text-slate-100">
                                                 <span>{c.username}</span>

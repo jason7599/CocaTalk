@@ -48,6 +48,7 @@ export const useContactsStore = create<ContactsState>((set, get) => ({
     reset: () => {
         set({
             contacts: {},
+            addingIds: new Set()
         });
     },
 

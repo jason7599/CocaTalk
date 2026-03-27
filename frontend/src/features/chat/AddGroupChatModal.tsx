@@ -6,7 +6,14 @@ import { useModal } from "../../shared/ModalContext";
 
 const AddGroupChatModal: React.FC = () => {
     const { closeModal } = useModal();
-    const contacts = useContactsStore((s) => s.getAll());
+
+    const contacts = useContactsStore((s) => s.contacts);
+    const contactList = useMemo(
+        () => Object.values(contacts).sort((a, b) =>
+            a.username.localeCompare(b.username)
+        ),
+        [contacts]
+    );
 
     const [selected, setSelected] = useState<Set<number>>(new Set());
     const [loading, setLoading] = useState(false);
@@ -23,15 +30,16 @@ const AddGroupChatModal: React.FC = () => {
     const canCreate = selected.size > 0;
 
     const helperText = useMemo(() => {
-        if (contacts.length === 0) return "You need contacts to start a group chat.";
+        if (contactList.length === 0) return "You need contacts to start a group chat.";
         if (selected.size === 0) return "Pick at least one person.";
         return `${selected.size} participant${selected.size > 1 ? "s" : ""} selected.`;
-    }, [contacts.length, selected.size]);
+    }, [contactList.length, selected.size]);
 
     const handleCreate = async () => {
         if (!canCreate || loading) return;
 
         setLoading(true);
+        // TODO:
         // await createGroupChat(Array.from(selected));
         closeModal();
         setLoading(false);
@@ -80,10 +88,10 @@ const AddGroupChatModal: React.FC = () => {
 
                     {/* Selected users */}
                     {selected.size > 0 && (
-                        <div className="p-4">
+                        <div className="p-4 max-h-[240px] overflow-y-auto relative">
                             <div className="flex flex-wrap gap-2">
                                 {[...selected].map((id) => {
-                                    const user = contacts.find((c) => c.id === id);
+                                    const user = contactList.find((c) => c.userId === id);
                                     if (!user) return null;
 
                                     return (
@@ -126,20 +134,20 @@ const AddGroupChatModal: React.FC = () => {
 
                     {/* Body */}
                     <div className="px-4 max-h-[420px] overflow-y-auto">
-                        {contacts.length === 0 ? (
+                        {contactList.length === 0 ? (
                             <div className="px-4 py-10 text-center text-sm text-slate-400">
                                 No contacts bro 🥀🥀🥀
                             </div>
                         ) : (
                             <div className="divide-y divide-white/10">
-                                {contacts.map((c) => {
-                                    const checked = selected.has(c.id);
+                                {contactList.map((c) => {
+                                    const checked = selected.has(c.userId);
 
                                     return (
                                         <button
-                                            key={c.id}
+                                            key={c.userId}
                                             type="button"
-                                            onClick={() => toggle(c.id)}
+                                            onClick={() => toggle(c.userId)}
                                             className="
                                                 w-full flex items-center justify-between gap-3
                                                 px-4 py-3 text-left
