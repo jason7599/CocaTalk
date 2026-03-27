@@ -3,6 +3,7 @@ import { useContactsStore } from "../../features/contacts/contactsStore";
 import { useMemo, useState } from "react";
 import { CheckIcon, UserGroupIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useModal } from "../../shared/ModalContext";
+import { createGroupChatroom } from "./chatroomActions";
 
 const AddGroupChatModal: React.FC = () => {
     const { closeModal } = useModal();
@@ -39,8 +40,9 @@ const AddGroupChatModal: React.FC = () => {
         if (!canCreate || loading) return;
 
         setLoading(true);
-        // TODO:
-        // await createGroupChat(Array.from(selected));
+
+        await createGroupChatroom(Array.from(selected));
+
         closeModal();
         setLoading(false);
     };

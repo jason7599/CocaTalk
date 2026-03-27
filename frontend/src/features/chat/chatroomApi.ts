@@ -16,3 +16,7 @@ export async function apiGetChatroomSummary(roomId: number): Promise<ChatroomSum
 export async function apiUpdateLastAck(roomId: number, seq: number): Promise<void> {
     await api.put(`/chats/${roomId}/ack`, { seq });
 };
+
+export async function apiCreateGroupChatroom(initMembers: number[]): Promise<number> {
+    return (await api.post("/chats/group", { initMembers })).data;
+};
