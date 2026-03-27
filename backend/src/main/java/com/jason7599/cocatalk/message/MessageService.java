@@ -1,9 +1,12 @@
 package com.jason7599.cocatalk.message;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.jason7599.cocatalk.message.event.EventMessageType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Low-level message service for chatrooms.
@@ -85,17 +88,37 @@ public class MessageService {
             long roomId,
             long userId,
             String username,
-            SendMessageRequest request
+            String content,
+            UUID clientId
     ) {
         return messageRepository.insertMessage(
                 roomId,
                 userId,
                 username,
-                MessageKind.USER.name(),
+                "USER",
                 null,
-                request.content(),
+                content,
                 null,
-                request.clientId()
+                clientId
+        );
+    }
+
+    public MessageEntity insertEventMessage(
+            long roomId,
+            long actorId,
+            String actorName,
+            EventMessageType eventType,
+            JsonNode eventData
+    ) {
+        return messageRepository.insertMessage(
+                roomId,
+                actorId,
+                actorName,
+                "EVENT",
+                eventType.name(),
+                null,
+                eventData.toString(),
+                null
         );
     }
 }

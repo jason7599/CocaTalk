@@ -1,6 +1,7 @@
 package com.jason7599.cocatalk.message;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.jason7599.cocatalk.message.event.EventMessageType;
 
 import java.time.Instant;
 import java.util.UUID;

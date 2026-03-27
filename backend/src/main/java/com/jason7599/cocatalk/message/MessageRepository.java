@@ -39,7 +39,6 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
                 WHERE room_id = :roomId
                   AND client_id = :clientId
             ),
-            
             next_seq AS (
                 UPDATE rooms
                 SET last_seq = last_seq + 1
@@ -47,7 +46,6 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
                   AND NOT EXISTS (SELECT 1 FROM existing)
                 RETURNING last_seq
             ),
-            
             inserted AS (
                 INSERT INTO messages (
                     room_id,
@@ -73,7 +71,6 @@ public interface MessageRepository extends JpaRepository<MessageEntity, MessageI
                 FROM next_seq
                 RETURNING *
             )
-         
             SELECT * FROM inserted
             UNION ALL
             SELECT * FROM existing

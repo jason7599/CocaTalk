@@ -39,7 +39,7 @@ public class ChatroomController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody CreateGroupRequest request
     ) {
-        return chatroomService.createGroupChatroom(userDetails.getId(), request.initMembers());
+        return chatroomService.createGroupChatroom(userDetails.getId(), userDetails.getUsername(), request.initMembers());
     }
 
     @GetMapping("/{roomId}/bootstrap")

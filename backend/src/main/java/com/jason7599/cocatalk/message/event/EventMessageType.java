@@ -1,4 +1,4 @@
-package com.jason7599.cocatalk.message;
+package com.jason7599.cocatalk.message.event;
 
 public enum EventMessageType {
     GROUP_CREATED,

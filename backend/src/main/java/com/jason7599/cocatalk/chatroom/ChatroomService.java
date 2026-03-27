@@ -5,6 +5,8 @@ import com.jason7599.cocatalk.message.MessageDto;
 import com.jason7599.cocatalk.message.MessagePage;
 import com.jason7599.cocatalk.message.MessageService;
 import com.jason7599.cocatalk.message.SendMessageRequest;
+import com.jason7599.cocatalk.message.event.EventMessagePayload;
+import com.jason7599.cocatalk.message.event.GroupCreatedEventPayload;
 import com.jason7599.cocatalk.user.UserInfo;
 import com.jason7599.cocatalk.user.relation.UserRelationService;
 import com.jason7599.cocatalk.websocket.EventPublisher;
@@ -13,8 +15,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -123,17 +127,23 @@ public class ChatroomService {
     }
 
     @Transactional
-    public long createGroupChatroom(long creatorId, List<Long> initMemberIds) {
+    public long createGroupChatroom(long creatorId, String creatorName, List<Long> initMemberIds) {
         long roomId = chatroomRepository.createGroupChatroom(creatorId);
-
-        initMemberIds.add(creatorId);
-
+        
+        Set<Long> memberIds = new HashSet<>(initMemberIds);
+        memberIds.add(creatorId);
+        
         chatroomRepository.ensureChatroomMembers(
                 roomId,
-                initMemberIds.toArray(new Long[0])
+                memberIds.toArray(new Long[0])
         );
 
-        // TODO: insert GROUP_CREATED event message
+        createEventMessage(
+                roomId,
+                creatorId,
+                creatorName,
+                new GroupCreatedEventPayload()
+        );
 
         return roomId;
     }
@@ -182,14 +192,30 @@ public class ChatroomService {
     public MessageDto sendMessage(long roomId, long userId, String username, SendMessageRequest request) {
         assertMembership(roomId, userId);
 
-        MessageDto message = new MessageDto(messageService.insertUserMessage(roomId,
+        MessageDto message = new MessageDto(messageService.insertUserMessage(
+                roomId,
                 userId,
                 username,
-                request));
+                request.content(),
+                request.clientId()
+        ));
 
         eventPublisher.publishMessage(message);
 
         return message;
+    }
+
+    @Transactional
+    private void createEventMessage(long roomId, long actorId, String actorName, EventMessagePayload payload) {
+        MessageDto message = new MessageDto(messageService.insertEventMessage(
+                roomId,
+                actorId,
+                actorName,
+                payload.type(),
+                payload.toJson()
+        ));
+
+        eventPublisher.publishMessage(message);
     }
 
     @Transactional
