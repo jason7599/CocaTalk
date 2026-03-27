@@ -33,6 +33,15 @@ public class ChatroomController {
         return chatroomService.resolveDirectChatroom(userDetails.getId(), request.targetUserId());
     }
 
+    @PostMapping("/group")
+    @ResponseStatus(HttpStatus.CREATED)
+    public long createGroupChatroom(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody CreateGroupRequest request
+    ) {
+        return chatroomService.createGroupChatroom(userDetails.getId(), request.initMembers());
+    }
+
     @GetMapping("/{roomId}/bootstrap")
     public ChatroomBootstrapDto bootstrap(
             @AuthenticationPrincipal CustomUserDetails userDetails,

@@ -130,18 +130,24 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             """, nativeQuery = true)
     long getOrCreateDirectChatroom(@Param("u1") long u1, @Param("u2") long u2);
 
+    @Query(value = """
+            INSERT INTO rooms (type, group_creator_id)
+            VALUES ('GROUP', :creatorId)
+            RETURNING id
+            """, nativeQuery = true)
+    long createGroupChatroom(@Param("creatorId") long creatorId);
+
     /**
-     * Ensures that the 2 users participating in a DIRECT chatroom are present in room_members.
-     * This method is specifically intended for DIRECT chatrooms created via getOrCreateChatroom.
+     * Adds the given users as members for the given chatroom.
      * This method is intentionally idempotent.
      */
     @Modifying
     @Query(value = """
             INSERT INTO room_members (room_id, user_id)
-            VALUES (:roomId, :u1), (:roomId, :u2)
+            SELECT :roomId, UNNEST(:userIds)
             ON CONFLICT DO NOTHING
             """, nativeQuery = true)
-    void ensureDirectChatroomMembers(@Param("roomId") long roomId, @Param("u1") long u1, @Param("u2") long u2);
+    void ensureChatroomMembers(@Param("roomId") long roomId, @Param("userIds") Long[] userIds);
 
     @Query(value = """
             SELECT

@@ -117,7 +117,23 @@ public class ChatroomService {
         }
 
         long roomId = chatroomRepository.getOrCreateDirectChatroom(requesterId, targetId);
-        chatroomRepository.ensureDirectChatroomMembers(roomId, requesterId, targetId);
+        chatroomRepository.ensureChatroomMembers(roomId, new Long[] { requesterId, targetId });
+
+        return roomId;
+    }
+
+    @Transactional
+    public long createGroupChatroom(long creatorId, List<Long> initMemberIds) {
+        long roomId = chatroomRepository.createGroupChatroom(creatorId);
+
+        initMemberIds.add(creatorId);
+
+        chatroomRepository.ensureChatroomMembers(
+                roomId,
+                initMemberIds.toArray(new Long[0])
+        );
+
+        // TODO: insert GROUP_CREATED event message
 
         return roomId;
     }
