@@ -1,6 +1,6 @@
 package com.jason7599.cocatalk.message;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.jason7599.cocatalk.message.event.EventData;
 import com.jason7599.cocatalk.message.event.EventMessageType;
 
 import java.time.Instant;
@@ -14,51 +14,20 @@ public record MessageDto(
         long actorId,
         String actorName,
         String content,
-        JsonNode eventData,
+        EventData eventData,
         Instant createdAt,
         UUID clientId
 ) {
-    // Projection exists because of enum -> string mapping
     public interface Projection {
         long getRoomId();
         long getSeq();
-        String getKind();
-        String getEventType();
+        MessageKind getKind();
+        EventMessageType getEventType();
         long getActorId();
         String getActorName();
         String getContent();
-        JsonNode getEventData();
+        String getEventData();
         Instant getCreatedAt();
         UUID getClientId();
-    }
-
-    public MessageDto(MessageEntity e) {
-        this(
-                e.getId().roomId(),
-                e.getId().seq(),
-                e.getKind(),
-                e.getEventType(),
-                e.getActorId(),
-                e.getActorName(),
-                e.getContent(),
-                e.getEventData(),
-                e.getCreatedAt(),
-                e.getClientId()
-        );
-    }
-
-    public MessageDto(Projection p) {
-        this(
-                p.getRoomId(),
-                p.getSeq(),
-                p.getKind() == null ? null : MessageKind.valueOf(p.getKind()),
-                p.getEventType() == null ? null : EventMessageType.valueOf(p.getEventType()),
-                p.getActorId(),
-                p.getActorName(),
-                p.getContent(),
-                p.getEventData(),
-                p.getCreatedAt(),
-                p.getClientId()
-        );
     }
 }

@@ -5,8 +5,9 @@ import com.jason7599.cocatalk.message.MessageDto;
 import com.jason7599.cocatalk.message.MessagePage;
 import com.jason7599.cocatalk.message.MessageService;
 import com.jason7599.cocatalk.message.SendMessageRequest;
-import com.jason7599.cocatalk.message.event.EventMessagePayload;
-import com.jason7599.cocatalk.message.event.GroupCreatedEventPayload;
+import com.jason7599.cocatalk.message.event.EventDataCodec;
+import com.jason7599.cocatalk.message.event.EventMessage;
+import com.jason7599.cocatalk.message.event.MessageDtoMapper;
 import com.jason7599.cocatalk.user.UserInfo;
 import com.jason7599.cocatalk.user.relation.UserRelationService;
 import com.jason7599.cocatalk.websocket.EventPublisher;
@@ -38,6 +39,8 @@ public class ChatroomService {
     private final MessageService messageService;
     private final EventPublisher eventPublisher;
 
+    private final MessageDtoMapper messageDtoMapper;
+
     public List<ChatroomSummary> getChatroomSummaries(long userId) {
         List<ChatroomSummary.Projection> chatroomSummaryProjections = chatroomRepository.getChatroomSummaries(userId);
 
@@ -58,24 +61,13 @@ public class ChatroomService {
                         ));
 
         return chatroomSummaryProjections.stream()
-                .map(proj -> new ChatroomSummary(
-                        proj.getRoomId(),
-                        proj.getRoomType(),
-                        membersMap.getOrDefault(proj.getRoomId(), List.of()),
-                        proj.getTotalMemberCount(),
-                        proj.getMyLastAck(),
-                        new MessageDto(
-                                proj.getRoomId(),
-                                proj.getLastSeq(),
-                                proj.getLastMessageKind(),
-                                proj.getLastMessageEventType(),
-                                proj.getLastActorId(),
-                                proj.getLastActorName(),
-                                proj.getLastMessage(),
-                                proj.getLastEventData(),
-                                proj.getLastMessageAt(),
-                                proj.getLastMessageClientId()
-                        )
+                .map(p -> new ChatroomSummary(
+                        p.getRoomId(),
+                        p.getRoomType(),
+                        membersMap.getOrDefault(p.getRoomId(), List.of()),
+                        p.getTotalMemberCount(),
+                        p.getMyLastAck(),
+                        messageDtoMapper.fromChatroomProjection(p)
                 )).toList();
     }
 
@@ -88,25 +80,14 @@ public class ChatroomService {
     public ChatroomSummary getChatroomSummary(long roomId, long viewerId) {
         assertMembership(roomId, viewerId);
 
-        ChatroomSummary.Projection proj = chatroomRepository.getChatroomSummary(roomId, viewerId);
+        ChatroomSummary.Projection p = chatroomRepository.getChatroomSummary(roomId, viewerId);
         return new ChatroomSummary(
-                proj.getRoomId(),
-                proj.getRoomType(),
+                p.getRoomId(),
+                p.getRoomType(),
                 chatroomRepository.fetchMembersPreview(roomId, viewerId, MEMBER_NAMES_PREVIEW_PER_ROOM),
-                proj.getTotalMemberCount(),
-                proj.getMyLastAck(),
-                new MessageDto(
-                        proj.getRoomId(),
-                        proj.getLastSeq(),
-                        proj.getLastMessageKind(),
-                        proj.getLastMessageEventType(),
-                        proj.getLastActorId(),
-                        proj.getLastActorName(),
-                        proj.getLastMessage(),
-                        proj.getLastEventData(),
-                        proj.getLastMessageAt(),
-                        proj.getLastMessageClientId()
-                )
+                p.getTotalMemberCount(),
+                p.getMyLastAck(),
+                messageDtoMapper.fromChatroomProjection(p)
         );
     }
 
@@ -142,7 +123,7 @@ public class ChatroomService {
                 roomId,
                 creatorId,
                 creatorName,
-                new GroupCreatedEventPayload()
+                EventMessage.groupCreated()
         );
 
         return roomId;
@@ -192,7 +173,7 @@ public class ChatroomService {
     public MessageDto sendMessage(long roomId, long userId, String username, SendMessageRequest request) {
         assertMembership(roomId, userId);
 
-        MessageDto message = new MessageDto(messageService.insertUserMessage(
+        MessageDto message = messageDtoMapper.fromEntity(messageService.insertUserMessage(
                 roomId,
                 userId,
                 username,
@@ -206,13 +187,12 @@ public class ChatroomService {
     }
 
     @Transactional
-    private void createEventMessage(long roomId, long actorId, String actorName, EventMessagePayload payload) {
-        MessageDto message = new MessageDto(messageService.insertEventMessage(
+    private void createEventMessage(long roomId, long actorId, String actorName, EventMessage eventMessage) {
+        MessageDto message = messageDtoMapper.fromEntity(messageService.insertEventMessage(
                 roomId,
                 actorId,
                 actorName,
-                payload.type(),
-                payload.toJson()
+                eventMessage
         ));
 
         eventPublisher.publishMessage(message);

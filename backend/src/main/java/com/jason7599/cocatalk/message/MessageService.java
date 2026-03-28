@@ -1,7 +1,8 @@
 package com.jason7599.cocatalk.message;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.jason7599.cocatalk.message.event.EventMessageType;
+import com.jason7599.cocatalk.message.event.EventDataCodec;
+import com.jason7599.cocatalk.message.event.EventMessage;
+import com.jason7599.cocatalk.message.event.MessageDtoMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +28,9 @@ public class MessageService {
 
     private final MessageRepository messageRepository;
 
+    private final MessageDtoMapper messageDtoMapper;
+    private final EventDataCodec eventDataCodec;
+
     /**
      * User scrolls up
      */
@@ -48,7 +52,7 @@ public class MessageService {
         long nextCursor = hasOlder ? start : 0;
 
         return new MessagePage(
-                projections.stream().map(MessageDto::new).toList(),
+                projections.stream().map(messageDtoMapper::fromProjection).toList(),
                 nextCursor,
                 hasOlder
         );
@@ -78,7 +82,7 @@ public class MessageService {
         long nextCursor = hasOlder ? firstSeq : 0;
 
         return new MessagePage(
-                projections.stream().map(MessageDto::new).toList(),
+                projections.stream().map(messageDtoMapper::fromProjection).toList(),
                 nextCursor,
                 hasOlder
         );
@@ -107,17 +111,16 @@ public class MessageService {
             long roomId,
             long actorId,
             String actorName,
-            EventMessageType eventType,
-            JsonNode eventData
+            EventMessage eventMessage
     ) {
         return messageRepository.insertMessage(
                 roomId,
                 actorId,
                 actorName,
                 "EVENT",
-                eventType.name(),
+                eventMessage.getType().name(),
                 null,
-                eventData.toString(),
+                eventDataCodec.toJson(eventMessage.getData()),
                 null
         );
     }
