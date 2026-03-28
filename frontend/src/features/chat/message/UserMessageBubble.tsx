@@ -46,7 +46,7 @@ const UserMessageBubble: React.FC<{ message: UserMessageDto | PendingUserMessage
     return (
         <div
             className={`flex ${isMe ? "justify-end" : "justify-start"} px-2 ${
-                g.isLast ? "pt-1 pb-2" : "pt-1 pb-[2px]"
+                g.isLast ? "pt-1 pb-8" : ""
             }`}
         >
             <div className="max-w-[min(76%,650px)] flex flex-col">
