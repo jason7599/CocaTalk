@@ -2,6 +2,14 @@ import React, { useEffect, useRef } from "react";
 import { useActiveChatroomStore } from "../active/activeChatroomStore";
 import UserMessageBubble from "./UserMessageBubble";
 import { useAuthStore } from "../../auth/authStore";
+import type { MessageDto } from "../../../shared/types";
+
+const GROUP_WINDOW_MS = 5 * 60 * 1000;
+
+export type MessageGrouping = {
+    isFirst: boolean;
+    isLast: boolean;
+};
 
 const MessageList: React.FC = () => {
     const roomStatus = useActiveChatroomStore((s) => s.status);
@@ -26,6 +34,32 @@ const MessageList: React.FC = () => {
     const skipAutoScrollRef = useRef(false);
 
     const me = useAuthStore((s) => s.requireUser().userId);
+
+    const grouping: MessageGrouping[] = React.useMemo(() => {
+        return messages.map((msg, i) => {
+            const prev = messages[i - 1];
+            const next = messages[i + 1];
+
+            const getTime = (m: MessageDto) => new Date(m.createdAt).getTime();
+
+            const isSameAsPrev =
+                prev &&
+                prev.actorId === msg.actorId &&
+                getTime(msg) - getTime(prev) < GROUP_WINDOW_MS
+            ;
+
+            const isSameAsNext =
+                next &&
+                next.actorId === msg.actorId &&
+                getTime(next) - getTime(msg) < GROUP_WINDOW_MS
+            ;
+
+            return {
+                isFirst: !isSameAsPrev,
+                isLast: !isSameAsNext,
+            };
+        });
+    }, [messages]);
 
     const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
         bottomSentinelRef.current?.scrollIntoView({ behavior, block: "end" });
@@ -114,7 +148,7 @@ const MessageList: React.FC = () => {
         if (isNearBottom || newestIsMine) {
             scrollToBottom(newestIsMine ? "smooth" : "auto");
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [messages.length, pendingMessages.length, me]);
 
     return (<>
@@ -137,11 +171,12 @@ const MessageList: React.FC = () => {
                 </div>
             ) : (
                 <div className="flex flex-col gap-2">
-                    {messages.map((m) => (
+                    {messages.map((m, i) => (
                         m.kind === "USER"
                             ? <UserMessageBubble
                                 message={m}
                                 key={m.seq}
+                                grouping={grouping[i]}
                             />
 
                             : null // todo: event messages
