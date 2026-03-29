@@ -4,6 +4,7 @@ import { useActiveChatroomStore } from "./active/activeChatroomStore";
 import { useContactsStore } from "../contacts/contactsStore";
 import { useStomp } from "../../services/ws/stompContext";
 import { formatChatroomDisplayNameFromMembers } from "./utils/chatFormat";
+import { useAuthStore } from "../auth/authStore";
 
 const ChatHeader: React.FC = () => {
     const connected = useStomp().connected;
@@ -14,19 +15,22 @@ const ChatHeader: React.FC = () => {
     const roomMeta = useActiveChatroomStore((s) => s.meta);
     const clearActiveRoom = useActiveChatroomStore((s) => s.clearActiveChatroom);
 
+    const me = useAuthStore((s) => s.requireUser());
     const contacts = useContactsStore((s) => s.contacts);
     const addContact = useContactsStore((s) => s.addContact);
 
     if (!activeRoomId) return null;
-
     if (roomStatus !== "READY") return null;
 
     const displayName = formatChatroomDisplayNameFromMembers(Object.values(members));
     const subjectUserId = roomMeta.type === "DIRECT"
         ? Object.values(members)[0].userId
-        : roomMeta.groupCreatorId;
+        : roomMeta.groupCreatorId
+    ;
 
-    const subjectInContacts = subjectUserId in contacts;
+    // Always treat as "safe" if I am the group creator
+    const subjectInContacts = subjectUserId === me.userId || subjectUserId in contacts;
+
     const blockedByOtherUser = roomMeta.type === "DIRECT" && roomMeta.blockedByOtherUser;
 
     return (
@@ -39,7 +43,10 @@ const ChatHeader: React.FC = () => {
                         {!blockedByOtherUser && !subjectInContacts && (
                             <div className="mt-1 flex items-center gap-2 text-xs text-amber-400/90">
                                 <span className="truncate">
-                                    This user isn't in your contacts.
+                                    {roomMeta.type === "DIRECT"
+                                        ? "This user is not in your contacts."
+                                        : "Group creator is not in your contacts."
+                                    }
                                 </span>
 
                                 <button
