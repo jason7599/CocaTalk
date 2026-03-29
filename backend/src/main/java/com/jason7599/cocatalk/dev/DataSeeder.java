@@ -88,9 +88,6 @@ public class DataSeeder {
             throw new RuntimeException("room does not seem to exist");
         }
 
-        devQueries.deleteRoomMessages(roomId);
-        devQueries.resetLastSeq(roomId);
-
         while (numMessages-- > 0) {
             UserInfo member = members.get(random.nextInt(members.size()));
 
