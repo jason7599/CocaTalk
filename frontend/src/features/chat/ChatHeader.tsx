@@ -28,9 +28,10 @@ const ChatHeader: React.FC = () => {
         : roomMeta.groupCreatorId
     ;
 
-    // Always treat as "safe" if I am the group creator
-    const subjectInContacts = subjectUserId === me.userId || subjectUserId in contacts;
+    const isCreator = roomMeta.type === "GROUP" && roomMeta.groupCreatorId === me.userId;
 
+    // Always treat as "safe" if I am the group creator
+    const subjectInContacts = isCreator || subjectUserId in contacts;
     const blockedByOtherUser = roomMeta.type === "DIRECT" && roomMeta.blockedByOtherUser;
 
     return (
@@ -39,6 +40,12 @@ const ChatHeader: React.FC = () => {
                 <div className="min-w-0 flex-1">
                     <h2 className="truncate text-lg font-semibold tracking-tight text-slate-100">
                         {displayName}
+
+                        {isCreator && (
+                            <span className="ml-2 text-[11px] px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-300 border border-amber-400/20">
+                                Creator
+                            </span>
+                        )}
 
                         {!blockedByOtherUser && !subjectInContacts && (
                             <div className="mt-1 flex items-center gap-2 text-xs text-amber-400/90">
