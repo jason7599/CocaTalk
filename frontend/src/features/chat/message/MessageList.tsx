@@ -3,6 +3,7 @@ import { useActiveChatroomStore } from "../active/activeChatroomStore";
 import UserMessageBubble from "./UserMessageBubble";
 import { useAuthStore } from "../../auth/authStore";
 import type { MessageDto } from "../../../shared/types";
+import EventMessageRow from "./EventMessageRow";
 
 const GROUP_WINDOW_MS = 5 * 60 * 1000;
 
@@ -178,8 +179,10 @@ const MessageList: React.FC = () => {
                                 key={m.seq}
                                 grouping={grouping[i]}
                             />
-
-                            : null // todo: event messages
+                            : <EventMessageRow 
+                                message={m}
+                                key={m.seq}
+                            />
                     ))}
                     {pendingMessages.map((m) => (
                         <UserMessageBubble

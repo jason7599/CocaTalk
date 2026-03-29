@@ -47,7 +47,7 @@ export function formatLastMessage(message: MessageDto): string {
     }
 };
 
-function formatEventMessage(message: EventMessageDto): string {
+export function formatEventMessage(message: EventMessageDto): string {
     switch (message.eventType) {
         case "GROUP_CREATED":
             return `${message.actorName} created the group`;
