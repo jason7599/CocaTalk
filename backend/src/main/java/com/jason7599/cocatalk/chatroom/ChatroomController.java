@@ -35,7 +35,7 @@ public class ChatroomController {
 
     @PostMapping("/group")
     @ResponseStatus(HttpStatus.CREATED)
-    public long createGroupChatroom(
+    public CreateGroupResponse createGroupChatroom(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody CreateGroupRequest request
     ) {

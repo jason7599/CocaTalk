@@ -108,3 +108,9 @@ export interface ChatroomBootstrapDto {
     lastReadSeq: number;
     lastSeq: number;
 };
+
+
+export interface CreateGroupResponse {
+    roomId: number;
+    hasSkippedMembers: boolean;
+};

@@ -189,4 +189,16 @@ public interface ChatroomRepository extends JpaRepository<ChatroomEntity, Long> 
             WHERE room_id = :roomId
             """, nativeQuery = true)
     Set<Long> fetchChatroomMemberIds(@Param("roomId") long roomId);
+
+    @Query(value = """
+            SELECT u.id
+            FROM users u
+            WHERE u.id IN (:userIds)
+            AND NOT EXISTS (
+                SELECT 1
+                FROM blocks b
+                WHERE b.user_id = u.id AND b.blocked_id = :requesterId
+            )
+            """, nativeQuery = true)
+    Set<Long> filterNonBlockingUsers(@Param("requesterId") long requesterId, @Param("userIds") Set<Long> userIds);
 }

@@ -1,5 +1,5 @@
 import api from "../../services/apiClient";
-import type { ChatroomBootstrapDto, ChatroomSummary } from "../../shared/types";
+import type { ChatroomBootstrapDto, ChatroomSummary, CreateGroupResponse } from "../../shared/types";
 
 export async function apiResolveDirectChatroom(targetUserId: number): Promise<number> {
     return (await api.post("/chats/direct", { targetUserId })).data;
@@ -17,6 +17,6 @@ export async function apiUpdateLastAck(roomId: number, seq: number): Promise<voi
     await api.put(`/chats/${roomId}/ack`, { seq });
 };
 
-export async function apiCreateGroupChatroom(initMembers: number[]): Promise<number> {
+export async function apiCreateGroupChatroom(initMembers: number[]): Promise<CreateGroupResponse> {
     return (await api.post("/chats/group", { initMembers })).data;
 };

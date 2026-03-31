@@ -1,12 +1,8 @@
 package com.jason7599.cocatalk.chatroom;
 
 import com.jason7599.cocatalk.exception.ApiError;
-import com.jason7599.cocatalk.message.MessageDto;
-import com.jason7599.cocatalk.message.MessagePage;
-import com.jason7599.cocatalk.message.MessageService;
-import com.jason7599.cocatalk.message.SendMessageRequest;
+import com.jason7599.cocatalk.message.*;
 import com.jason7599.cocatalk.message.event.EventMessage;
-import com.jason7599.cocatalk.message.MessageDtoMapper;
 import com.jason7599.cocatalk.user.UserInfo;
 import com.jason7599.cocatalk.user.relation.UserRelationService;
 import com.jason7599.cocatalk.websocket.EventPublisher;
@@ -107,12 +103,20 @@ public class ChatroomService {
     }
 
     @Transactional
-    public long createGroupChatroom(long creatorId, String creatorName, List<Long> initMemberIds) {
+    public CreateGroupResponse createGroupChatroom(long creatorId, String creatorName, List<Long> initMemberIds) {
+
+        Set<Long> requestedMemberIds = new HashSet<>(initMemberIds);
+        Set<Long> memberIds = chatroomRepository.filterNonBlockingUsers(creatorId, requestedMemberIds);
+        if (memberIds.isEmpty()) {
+            throw new ApiError(HttpStatus.BAD_REQUEST, "No valid members to create a group");
+        }
+
+        boolean hasSkippedMembers = requestedMemberIds.size() != memberIds.size();
+
         long roomId = chatroomRepository.createGroupChatroom(creatorId);
-        
-        Set<Long> memberIds = new HashSet<>(initMemberIds);
+
         memberIds.add(creatorId);
-        
+
         chatroomRepository.ensureChatroomMembers(
                 roomId,
                 memberIds.toArray(new Long[0])
@@ -125,7 +129,10 @@ public class ChatroomService {
                 EventMessage.groupCreated()
         );
 
-        return roomId;
+        return new CreateGroupResponse(
+                roomId,
+                hasSkippedMembers
+        );
     }
 
     public ChatroomBootstrapDto bootstrap(long roomId, long userId) {
@@ -171,6 +178,8 @@ public class ChatroomService {
     @Transactional
     public MessageDto sendMessage(long roomId, long userId, String username, SendMessageRequest request) {
         assertMembership(roomId, userId);
+
+        // TODO: check blocked status if direct chat...
 
         MessageDto message = messageDtoMapper.fromEntity(messageService.insertUserMessage(
                 roomId,
