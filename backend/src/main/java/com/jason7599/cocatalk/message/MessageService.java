@@ -2,7 +2,6 @@ package com.jason7599.cocatalk.message;
 
 import com.jason7599.cocatalk.message.event.EventDataCodec;
 import com.jason7599.cocatalk.message.event.EventMessage;
-import com.jason7599.cocatalk.message.event.MessageDtoMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

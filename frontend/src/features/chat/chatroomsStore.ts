@@ -121,8 +121,8 @@ export const useChatroomsStore = create<ChatroomsState>((set, get) => ({
     setMyLastAck: (roomId, seq) => {
         const s = get();
         const room = s.byId[roomId];
-        if (!room) return;
 
+        if (!room) return;
         if (seq <= room.myLastAck) return;
 
         const updated: ChatroomSummary = {

@@ -1,8 +1,7 @@
-package com.jason7599.cocatalk.message.event;
+package com.jason7599.cocatalk.message;
 
 import com.jason7599.cocatalk.chatroom.ChatroomSummary;
-import com.jason7599.cocatalk.message.MessageDto;
-import com.jason7599.cocatalk.message.MessageEntity;
+import com.jason7599.cocatalk.message.event.EventDataCodec;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

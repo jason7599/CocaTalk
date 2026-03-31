@@ -5,9 +5,8 @@ import com.jason7599.cocatalk.message.MessageDto;
 import com.jason7599.cocatalk.message.MessagePage;
 import com.jason7599.cocatalk.message.MessageService;
 import com.jason7599.cocatalk.message.SendMessageRequest;
-import com.jason7599.cocatalk.message.event.EventDataCodec;
 import com.jason7599.cocatalk.message.event.EventMessage;
-import com.jason7599.cocatalk.message.event.MessageDtoMapper;
+import com.jason7599.cocatalk.message.MessageDtoMapper;
 import com.jason7599.cocatalk.user.UserInfo;
 import com.jason7599.cocatalk.user.relation.UserRelationService;
 import com.jason7599.cocatalk.websocket.EventPublisher;
@@ -180,6 +179,8 @@ public class ChatroomService {
                 request.content(),
                 request.clientId()
         ));
+
+        updateLastAck(roomId, userId, message.seq());
 
         eventPublisher.publishMessage(message);
 
