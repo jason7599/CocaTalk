@@ -4,9 +4,11 @@ import { useMemo, useState } from "react";
 import { CheckIcon, UserGroupIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useModal } from "../../shared/ModalContext";
 import { createGroupChatroom } from "./chatroomActions";
+import FeedbackModal from "../../shared/FeedbackModal";
+import { errorMessage } from "../../shared/utils/errors";
 
 const AddGroupChatModal: React.FC = () => {
-    const { closeModal } = useModal();
+    const { showModal, closeModal } = useModal();
 
     const contacts = useContactsStore((s) => s.contacts);
     const contactList = useMemo(
@@ -41,9 +43,38 @@ const AddGroupChatModal: React.FC = () => {
 
         setLoading(true);
 
-        await createGroupChatroom(Array.from(selected));
+        // TODO: feedback
+        try {
+            const res = await createGroupChatroom(Array.from(selected));
 
-        closeModal();
+            closeModal();
+
+            if (res.hasSkippedMembers) {
+                showModal(
+                    <FeedbackModal
+                        title="Group created"
+                        message="Some members couldn't be added."
+                        variant="WARNING"
+                    />
+                );
+            } else {
+                showModal(
+                    <FeedbackModal
+                        title="Group created"
+                        message="Group was successfully created :)"
+                    />
+                );
+            }
+        } catch (e) {
+            showModal(
+                <FeedbackModal
+                    title="Failed to create group"
+                    message={errorMessage(e)}
+                    variant="ERROR"
+                />
+            );
+        }
+        
         setLoading(false);
     };
 

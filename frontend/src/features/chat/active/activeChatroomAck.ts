@@ -84,8 +84,6 @@ export function createAckActions(
                 _lastSentAck: pending,
                 _ackTimer: null
             });
-
-            console.log("ACKed", pending);
         },
     }
 };

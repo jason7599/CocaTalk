@@ -1,3 +1,4 @@
+import type { CreateGroupResponse } from "../../shared/types";
 import { useActiveChatroomStore } from "./active/activeChatroomStore";
 import { apiCreateGroupChatroom, apiResolveDirectChatroom } from "./chatroomApi";
 import { useChatroomsStore } from "./chatroomsStore";
@@ -20,7 +21,10 @@ export async function openDirectChatroom(targetUserId: number): Promise<void> {
     }
 };
 
-export async function createGroupChatroom(initMembers: number[]): Promise<void> {
-    const roomId = await apiCreateGroupChatroom(initMembers);
-    useActiveChatroomStore.getState().setActiveChatroom(roomId);
+export async function createGroupChatroom(initMembers: number[]): Promise<CreateGroupResponse> {
+    const res = await apiCreateGroupChatroom(initMembers);
+
+    useActiveChatroomStore.getState().setActiveChatroom(res.roomId);
+
+    return res;
 }
