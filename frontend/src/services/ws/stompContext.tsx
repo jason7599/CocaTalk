@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { Client, type StompSubscription } from "@stomp/stompjs";
 import { wsHandleEvent, wsHandleMessage } from "./wsEventHandler";
+import { useAuthStore } from "../../features/auth/authStore";
 
 const WS_URL = import.meta.env.VITE_WS_URL;
 
@@ -21,6 +22,8 @@ const StompContext = createContext<StompContextValue>({
 });
 
 export const StompProvider: React.FC<{ children: React.ReactNode }> = ({ children, }) => {
+    const user = useAuthStore((s) => s.user);
+
     const [connected, setConnected] = useState(false);
 
     const clientRef = useRef<Client | null>(null);
@@ -39,6 +42,12 @@ export const StompProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     useEffect(() => {
+        if (!user) {
+            clientRef.current?.deactivate();
+            cleanup();
+            return;
+        }
+
         const client = new Client({
             brokerURL: WS_URL,
             reconnectDelay: 3000,
@@ -55,6 +64,7 @@ export const StompProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             },
 
             onConnect: () => {
+                console.log("STOMP connected");
                 setConnected(true);
 
                 // defensive 
@@ -85,7 +95,7 @@ export const StompProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             client.deactivate();
             cleanup();
         };
-    }, []);
+    }, [user]);
 
     return (
         <StompContext.Provider value={{ client: clientRef.current, connected }}>

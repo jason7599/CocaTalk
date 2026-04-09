@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { sessionManager } from "./sessionManager";
 import { useAuthStore } from "../auth/authStore";
+import { useStomp } from "../../services/ws/stompContext";
 
 export const useSessionLifecycle = () => {
+    const { connected } = useStomp();
+
     const user = useAuthStore((s) => s.user);
     const isLoggedIn = !!user;
     const fetchMe = useAuthStore((s) => s.fetchMe);
@@ -24,6 +27,10 @@ export const useSessionLifecycle = () => {
             return;
         }
 
+        if (!connected) {
+            return;
+        }
+
         const run = async () => {
             setBootstrapping(true);
 
@@ -35,7 +42,7 @@ export const useSessionLifecycle = () => {
         };
 
         run();
-    }, [isLoggedIn]);
+    }, [isLoggedIn, connected]);
 
     return { bootstrapping };
 };
