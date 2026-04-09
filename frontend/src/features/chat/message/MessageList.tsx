@@ -45,12 +45,14 @@ const MessageList: React.FC = () => {
 
             const isSameAsPrev =
                 prev &&
+                prev.kind === "USER" &&
                 prev.actorId === msg.actorId &&
                 getTime(msg) - getTime(prev) < GROUP_WINDOW_MS
             ;
 
             const isSameAsNext =
                 next &&
+                next.kind === "USER" &&
                 next.actorId === msg.actorId &&
                 getTime(next) - getTime(msg) < GROUP_WINDOW_MS
             ;
