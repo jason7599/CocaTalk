@@ -48,8 +48,6 @@ export const StompProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             return;
         }
 
-        console.log("========CREATING STOMP CLIENT========");
-
         const client = new Client({
             brokerURL: WS_URL,
             reconnectDelay: 3000,
@@ -79,8 +77,7 @@ export const StompProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     "/user/queue/events",
                     wsHandleEvent
                 );
-
-                console.log("========STOMP CONNECTED========");
+                
                 setConnected(true);
             },
 

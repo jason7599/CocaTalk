@@ -31,7 +31,6 @@ export const useSessionLifecycle = () => {
         }
 
         const run = async () => {
-            console.log("========BOOTSTRAPPING START========");
             setBootstrapping(true);
 
             try {
@@ -39,8 +38,6 @@ export const useSessionLifecycle = () => {
             } finally {
                 setBootstrapping(false);
             }
-
-            console.log("========BOOTSTRAPPING FINISH========");
         };
 
         run();
