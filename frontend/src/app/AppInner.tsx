@@ -5,15 +5,18 @@ import { useAuthStore } from "../features/auth/authStore";
 import { useSessionLifecycle } from "../features/session/useSessionLifecycle";
 import AppLayout from "./AppLayout";
 import AuthPage from "../features/auth/AuthPage";
+import { useStomp } from "../services/ws/stompContext";
 
 const AppInner: React.FC = () => {
+    const { connected } = useStomp();
     const { bootstrapping } = useSessionLifecycle();
 
     const user = useAuthStore((s) => s.user);
-    const isLoading = useAuthStore((s) => s.isLoading);
+    const loadingUser = useAuthStore((s) => s.isLoading);
     const isLoggedIn = !!user;
 
-    if (isLoading || bootstrapping) return <SessionLoadingScreen />;
+    if (loadingUser || bootstrapping) return <SessionLoadingScreen />;
+    if (isLoggedIn && !connected) return <SessionLoadingScreen />;
 
     return (
         <Router>

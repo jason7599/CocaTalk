@@ -25,7 +25,7 @@ const SessionLoadingScreen: React.FC = () => {
                         Preparing your session
                     </p>
                     <p className="text-sm text-slate-400">
-                        If you can read this, I have failed you
+                        Hopefully you never can read this
                     </p>
                 </div>
 

@@ -15,15 +15,14 @@ export const useSessionLifecycle = () => {
     useEffect(() => {
         const init = async () => {
             await fetchMe();
-            setBootstrapping(false);
         }
-
         init();
     }, [fetchMe]);
 
     useEffect(() => {
         if (!isLoggedIn) {
             sessionManager.clearSession();
+            setBootstrapping(false);
             return;
         }
 
@@ -32,6 +31,7 @@ export const useSessionLifecycle = () => {
         }
 
         const run = async () => {
+            console.log("========BOOTSTRAPPING START========");
             setBootstrapping(true);
 
             try {
@@ -39,6 +39,8 @@ export const useSessionLifecycle = () => {
             } finally {
                 setBootstrapping(false);
             }
+
+            console.log("========BOOTSTRAPPING FINISH========");
         };
 
         run();
