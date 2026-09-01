@@ -5,6 +5,7 @@ import AddGroupChatModal from "./AddGroupChatModal";
 import { useChatroomsStore } from "./chatroomsStore";
 import { useActiveChatroomStore } from "./active/activeChatroomStore";
 import { formatLastMessage, formatChatroomDisplayNameFromSummary } from "./utils/chatFormat";
+import { UserGroupIcon, UserIcon } from "@heroicons/react/24/outline";
 
 function formatTime(ts: string | number | Date) {
     const d = new Date(ts);
@@ -121,19 +122,26 @@ const ChatroomsTab: React.FC = () => {
                                         />
 
                                         <div className="flex items-start justify-between gap-3">
+
                                             <div className="min-w-0">
                                                 <div className="flex items-center gap-2">
                                                     <div
                                                         className={[
                                                             "h-9 w-9 flex-none rounded-full",
+                                                            "flex items-center justify-center",
                                                             "bg-gradient-to-br from-pink-500/20 to-red-500/20",
                                                             "ring-1 ring-white/10",
                                                             isActive
                                                                 ? "shadow-[0_0_18px_rgba(244,63,94,0.16)]"
                                                                 : "shadow-none",
                                                         ].join(" ")}
-                                                        aria-hidden="true"
-                                                    />
+                                                    >
+                                                        {room.roomType === "GROUP" ? (
+                                                            <UserGroupIcon className="h-4.5 w-4.5 text-rose-200" />
+                                                        ) : (
+                                                            <UserIcon className="h-4.5 w-4.5 text-slate-300" />
+                                                        )}
+                                                    </div>
                                                     <div className="min-w-0">
                                                         <div
                                                             className={[
@@ -144,6 +152,12 @@ const ChatroomsTab: React.FC = () => {
                                                             {formatChatroomDisplayNameFromSummary(room)}
                                                         </div>
 
+                                                        {room.roomType === "GROUP" && (
+                                                            <span className="flex-none rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-medium text-slate-400 ring-1 ring-white/10">
+                                                                {room.totalMemberCount} members
+                                                            </span>
+                                                        )}
+                                                        
                                                         <div
                                                             className={[
                                                                 "truncate text-sm",
