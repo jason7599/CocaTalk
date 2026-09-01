@@ -125,23 +125,44 @@ const ChatroomsTab: React.FC = () => {
 
                                             <div className="min-w-0">
                                                 <div className="flex items-center gap-2">
-                                                    <div
-                                                        className={[
-                                                            "h-9 w-9 flex-none rounded-full",
-                                                            "flex items-center justify-center",
-                                                            "bg-gradient-to-br from-pink-500/20 to-red-500/20",
-                                                            "ring-1 ring-white/10",
-                                                            isActive
-                                                                ? "shadow-[0_0_18px_rgba(244,63,94,0.16)]"
-                                                                : "shadow-none",
-                                                        ].join(" ")}
-                                                    >
-                                                        {room.roomType === "GROUP" ? (
-                                                            <UserGroupIcon className="h-4.5 w-4.5 text-rose-200" />
-                                                        ) : (
-                                                            <UserIcon className="h-4.5 w-4.5 text-slate-300" />
+                                                    <div className="relative h-9 w-9 flex-none">
+                                                        <div
+                                                            className={[
+                                                                "h-9 w-9 rounded-full",
+                                                                "flex items-center justify-center",
+                                                                "bg-gradient-to-br from-pink-500/20 to-red-500/20",
+                                                                "ring-1 ring-white/10",
+                                                                isActive
+                                                                    ? "shadow-[0_0_18px_rgba(244,63,94,0.16)]"
+                                                                    : "shadow-none",
+                                                            ].join(" ")}
+                                                        >
+                                                            {room.roomType === "GROUP" ? (
+                                                                <UserGroupIcon className="h-5 w-5 text-rose-200" />
+                                                            ) : (
+                                                                <UserIcon className="h-5 w-5 text-slate-300" />
+                                                            )}
+                                                        </div>
+
+                                                        {room.roomType === "GROUP" && (
+                                                            <span
+                                                                className="
+                                                                    absolute left-1/2 -translate-x-1/2 -bottom-1
+                                                                    min-w-[17px] h-[17px] px-1
+                                                                    rounded-full
+                                                                    flex items-center justify-center
+                                                                    bg-slate-900
+                                                                    text-[9px] font-bold text-rose-200
+                                                                    ring-1 ring-white/15
+                                                                    shadow-md
+                                                                "
+                                                            >
+                                                                {room.totalMemberCount > 99 ? "99+" : room.totalMemberCount}
+                                                            </span>
                                                         )}
                                                     </div>
+
+
                                                     <div className="min-w-0">
                                                         <div
                                                             className={[
@@ -152,12 +173,6 @@ const ChatroomsTab: React.FC = () => {
                                                             {formatChatroomDisplayNameFromSummary(room)}
                                                         </div>
 
-                                                        {room.roomType === "GROUP" && (
-                                                            <span className="flex-none rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-medium text-slate-400 ring-1 ring-white/10">
-                                                                {room.totalMemberCount} members
-                                                            </span>
-                                                        )}
-                                                        
                                                         <div
                                                             className={[
                                                                 "truncate text-sm",
