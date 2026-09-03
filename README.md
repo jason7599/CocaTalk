@@ -16,7 +16,6 @@ Before development was discontinued, CocaTalk had reached a functional state wit
 
 * JWT-based authentication
 * Contact management
-* User blocking
 * Direct messaging
 * Group chats
 * Real-time messaging over WebSockets
@@ -33,8 +32,8 @@ Both direct messaging and group chat functionality were working and tested befor
 The following planned features were not completed:
 
 * Muting conversations
+* Blocking users
 * Group membership management
-
   * Inviting users to an existing group
   * Removing users from a group
 
@@ -43,8 +42,8 @@ Development stopped before these features were added, as I decided to rebuild th
 
 ## Successor
 
-Development continues in **CacoTalk**, a clean-sheet successor built using the lessons learned here.
+Development continues in **[CacoTalk](https://github.com/jason7599/cacotalk-messenger)**, a clean-sheet successor built using the lessons learned here.
 
-**Status:** Archived
-**Successor:** CacoTalk
+**Status:** Archived\
+**Successor:** CacoTalk\
 **Purpose of this repository:** Historical project / learning record
