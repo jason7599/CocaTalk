@@ -1,3 +1,5 @@
+![](screenshot.png)
+
 # CocaTalk
 
 > Archived — this project has been discontinued in favor of a fresh rebuild, **CacoTalk**.
