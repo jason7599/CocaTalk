@@ -2,7 +2,7 @@
 
 # CocaTalk
 
-> Archived — this project has been discontinued in favor of a fresh rebuild, **CacoTalk**.
+> Archived — this project has been discontinued in favor of a fresh rebuild, **[CacoTalk](https://github.com/jason7599/cacotalk-messenger)**.
 
 CocaTalk was my first serious attempt at building a full-stack real-time messaging application.
 
